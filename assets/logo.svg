@@ -1,0 +1,14 @@
+<svg viewBox="0 0 620 190" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="chrome" x1="0%" y1="0%" x2="0%" y2="100%">
+<stop offset="0%" stop-color="#FFFFFF"></stop><stop offset="35%" stop-color="#C9CDD3"></stop><stop offset="55%" stop-color="#7D828B"></stop><stop offset="75%" stop-color="#E7E9EC"></stop><stop offset="100%" stop-color="#9AA0A8"></stop>
+</linearGradient>
+<linearGradient id="paintX" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="#FFDE7A"></stop><stop offset="30%" stop-color="#FFC93C"></stop><stop offset="65%" stop-color="#F16A3E"></stop><stop offset="100%" stop-color="#E8384F"></stop>
+</linearGradient>
+</defs>
+<text x="4" y="130" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-style="italic" font-size="130" letter-spacing="-3">
+<tspan fill="url(#chrome)">Fun</tspan><tspan fill="url(#paintX)">X</tspan>
+</text>
+<text x="8" y="168" fill="#8A8A90" font-family="Arial, Helvetica, sans-serif" font-size="19" letter-spacing="8" font-weight="700">THE FUNX UNIVERSE</text>
+</svg>

@@ -1,0 +1,2 @@
+id,name,description,brand,line,universe,type,age,material,color,electronic,price,salePrice,badge,rating,reviews,stock,boxLength_in,boxWidth_in,boxHeight_in,weight_lb,isNew,isTrending,isCollectible,isSale,image1_filename,image2_filename,image3_filename,video_filename
+p25,Example Product Name,"A short 1-2 sentence description of the product, its story, and what makes it special.",FunX,Example Universe · Die-Cast,Skyline Riders,Die-Cast,13+,Zinc Alloy Die-Cast,Ochre / Chrome,N,150,,New,4.5,10,12,10,6,4,1.2,TRUE,FALSE,FALSE,FALSE,p25-1.jpg,p25-2.jpg,p25-3.jpg,p25.mp4

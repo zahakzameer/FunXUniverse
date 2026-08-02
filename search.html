@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Search — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Tag } = window.FunXDesignSystem_bbd8ae;
+const POPULAR = ['Skyline Riders','Ironclad Legion','Numbered Edition','Aerodrome','Under PKR 150'];
+
+function SearchBar({ query, setQuery }){
+  return <div style={{maxWidth:720,margin:'0 auto',position:'relative'}}>
+    <span style={{position:'absolute',left:20,top:'50%',transform:'translateY(-50%)',color:'var(--text-muted)'}}>{window.ICONS.search}</span>
+    <input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search die-cast, action figures, universes…" style={{width:'100%',height:64,borderRadius:'var(--radius-lg)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',color:'var(--text-primary)',padding:'0 24px 0 54px',fontSize:18,outline:'none'}}/>
+  </div>;
+}
+
+function App(){
+  const [query,setQuery] = React.useState('');
+  const q = query.trim().toLowerCase();
+  const results = q ? window.PRODUCTS.filter(p => (p.name+' '+p.line+' '+p.universe+' '+p.type).toLowerCase().includes(q)) : [];
+
+  return <div>
+    <Header active=""/>
+    <section style={{padding:'80px 40px 24px',textAlign:'center'}} data-screen-label="Search">
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:48,margin:'0 0 32px'}}>Search the Universe</h1>
+      <SearchBar query={query} setQuery={setQuery}/>
+      <div style={{display:'flex',gap:10,justifyContent:'center',marginTop:24,flexWrap:'wrap'}}>
+        <span style={{fontSize:13,color:'var(--text-muted)',marginRight:4,alignSelf:'center'}}>Popular:</span>
+        {POPULAR.map(t => <div key={t} onClick={()=>setQuery(t)} style={{cursor:'pointer'}}><Tag>{t}</Tag></div>)}
+      </div>
+    </section>
+
+    <section style={{maxWidth:1280,margin:'0 auto',padding:'56px 40px 96px'}}>
+      {!q && <div style={{textAlign:'center',color:'var(--text-muted)',fontSize:15,padding:'40px 0'}}>Start typing to search across every FunX universe.</div>}
+      {q && results.length === 0 && <div style={{textAlign:'center',padding:'40px 0'}}>
+        <div style={{fontSize:18,fontWeight:600,marginBottom:8}}>No results for "{query}"</div>
+        <p style={{color:'var(--text-muted)',fontSize:14}}>Try a universe name like Skyline Riders or Ironclad Legion.</p>
+      </div>}
+      {q && results.length > 0 && <>
+        <div style={{fontSize:13,color:'var(--text-muted)',marginBottom:24}}>{results.length} results for "{query}"</div>
+        <ProductGrid products={results} cols={4}/>
+      </>}
+    </section>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Shipping — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Accordion, Breadcrumb } = window.FunXDesignSystem_bbd8ae;
+
+const METHODS = [
+  ['Standard','5–7 business days','Free over PKR 150 · PKR 14 otherwise'],
+  ['Expedited','2–3 business days','PKR 28'],
+  ['White-Glove (Numbered Editions)','5–9 business days','PKR 65 · includes foam crate & signature'],
+];
+
+function App(){
+  return <div>
+    <Header active=""/>
+    <div style={{maxWidth:900,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Shipping">
+      <Breadcrumb items={['Support','Shipping']}/>
+    </div>
+    <section style={{maxWidth:900,margin:'0 auto',padding:'24px 40px 0',textAlign:'center'}}>
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:52,margin:'0 0 14px'}}>Shipping</h1>
+      <p style={{color:'var(--text-secondary)',fontSize:16,maxWidth:520,margin:'0 auto'}}>Every piece ships in collector-grade packaging — foam-lined boxes, corner protection, and a printed certificate for numbered editions.</p>
+    </section>
+
+    <section style={{maxWidth:900,margin:'0 auto',padding:'64px 40px'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:0,border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',overflow:'hidden'}}>
+        <div style={{padding:'16px 20px',fontSize:12,letterSpacing:1,textTransform:'uppercase',color:'var(--text-muted)',fontWeight:700,background:'var(--surface-panel)'}}>Method</div>
+        <div style={{padding:'16px 20px',fontSize:12,letterSpacing:1,textTransform:'uppercase',color:'var(--text-muted)',fontWeight:700,background:'var(--surface-panel)'}}>Delivery</div>
+        <div style={{padding:'16px 20px',fontSize:12,letterSpacing:1,textTransform:'uppercase',color:'var(--text-muted)',fontWeight:700,background:'var(--surface-panel)'}}>Cost</div>
+        {METHODS.map(row => row.map((cell,i) => <div key={cell+i} style={{padding:'20px',fontSize:14,color: i===0?'var(--text-primary)':'var(--text-secondary)',fontWeight:i===0?600:400,borderTop:'1px solid var(--border-hairline-soft)'}}>{cell}</div>))}
+      </div>
+    </section>
+
+    <section style={{maxWidth:900,margin:'0 auto',padding:'0 40px 64px'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24}}>
+        {[['Foam-lined crates','Every numbered edition ships in a custom foam-cut box, not a padded envelope.'],['Signature on delivery','Orders over PKR 200 require a signature — no exceptions, no porch drop-offs.'],['International','We ship to 24 countries; duties are calculated and shown at checkout, never after.']].map(([t,d]) => <div key={t} style={{padding:24,border:'1px solid var(--border-hairline-soft)',borderRadius:'var(--radius-lg)'}}>
+          <div style={{fontSize:15,fontWeight:600,marginBottom:10}}>{t}</div>
+          <div style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.6}}>{d}</div>
+        </div>)}
+      </div>
+    </section>
+
+    <section style={{maxWidth:760,margin:'0 auto',padding:'0 40px 96px'}}>
+      <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:28,marginBottom:20}}>Shipping FAQ</h2>
+      <Accordion items={[
+        {title:'When will my order ship?',content:'In-stock pieces ship within 2 business days. Numbered editions cast to order ship within 10–15 business days — the product page always shows the current estimate.'},
+        {title:'Do you ship internationally?',content:'Yes, to 24 countries. Duties and import taxes are calculated at checkout so there are no surprise charges on delivery.'},
+        {title:'Can I change my shipping method after ordering?',content:"Within 1 hour of placing your order, yes — contact support and we'll adjust it before the piece is packed."},
+        {title:'What if my piece arrives damaged?',content:'Photograph the packaging before opening it further and contact support within 48 hours. We replace damaged numbered editions from the same run whenever possible.'},
+      ]}/>
+    </section>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

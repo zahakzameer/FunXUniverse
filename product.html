@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Product — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Breadcrumb, Button, Accordion, Card, Tag } = window.FunXDesignSystem_bbd8ae;
+
+function Gallery({ p }){
+  const hasReal = p.images && p.images[0] && p.images[0].startsWith('assets/');
+  const media = [...p.images, '__video__'];
+  const [active,setActive] = React.useState(0);
+  const videoRef = React.useRef(null);
+  React.useEffect(()=>{
+    const v = videoRef.current;
+    if (!v) return;
+    if (media[active] === '__video__') { v.currentTime = 0; v.play().catch(()=>{}); } else { v.pause(); }
+  },[active]);
+
+  return <div>
+    <div style={{aspectRatio:'1',borderRadius:'var(--radius-xl)',overflow:'hidden',position:'relative',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)',marginBottom:16}}>
+      {media[active] === '__video__'
+        ? <video ref={videoRef} muted loop playsInline controls style={{width:'100%',height:'100%',objectFit:'cover'}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
+        : (hasReal ? <img src={p.images[active]} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
+      }
+      {p.badge && <span style={{position:'absolute',top:16,left:16,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:11,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'6px 12px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:`repeat(${media.length},1fr)`,gap:10}}>
+      {media.map((m,i) => <div key={i} onClick={()=>setActive(i)} style={{aspectRatio:'1',borderRadius:'var(--radius-md)',overflow:'hidden',cursor:'pointer',border: active===i ? '2px solid var(--paint-orange)' : '1px solid var(--border-hairline)',position:'relative',background:'var(--surface-gallery)'}}>
+        {m === '__video__'
+          ? <><video muted playsInline style={{width:'100%',height:'100%',objectFit:'cover'}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
+              <span style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(11,11,13,0.35)'}}><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span></>
+          : (hasReal ? <img src={m} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-thumb-${p.id}-${i}`} style={{width:'100%',height:'100%'}} placeholder="Photo"></image-slot>)
+        }
+      </div>)}
+    </div>
+  </div>;
+}
+
+function Stars({ rating }){
+  return <div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i => <span key={i}>{window.ICONS.star(i<=Math.round(rating))}</span>)}</div>;
+}
+
+function QtyStepper({ qty, setQty, max }){
+  return <div style={{display:'flex',alignItems:'center',border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-sm)',width:120,height:44}}>
+    <button onClick={()=>setQty(Math.max(1,qty-1))} style={{flex:1,height:'100%',background:'none',border:'none',color:'var(--text-secondary)',cursor:'pointer',fontSize:18}}>−</button>
+    <span style={{flex:1,textAlign:'center',fontSize:15}}>{qty}</span>
+    <button onClick={()=>setQty(Math.min(max,qty+1))} style={{flex:1,height:'100%',background:'none',border:'none',color:'var(--text-secondary)',cursor:'pointer',fontSize:18}}>+</button>
+  </div>;
+}
+
+function SpecRow({ label, value }){
+  return <div style={{display:'flex',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--border-hairline-soft)',fontSize:14}}>
+    <span style={{color:'var(--text-muted)'}}>{label}</span><span style={{color:'var(--text-primary)',fontWeight:600}}>{value}</span>
+  </div>;
+}
+
+function App(){
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id') || 'p1';
+  const p = window.PRODUCTS.find(x=>x.id===id) || window.PRODUCTS[0];
+  const [qty,setQty] = React.useState(1);
+  const [added,setAdded] = React.useState(false);
+  const price = p.salePrice || p.price;
+  const related = window.PRODUCTS.filter(x => x.id!==p.id && (x.universe===p.universe || x.type===p.type)).slice(0,4);
+
+  const addToCart = () => { setAdded(true); setTimeout(()=>setAdded(false),2200); };
+
+  return <div>
+    <Header active=""/>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'32px 40px 0'}} data-screen-label="Product Detail">
+      <Breadcrumb items={['Shop','Toys & Plush',p.name]}/>
+    </div>
+
+    <section style={{maxWidth:1280,margin:'0 auto',padding:'32px 40px 96px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'start'}}>
+      <Gallery p={p}/>
+
+      <div>
+        <div style={{fontSize:12,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{p.line}</div>
+        <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:38,margin:'0 0 14px',lineHeight:1.1}}>{p.name}</h1>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:20}}>
+          <Stars rating={p.rating}/>
+          <span style={{fontSize:13,color:'var(--text-muted)'}}>{p.rating} · {p.reviews} reviews</span>
+        </div>
+        <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:8}}>
+          {p.salePrice ? <>
+            <span style={{fontSize:32,fontWeight:700,color:'var(--paint-orange)'}}>{window.fmtPrice(p.salePrice)}</span>
+            <span style={{fontSize:18,color:'var(--text-muted-soft)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
+          </> : <span style={{fontSize:32,fontWeight:700}}>{window.fmtPrice(p.price)}</span>}
+        </div>
+        <StockLabel stock={p.stock}/>
+        {p.stock > 5 && <div style={{fontSize:13,color:'var(--color-success)',marginBottom:8}}>In Stock — ready to ship</div>}
+        <p style={{fontSize:15,color:'var(--text-secondary)',lineHeight:1.7,margin:'20px 0 28px'}}>{p.description}</p>
+
+        <div style={{display:'flex',gap:14,marginBottom:28}}>
+          <QtyStepper qty={qty} setQty={setQty} max={Math.max(1,p.stock)}/>
+          <Button variant="primary" size="lg" onClick={addToCart} disabled={p.stock<=0} style={{flex:1}}>{p.stock<=0 ? 'Out of Stock' : added ? 'Added ✓' : 'Add to Cart'}</Button>
+        </div>
+        <Button variant="secondary" size="lg" style={{width:'100%',marginBottom:32}} onClick={()=>location.href='cart.html'}>Buy Now</Button>
+
+        <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:24,marginBottom:32}}>
+          <SpecRow label="Brand" value={p.brand}/>
+          <SpecRow label="Universe" value={p.universe}/>
+          <SpecRow label="Material" value={p.material}/>
+          <SpecRow label="Color" value={p.color}/>
+          <SpecRow label="Electronic" value={p.electronic ? 'Yes' : 'No'}/>
+          <SpecRow label="Recommended Age" value={p.age}/>
+          <SpecRow label="Box Dimensions" value={p.boxDims}/>
+          <SpecRow label="Weight" value={p.weight}/>
+        </div>
+
+        <Accordion items={[
+          {title:'Shipping & Returns',content:'Ships in 2 business days if in stock. 30-day returns on unworn pieces in original packaging — see our Shipping and Returns pages for full details.'},
+          {title:'Authentication',content: p.isCollectible ? 'This is a numbered edition \u2014 your order is logged in our system and traceable from checkout to delivery.' : "Every FunX product is sample-tested by our team before it ever goes live on the site."},
+        ]}/>
+      </div>
+    </section>
+
+    {related.length > 0 && <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px'}}>
+      <SectionHeading eyebrow="You May Also Like" title="More From This Universe"/>
+      <ProductGrid products={related} cols={4}/>
+    </section>}
+
+    <PromoBanner title="Earn Toward Your Next Numbered Run" sub="Join the Collector's Circle and earn credit on every order." cta="Learn More"/>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

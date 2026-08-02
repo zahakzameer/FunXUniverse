@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Button } = window.FunXDesignSystem_bbd8ae;
+
+function Hero(){
+  const videoRef = React.useRef(null);
+  React.useEffect(()=>{ const v = videoRef.current; if (v) v.play().catch(()=>{}); },[]);
+  return <section style={{position:'relative',minHeight:680,display:'flex',alignItems:'center',overflow:'hidden',background:'#000'}} data-screen-label="Home — Hero">
+    <video ref={videoRef} autoPlay muted loop playsInline style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.75}}>
+      <source src="videos/p1.mp4" type="video/mp4"/>
+    </video>
+    <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,rgba(11,11,13,0.95) 0%,rgba(11,11,13,0.6) 50%,rgba(11,11,13,0.25) 100%)'}}></div>
+    <div style={{position:'absolute',inset:0,backgroundImage:'repeating-linear-gradient(115deg,transparent 0,transparent 38px,rgba(255,255,255,0.03) 38px,rgba(255,255,255,0.03) 40px)',mixBlendMode:'overlay'}}></div>
+    <div style={{position:'absolute',top:0,bottom:0,right:0,width:6,background:'linear-gradient(180deg,var(--paint-orange),var(--paint-yellow))'}}></div>
+    <div style={{position:'relative',maxWidth:1280,margin:'0 auto',padding:'0 40px',width:'100%'}}>
+      <div style={{maxWidth:560}}>
+        <div style={{display:'inline-flex',alignItems:'center',gap:8,fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:18}}>
+          <span style={{width:8,height:8,borderRadius:'50%',background:'var(--paint-orange)',boxShadow:'0 0 10px var(--paint-orange)'}}></span>The FunX Universe
+        </div>
+        <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:80,lineHeight:0.98,letterSpacing:'-1px',margin:'0 0 26px'}}>Every Toy<br/>Has a Story</h1>
+        <p style={{fontSize:18,color:'var(--text-secondary)',lineHeight:1.6,marginBottom:36,maxWidth:440}}>Founded 2026 by a lifelong player, FunX builds RC vehicles, die-cast, and action figures worth taking out of the box — not just displaying.</p>
+        <div style={{display:'flex',gap:14}}>
+          <Button variant="primary" size="lg" onClick={()=>location.href='new.html'}>Shop New Arrivals</Button>
+          <Button variant="secondary" size="lg" onClick={()=>location.href='collectibles.html'}>Explore Collectibles</Button>
+        </div>
+      </div>
+    </div>
+  </section>;
+}
+
+function CategoryNav(){
+  return <section style={{padding:'88px 0'}}>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 40px'}}>
+      <SectionHeading eyebrow="Start Browsing" title="Shop by World"/>
+    </div>
+    <CategoryRail tiles={[
+      {label:'Die-Cast Vehicles',href:'toys-plush.html'},
+      {label:'Action Figures',href:'toys-plush.html'},
+      {label:'Numbered Editions',href:'collectibles.html'},
+      {label:'Current Sale',href:'sale.html'},
+    ]}/>
+  </section>;
+}
+
+function FeaturedGrid(){
+  const trending = window.PRODUCTS.filter(p=>p.isTrending).slice(0,6);
+  return <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px'}}>
+    <SectionHeading eyebrow="Most Collected" title="Trending Now" cta="View all" ctaHref="trending.html"/>
+    <ProductGrid products={trending} cols={3}/>
+  </section>;
+}
+
+function StoryBand(){
+  const { Card } = window.FunXDesignSystem_bbd8ae;
+  return <section style={{background:'var(--surface-sunken)',padding:'96px 0'}}>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'center'}}>
+      <div style={{borderRadius:24,overflow:'hidden',height:440}}><image-slot id="story-home" placeholder="Photo — founder Muhammad bin Zameer with the FunX catalog"></image-slot></div>
+      <div>
+        <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:16}}>Founded 2026</div>
+        <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,lineHeight:1.05,margin:'0 0 22px'}}>Built by Someone Who Never Stopped Playing</h2>
+        <p style={{fontSize:17,lineHeight:1.7,color:'var(--text-secondary)',marginBottom:28,maxWidth:460}}>Muhammad bin Zameer started FunX at 25, after two earlier startups, because the one shelf that never got boring was the one lined with toys. FunX is that shelf, built into a store — with a mission to reach players everywhere.</p>
+        <Card variant="dark" padding="lg" style={{maxWidth:460}}>
+          <p style={{fontStyle:'italic',fontSize:15,margin:'0 0 10px',color:'var(--text-primary)'}}>"I stopped trying to build what a company was supposed to look like, and started building the store I actually wanted."</p>
+          <div style={{fontSize:13,color:'var(--text-muted)'}}>— Muhammad bin Zameer, Founder</div>
+        </Card>
+      </div>
+    </div>
+  </section>;
+}
+
+function NewStrip(){
+  const items = window.PRODUCTS.filter(p=>p.isNew).slice(0,4);
+  return <section style={{maxWidth:1280,margin:'0 auto',padding:'96px 40px'}}>
+    <SectionHeading eyebrow="Just Landed" title="New Arrivals" cta="View all" ctaHref="new.html"/>
+    <ProductGrid products={items} cols={4}/>
+  </section>;
+}
+
+function Newsletter(){
+  const [email,setEmail] = React.useState('');
+  const [subscribed,setSubscribed] = React.useState(false);
+  return <section style={{maxWidth:1280,margin:'0 auto 96px',padding:'0 40px'}}>
+    <div style={{borderRadius:'var(--radius-2xl)',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',padding:'64px',textAlign:'center'}}>
+      <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:36,margin:'0 0 12px'}}>Find Magical Deals, First</h2>
+      <p style={{color:'var(--text-muted)',maxWidth:440,margin:'0 auto 28px'}}>Sign up for early access to numbered drops and collector-only offers.</p>
+      {subscribed ? <div style={{fontSize:14,color:'var(--color-success)'}}>✓ You're on the list.</div> : <form onSubmit={(e)=>{e.preventDefault(); if(email.trim()) setSubscribed(true);}} style={{display:'flex',gap:10,justifyContent:'center',maxWidth:420,margin:'0 auto'}}>
+        <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required placeholder="you@example.com" style={{flex:1,height:48,borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-card)',color:'var(--text-primary)',padding:'0 16px',fontSize:14,outline:'none'}}/>
+        <button style={{height:48,padding:'0 24px',borderRadius:'var(--radius-md)',border:'none',background:'var(--color-primary)',color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer'}}>Sign Up</button>
+      </form>}
+    </div>
+  </section>;
+}
+
+function App(){
+  return <div>
+    <Header active="Home"/>
+    <Hero/>
+    <CategoryNav/>
+    <FeaturedGrid/>
+    <StoryBand/>
+    <NewStrip/>
+    <PromoBanner title="Earn Toward Your Next Numbered Run" sub="Join the Collector's Circle and earn credit on every order." cta="Learn More"/>
+    <Newsletter/>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

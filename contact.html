@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Contact Us — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Input, Select, Button, Card, Breadcrumb, Toast } = window.FunXDesignSystem_bbd8ae;
+
+function ContactInfoRow({ icon, label, value, href }){
+  return <a href={href} style={{display:'flex',gap:14,alignItems:'flex-start',textDecoration:'none',color:'inherit',marginBottom:22}}>
+    <span style={{width:40,height:40,borderRadius:'50%',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--accent-cyan)',flexShrink:0}}>{icon}</span>
+    <span>
+      <div style={{fontSize:12,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>{label}</div>
+      <div style={{fontSize:15,color:'var(--text-primary)',fontWeight:600}}>{value}</div>
+    </span>
+  </a>;
+}
+
+function App(){
+  const [sent,setSent] = React.useState(false);
+  const [form,setForm] = React.useState({name:'',email:'',subject:'General Inquiry',message:''});
+  const update = (k) => (e) => setForm({...form,[k]:e.target.value});
+  const submit = (e) => {
+    e.preventDefault();
+    const body = `Name: ${form.name}\nEmail: ${form.email}\nSubject: ${form.subject}\n\n${form.message}`;
+    window.location.href = `mailto:thefunxuniverse@gmail.com?subject=${encodeURIComponent('[FunX Contact] '+form.subject)}&body=${encodeURIComponent(body)}`;
+    setSent(true);
+  };
+
+  return <div>
+    <Header active=""/>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Contact Us">
+      <Breadcrumb items={['Shop','Contact Us']}/>
+    </div>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'24px 40px 0',textAlign:'center'}}>
+      <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:14}}>We're Here to Help</div>
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:56,margin:'0 0 14px'}}>Contact Us</h1>
+      <p style={{color:'var(--text-secondary)',fontSize:17,maxWidth:520,margin:'0 auto'}}>Questions about an order or a product? You're talking directly to the team building FunX — we reply within one business day.</p>
+    </div>
+
+    <section style={{maxWidth:1280,margin:'0 auto',padding:'72px 40px 96px',display:'grid',gridTemplateColumns:'1fr 1.3fr',gap:64}}>
+      <div>
+        <ContactInfoRow icon={window.ICONS.mail} label="Email" value="thefunxuniverse@gmail.com" href="mailto:thefunxuniverse@gmail.com"/>
+        <ContactInfoRow icon={window.ICONS.phone} label="Phone" value="+92 327 5347075" href="tel:+923275347075"/>
+        <ContactInfoRow icon={window.ICONS.pin} label="Showroom" value="Jhelum, Punjab, Pakistan" href="https://maps.google.com/?q=Jhelum+Punjab+Pakistan"/>
+        <div style={{marginTop:8,marginBottom:28}}>
+          <div style={{fontSize:12,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>Support Hours</div>
+          <div style={{fontSize:14,color:'var(--text-secondary)',lineHeight:1.8}}>Mon–Sat, 10am–6pm PKT</div>
+        </div>
+        <div style={{display:'flex',gap:12}}>
+          {window.SOCIAL_LINKS.map(s => <a key={s.label} href={s.href} target="_blank" rel="noopener" aria-label={s.label} style={{width:40,height:40,borderRadius:'50%',border:'1px solid var(--border-hairline)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text-secondary)',textDecoration:'none'}}>{window.ICONS[s.icon]}</a>)}
+        </div>
+        <div style={{marginTop:40,borderRadius:'var(--radius-xl)',overflow:'hidden',height:220,border:'1px solid var(--border-hairline-soft)'}}>
+          <image-slot id="contact-map" placeholder="Map — Jhelum, Punjab, Pakistan"></image-slot>
+        </div>
+      </div>
+
+      <Card variant="dark" padding="lg">
+        {sent ? <div style={{padding:'40px 8px',textAlign:'center'}}>
+          <div style={{fontSize:40,marginBottom:16,color:'var(--color-success)'}}>✓</div>
+          <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:28,margin:'0 0 10px'}}>Message Sent</h3>
+          <p style={{color:'var(--text-muted)',fontSize:14}}>Your email app should have opened, addressed to thefunxuniverse@gmail.com. We reply within one business day.</p>
+        </div> : <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+            <Input label="Full name" placeholder="Jordan Rivera" value={form.name} onChange={update('name')} required/>
+            <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
+          </div>
+          <Select label="Subject" value={form.subject} onChange={update('subject')} options={['General Inquiry','Order Support','Product Question','Press','Wholesale']}/>
+          <label style={{display:'flex',flexDirection:'column',gap:6,fontFamily:'var(--font-body)'}}>
+            <span style={{fontSize:'var(--caption-size)',fontWeight:600,color:'var(--text-secondary)'}}>Message</span>
+            <textarea required value={form.message} onChange={update('message')} rows={6} placeholder="Tell us how we can help" style={{borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',color:'var(--text-primary)',padding:'12px 16px',fontSize:'var(--body-md-size)',outline:'none',resize:'vertical',fontFamily:'var(--font-body)'}}/>
+          </label>
+          <Button variant="primary" size="lg">Send Message</Button>
+        </form>}
+      </Card>
+    </section>
+
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

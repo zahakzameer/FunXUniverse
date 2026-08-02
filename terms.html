@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Terms of Service — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Breadcrumb } = window.FunXDesignSystem_bbd8ae;
+const SECTIONS = [
+  ['1. Orders & Numbered Editions','Placing an order for a numbered edition reserves your place in that run at the time of purchase, not the time of casting. Runs are fixed at the size disclosed on the product page and are never reopened.'],
+  ['2. Pricing & Availability','Prices are shown in USD and may change without notice for items not yet purchased. Numbered editions in production may show an estimated ship window rather than immediate availability.'],
+  ['3. Shipping & Risk of Loss','Title and risk of loss pass to you upon delivery to the carrier. See our Shipping page for methods, timing, and packaging standards.'],
+  ['4. Returns & Cancellations','Returns are accepted within 30 days of delivery per our Returns policy. Cast-to-order numbered editions may not be cancelled once casting has begun.'],
+  ['5. Authentication','Certificates issued with numbered editions are for provenance verification only and do not constitute a warranty beyond our standard return policy.'],
+  ['6. Account Use','You are responsible for maintaining the confidentiality of your account credentials and for all activity under your account.'],
+  ['7. Limitation of Liability','FunX is not liable for indirect or consequential damages arising from use of the site or products, to the maximum extent permitted by law.'],
+  ['8. Changes to These Terms','We may update these terms periodically; continued use of the site after changes constitutes acceptance of the revised terms.'],
+];
+
+function App(){
+  return <div>
+    <Header active=""/>
+    <div style={{maxWidth:760,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Terms of Service"><Breadcrumb items={['Legal','Terms of Service']}/></div>
+    <section style={{maxWidth:760,margin:'0 auto',padding:'24px 40px 96px'}}>
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,margin:'0 0 8px'}}>Terms of Service</h1>
+      <p style={{fontSize:13,color:'var(--text-muted)',marginBottom:40}}>Last updated July 1, 2026</p>
+      {SECTIONS.map(([t,d]) => <div key={t} style={{marginBottom:28}}>
+        <h3 style={{fontSize:17,fontWeight:600,marginBottom:10}}>{t}</h3>
+        <p style={{fontSize:15,color:'var(--text-secondary)',lineHeight:1.7,margin:0}}>{d}</p>
+      </div>)}
+    </section>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Returns — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Accordion, Breadcrumb, Button, Input } = window.FunXDesignSystem_bbd8ae;
+
+const STEPS = [
+  ['1','Start your return','Enter your order number and email below within 30 days of delivery.'],
+  ['2','Print your label','We email a prepaid return label — no box hunting required.'],
+  ['3','Pack it up','Original foam packaging works best; any sturdy box is fine otherwise.'],
+  ['4','Refund issued','Once we receive and inspect the piece, refunds post within 3–5 business days.'],
+];
+
+function App(){
+  const [order,setOrder] = React.useState('');
+  const [email,setEmail] = React.useState('');
+  const [started,setStarted] = React.useState(false);
+
+  return <div>
+    <Header active=""/>
+    <div style={{maxWidth:900,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Returns">
+      <Breadcrumb items={['Support','Returns']}/>
+    </div>
+    <section style={{maxWidth:900,margin:'0 auto',padding:'24px 40px 0',textAlign:'center'}}>
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:52,margin:'0 0 14px'}}>Returns</h1>
+      <p style={{color:'var(--text-secondary)',fontSize:16,maxWidth:520,margin:'0 auto'}}>30-day returns on every piece, unworn and in original packaging. Numbered editions are returnable — the number stays retired either way.</p>
+    </section>
+
+    <section style={{maxWidth:900,margin:'0 auto',padding:'64px 40px'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:24}}>
+        {STEPS.map(([n,t,d]) => <div key={n}>
+          <div style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:32,color:'var(--paint-orange)',marginBottom:12}}>{n}</div>
+          <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>{t}</div>
+          <div style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.6}}>{d}</div>
+        </div>)}
+      </div>
+    </section>
+
+    <section style={{maxWidth:520,margin:'0 auto',padding:'0 40px 96px'}}>
+      <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:32,background:'var(--surface-panel)'}}>
+        {started ? <div style={{textAlign:'center',padding:'16px 0'}}>
+          <div style={{fontSize:36,marginBottom:14,color:'var(--color-success)'}}>✓</div>
+          <div style={{fontSize:18,fontWeight:600,marginBottom:8}}>Return started</div>
+          <p style={{fontSize:13,color:'var(--text-muted)'}}>Check {email || 'your inbox'} for your prepaid label and next steps.</p>
+        </div> : <form onSubmit={(e)=>{e.preventDefault();setStarted(true);}} style={{display:'flex',flexDirection:'column',gap:20}}>
+          <div style={{fontSize:16,fontWeight:600}}>Start a Return</div>
+          <Input label="Order number" placeholder="FX-10482" value={order} onChange={e=>setOrder(e.target.value)} required/>
+          <Input label="Email" type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} required/>
+          <Button variant="primary" size="lg">Continue</Button>
+        </form>}
+      </div>
+    </section>
+
+    <section style={{maxWidth:760,margin:'0 auto',padding:'0 40px 96px'}}>
+      <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:28,marginBottom:20}}>Returns FAQ</h2>
+      <Accordion items={[
+        {title:'Can I return a numbered edition?',content:'Yes — numbered editions are returnable within 30 days like any other piece. The run number is retired permanently and is not reissued to another buyer.'},
+        {title:'Do I have to pay for return shipping?',content:'No, we email a prepaid label once your return is started.'},
+        {title:'Can I exchange instead of refund?',content:"Yes, choose \"Exchange\" when starting your return and we'll hold your replacement piece while the original is in transit."},
+        {title:'What condition does the piece need to be in?',content:'Unworn/undisplayed-damage and in original packaging. Certificates of provenance should be included for numbered editions.'},
+      ]}/>
+    </section>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

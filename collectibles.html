@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Collectibles — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Breadcrumb, Select } = window.FunXDesignSystem_bbd8ae;
+
+function PageHeader(){
+  return <div style={{maxWidth:1280,margin:'0 auto',padding:'56px 40px 40px',textAlign:'center'}} data-screen-label="Collectibles">
+    <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:56,margin:'0 0 14px'}}>Collectibles</h1>
+    <p style={{color:'var(--text-secondary)',fontSize:17,maxWidth:560,margin:'0 auto'}}>Numbered runs, anniversary castings, and display-case pieces — each shipped with a certificate of provenance.</p>
+  </div>;
+}
+
+function App(){
+  const [sort,setSort] = React.useState('Featured');
+  const [visible,setVisible] = React.useState(12);
+  let list = window.PRODUCTS.filter(p=>p.isCollectible);
+  if(sort==='Price: Low to High') list = [...list].sort((a,b)=>(a.salePrice||a.price)-(b.salePrice||b.price));
+  if(sort==='Price: High to Low') list = [...list].sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
+
+  const groups = [
+    {title:'Edition Type', options:['Numbered','Anniversary','Founders Set','Display Case']},
+    {title:'Universe', options:['Skyline Riders','Ironclad Legion','Aerodrome','Voltage Corps']},
+    {title:'Price', options:['Under PKR 150','PKR 150–250','PKR 250+']},
+  ];
+
+  return <div>
+    <Header active="Collectibles"/>
+    <PageHeader/>
+    <CategoryRail tiles={[
+      {label:'Numbered Editions',href:'#grid'},
+      {label:'Anniversary Castings',href:'#grid'},
+      {label:'Founders Sets',href:'#grid'},
+      {label:'Display Cases',href:'#grid'},
+    ]}/>
+    <section id="grid" style={{maxWidth:1280,margin:'0 auto',padding:'80px 40px 0',display:'flex',gap:48}}>
+      <FilterSidebar groups={groups}/>
+      <div style={{flex:1}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28,flexWrap:'wrap',gap:16}}>
+          <div><Breadcrumb items={['Shop','Collectibles']}/><div style={{fontSize:13,color:'var(--text-muted)',marginTop:8}}>{list.length} products</div></div>
+          <div style={{width:220}}><Select value={sort} onChange={e=>setSort(e.target.value)} options={['Featured','Price: Low to High','Price: High to Low']}/></div>
+        </div>
+        <ProductGrid products={list.slice(0,visible)} cols={4}/>
+        {visible < list.length && <div style={{textAlign:'center',marginTop:48}}>
+          <button onClick={()=>setVisible(v=>v+12)} style={{height:52,padding:'0 40px',borderRadius:'var(--radius-md)',border:'none',background:'var(--color-primary)',color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer'}}>Load More</button>
+        </div>}
+      </div>
+    </section>
+    <div style={{height:96}}></div>
+    <PromoBanner title="Every Piece, Numbered & Certified" sub="Provenance paperwork ships in the box — no exceptions." cta="Read the Story" ctaHref="provenance.html"/>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Toys & Plush — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Breadcrumb, Select } = window.FunXDesignSystem_bbd8ae;
+
+function PageHeader(){
+  return <div style={{maxWidth:1280,margin:'0 auto',padding:'56px 40px 40px',textAlign:'center'}} data-screen-label="Toys & Plush">
+    <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:56,margin:'0 0 14px'}}>Toys & Plush</h1>
+    <p style={{color:'var(--text-secondary)',fontSize:17}}>Die-cast vehicles, RC racers, and action figures, cast from the tooling that started it all.</p>
+  </div>;
+}
+
+function Toolbar({ count, sort, setSort }){
+  return <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28,flexWrap:'wrap',gap:16}}>
+    <div>
+      <Breadcrumb items={['Shop','Toys & Plush']}/>
+      <div style={{fontSize:13,color:'var(--text-muted)',marginTop:8}}>{count} products</div>
+    </div>
+    <div style={{width:220}}><Select value={sort} onChange={e=>setSort(e.target.value)} options={['Featured','Best Selling','Price: Low to High','Price: High to Low','Newest']}/></div>
+  </div>;
+}
+
+function App(){
+  const [sort,setSort] = React.useState('Featured');
+  const [visible,setVisible] = React.useState(12);
+  let list = window.PRODUCTS.filter(p=>p.type==='Die-Cast'||p.type==='Action Figure'||p.type==='RC Vehicle');
+  if(sort==='Price: Low to High') list = [...list].sort((a,b)=>(a.salePrice||a.price)-(b.salePrice||b.price));
+  if(sort==='Price: High to Low') list = [...list].sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
+  if(sort==='Best Selling') list = [...list].sort((a,b)=>b.reviews-a.reviews);
+  if(sort==='Newest') list = [...list].sort((a,b)=>(b.isNew?1:0)-(a.isNew?1:0));
+
+  const groups = [
+    {title:'Category', options:['Die-Cast Vehicles','Action Figures','RC Vehicles','Accessories']},
+    {title:'Universe', options:['Skyline Riders','Ironclad Legion','Aerodrome','Rangehead','Voltage Corps']},
+    {title:'Age', options:['All Ages','8+','13+']},
+    {title:'Price', options:['Under PKR 100','PKR 100–200','PKR 200–300','PKR 300+']},
+    {title:'Availability', options:['In Stock','Numbered Edition','On Sale']},
+  ];
+
+  return <div>
+    <Header active="Toys & Plush"/>
+    <PageHeader/>
+    <CategoryRail tiles={[
+      {label:'Die-Cast Vehicles',href:'#grid'},
+      {label:'Action Figures',href:'#grid'},
+      {label:'Numbered Sets',href:'collectibles.html'},
+      {label:'New This Week',href:'new.html'},
+    ]}/>
+    <section id="grid" style={{maxWidth:1280,margin:'0 auto',padding:'80px 40px 0',display:'flex',gap:48}}>
+      <FilterSidebar groups={groups}/>
+      <div style={{flex:1}}>
+        <Toolbar count={list.length} sort={sort} setSort={setSort}/>
+        <ProductGrid products={list.slice(0,visible)} cols={4}/>
+        {visible < list.length && <div style={{textAlign:'center',marginTop:48}}>
+          <button onClick={()=>setVisible(v=>v+12)} style={{height:52,padding:'0 40px',borderRadius:'var(--radius-md)',border:'none',background:'var(--color-primary)',color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer'}}>Load More</button>
+        </div>}
+      </div>
+    </section>
+    <section style={{maxWidth:960,margin:'0 auto',padding:'96px 40px 0',color:'var(--text-muted)',fontSize:14,lineHeight:1.7}}>
+      <h3 style={{color:'var(--text-secondary)',fontSize:16,fontWeight:600,marginBottom:12}}>FunX Toys & Plush</h3>
+      <p>Every FunX toy is cast from the original vintage tooling and finished by hand — from Skyline Riders die-cast coupes to Ironclad Legion action figures. Each numbered piece ships with a certificate of provenance. Browse Aerodrome, Rangehead, and Voltage Corps, or check today's <a href="new.html">new arrivals</a> and <a href="sale.html">current sale</a>.</p>
+    </section>
+    <div style={{height:96}}></div>
+    <PromoBanner title="Earn Toward Your Next Numbered Run" sub="Join the Collector's Circle and earn credit on every order." cta="Learn More"/>
+    <Footer/>
+  </div>;
+}
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body></html>
