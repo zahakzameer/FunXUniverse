@@ -984,7 +984,7 @@ function ShopFooter() {
       margin: '0 auto'
     }
   }, React.createElement('div', null, React.createElement('img', {
-    src: '../../assets/logo-mark.svg',
+    src: 'assets/logo-mark.svg',
     style: {
       height: '40px',
       marginBottom: '12px'
@@ -1045,7 +1045,7 @@ function ShopHeader({
       fontFamily: 'var(--font-body)'
     }
   }, React.createElement('img', {
-    src: '../../assets/logo.svg',
+    src: 'assets/logo.svg',
     style: {
       height: '34px'
     }
