@@ -49,22 +49,22 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
     if (media[active] === '__video__') { v.currentTime = 0; v.play().catch(()=>{}); } else { v.pause(); }
   },[active]);
   const price = p.salePrice || p.price;
-  return <section style={{background:'linear-gradient(180deg,#F7F7F5,#EEEEEA)',padding:'72px 40px 56px',textAlign:'center'}} data-screen-label="Product Detail — Hero">
+  return <section style={{background:'linear-gradient(180deg,var(--surface-canvas),var(--surface-sunken))',padding:'72px 40px 56px',textAlign:'center'}} data-screen-label="Product Detail — Hero">
     <div style={{maxWidth:900,margin:'0 auto'}}>
-      <div style={{fontSize:13,color:'#6b6b70',letterSpacing:1,textTransform:'uppercase',marginBottom:14}}>{p.line}</div>
-      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:'clamp(38px,5.5vw,64px)',margin:'0 0 18px',lineHeight:1.02,letterSpacing:'-1.5px',color:'#141416'}}>{p.name}</h1>
-      <p style={{fontSize:18,color:'#4a4a4e',maxWidth:560,margin:'0 auto 28px',lineHeight:1.6}}>{p.description}</p>
+      <div style={{fontSize:13,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:14}}>{p.line}</div>
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:'clamp(38px,5.5vw,64px)',margin:'0 0 18px',lineHeight:1.02,letterSpacing:'-1.5px',color:'var(--text-primary)'}}>{p.name}</h1>
+      <p style={{fontSize:18,color:'var(--text-secondary)',maxWidth:560,margin:'0 auto 28px',lineHeight:1.6}}>{p.description}</p>
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:8}}>
-        <Stars rating={p.rating}/><span style={{fontSize:13,color:'#6b6b70'}}>{p.rating} · {p.reviews} reviews</span>
+        <Stars rating={p.rating}/><span style={{fontSize:13,color:'var(--text-muted)'}}>{p.rating} · {p.reviews} reviews</span>
       </div>
       <div style={{display:'flex',alignItems:'baseline',justifyContent:'center',gap:12,marginBottom:36}}>
         {p.salePrice ? <>
           <span style={{fontSize:26,fontWeight:700,color:'var(--paint-orange)'}}>{window.fmtPrice(p.salePrice)}</span>
-          <span style={{fontSize:16,color:'#8a8a8e',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
-        </> : <span style={{fontSize:26,fontWeight:700,color:'#141416'}}>{window.fmtPrice(p.price)}</span>}
+          <span style={{fontSize:16,color:'var(--text-muted)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
+        </> : <span style={{fontSize:26,fontWeight:700,color:'var(--text-primary)'}}>{window.fmtPrice(p.price)}</span>}
       </div>
     </div>
-    <div style={{maxWidth:640,margin:'0 auto',aspectRatio:'1',borderRadius:32,overflow:'hidden',position:'relative',background:'#fff',boxShadow:'0 40px 80px -20px rgba(0,0,0,0.15)',marginBottom:28}}>
+    <div style={{maxWidth:640,margin:'0 auto',aspectRatio:'1',borderRadius:32,overflow:'hidden',position:'relative',background:'var(--surface-gallery-card)',boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5), var(--glow-gold)',marginBottom:28}}>
       {p.badge && <span style={{position:'absolute',top:20,right:20,zIndex:3,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 10px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
       <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'56px'}}>
         {media[active] === '__video__'
@@ -77,8 +77,8 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
       </div>}
     </div>
     <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:'center',marginBottom:36}}>
-      <span style={{fontSize:13,color:'#6b6b70',marginRight:4}}>Color</span>
-      {colors.map((c,i) => <span key={c} onClick={()=>setActive(i % media.length)} style={{width:26,height:26,borderRadius:'50%',background:c,border: (i % media.length)===active ? '2px solid #141416' : '2px solid transparent',cursor:'pointer',boxShadow:'0 0 0 1px #ffffff44 inset'}}></span>)}
+      <span style={{fontSize:13,color:'var(--text-muted)',marginRight:4}}>Color</span>
+      {colors.map((c,i) => <span key={c} onClick={()=>setActive(i % media.length)} style={{width:26,height:26,borderRadius:'50%',background:c,border: (i % media.length)===active ? '2px solid var(--text-primary)' : '2px solid transparent',cursor:'pointer',boxShadow:'0 0 0 1px #ffffff44 inset'}}></span>)}
     </div>
     <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',maxWidth:480,margin:'0 auto'}}>
       <QtyStepper qty={qty} setQty={setQty} max={Math.max(1,p.stock)}/>
@@ -91,10 +91,10 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
 
 function StickyBar({ p, onAdd, added, visible }){
   const price = p.salePrice || p.price;
-  return <div style={{position:'sticky',top:80,zIndex:20,background:'rgba(247,247,245,0.94)',backdropFilter:'blur(10px)',borderBottom:'1px solid #00000012',transform: visible ? 'translateY(0)' : 'translateY(-100%)',transition:'transform .3s ease',padding:'14px 40px',display:'flex',alignItems:'center',justifyContent:'space-between',maxWidth:1280,margin:'0 auto'}}>
+  return <div style={{position:'sticky',top:80,zIndex:20,background:'rgba(11,11,13,0.92)',backdropFilter:'blur(10px)',borderBottom:'1px solid var(--border-hairline-soft)',transform: visible ? 'translateY(0)' : 'translateY(-100%)',transition:'transform .3s ease',padding:'14px 40px',display:'flex',alignItems:'center',justifyContent:'space-between',maxWidth:1280,margin:'0 auto'}}>
     <div style={{display:'flex',alignItems:'center',gap:14}}>
-      <span style={{fontSize:15,fontWeight:700,color:'#141416'}}>{p.name}</span>
-      <span style={{fontSize:14,color:'#6b6b70'}}>{window.fmtPrice(price)}</span>
+      <span style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{p.name}</span>
+      <span style={{fontSize:14,color:'var(--text-muted)'}}>{window.fmtPrice(price)}</span>
     </div>
     <Button variant="primary" size="md" onClick={onAdd} disabled={p.stock<=0}>{added ? 'Added ✓' : 'Add to Cart'}</Button>
   </div>;
@@ -134,7 +134,7 @@ function App(){
   return <div>
     <Header active=""/>
     <StickyBar p={p} onAdd={addToCart} added={added} visible={stickyVisible}/>
-    <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 40px 0',background:'#F7F7F5'}}>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 40px 0',background:'var(--surface-canvas)'}}>
       <Breadcrumb items={['Shop','Toys & Plush',p.name]}/>
     </div>
 
