@@ -3,56 +3,28 @@
 <meta charset="utf-8">
 <title>Product — The FunX Universe</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="tokens/theme-light.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="_ds_bundle.js"></script>
 <script src="image-slot.js"></script>
+<link rel="stylesheet" href="motion.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel" src="common.jsx"></script>
 <script type="text/babel">
-const { Breadcrumb, Button, Accordion, Card, Tag } = window.FunXDesignSystem_bbd8ae;
-
-function Gallery({ p }){
-  const hasReal = p.images && p.images[0] && p.images[0].startsWith('assets/');
-  const media = [...p.images, '__video__'];
-  const [active,setActive] = React.useState(0);
-  const videoRef = React.useRef(null);
-  React.useEffect(()=>{
-    const v = videoRef.current;
-    if (!v) return;
-    if (media[active] === '__video__') { v.currentTime = 0; v.play().catch(()=>{}); } else { v.pause(); }
-  },[active]);
-
-  return <div>
-    <div style={{aspectRatio:'1',borderRadius:'var(--radius-xl)',overflow:'hidden',position:'relative',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)',marginBottom:16}}>
-      {media[active] === '__video__'
-        ? <video ref={videoRef} muted loop playsInline controls style={{width:'100%',height:'100%',objectFit:'cover'}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
-        : (hasReal ? <img src={p.images[active]} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
-      }
-      {p.badge && <span style={{position:'absolute',top:16,left:16,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:11,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'6px 12px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
-    </div>
-    <div style={{display:'grid',gridTemplateColumns:`repeat(${media.length},1fr)`,gap:10}}>
-      {media.map((m,i) => <div key={i} onClick={()=>setActive(i)} style={{aspectRatio:'1',borderRadius:'var(--radius-md)',overflow:'hidden',cursor:'pointer',border: active===i ? '2px solid var(--paint-orange)' : '1px solid var(--border-hairline)',position:'relative',background:'var(--surface-gallery)'}}>
-        {m === '__video__'
-          ? <><video muted playsInline style={{width:'100%',height:'100%',objectFit:'cover'}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
-              <span style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(11,11,13,0.35)'}}><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span></>
-          : (hasReal ? <img src={m} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-thumb-${p.id}-${i}`} style={{width:'100%',height:'100%'}} placeholder="Photo"></image-slot>)
-        }
-      </div>)}
-    </div>
-  </div>;
-}
+const { Breadcrumb, Button, Accordion } = window.FunXDesignSystem_bbd8ae;
 
 function Stars({ rating }){
   return <div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i => <span key={i}>{window.ICONS.star(i<=Math.round(rating))}</span>)}</div>;
 }
 
 function QtyStepper({ qty, setQty, max }){
-  return <div style={{display:'flex',alignItems:'center',border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-sm)',width:120,height:44}}>
+  return <div style={{display:'flex',alignItems:'center',border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-sm)',width:120,height:48}}>
     <button onClick={()=>setQty(Math.max(1,qty-1))} style={{flex:1,height:'100%',background:'none',border:'none',color:'var(--text-secondary)',cursor:'pointer',fontSize:18}}>−</button>
     <span style={{flex:1,textAlign:'center',fontSize:15}}>{qty}</span>
     <button onClick={()=>setQty(Math.min(max,qty+1))} style={{flex:1,height:'100%',background:'none',border:'none',color:'var(--text-secondary)',cursor:'pointer',fontSize:18}}>+</button>
@@ -60,8 +32,84 @@ function QtyStepper({ qty, setQty, max }){
 }
 
 function SpecRow({ label, value }){
-  return <div style={{display:'flex',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--border-hairline-soft)',fontSize:14}}>
+  return <div style={{display:'flex',justifyContent:'space-between',padding:'16px 0',borderBottom:'1px solid var(--border-hairline-soft)',fontSize:15}}>
     <span style={{color:'var(--text-muted)'}}>{label}</span><span style={{color:'var(--text-primary)',fontWeight:600}}>{value}</span>
+  </div>;
+}
+
+function Hero({ p, qty, setQty, added, onAdd, onBuy }){
+  const hasReal = p.images && p.images[0];
+  const media = p.hasVideo ? [...p.images, '__video__'] : p.images;
+  const [active,setActive] = React.useState(0);
+  const videoRef = React.useRef(null);
+  const colors = ['#F16A3E','#141416','#3DDBFF','#FFC93C'];
+  React.useEffect(()=>{
+    const v = videoRef.current;
+    if (!v) return;
+    if (media[active] === '__video__') { v.currentTime = 0; v.play().catch(()=>{}); } else { v.pause(); }
+  },[active]);
+  const price = p.salePrice || p.price;
+  return <section style={{background:'linear-gradient(180deg,#F7F7F5,#EEEEEA)',padding:'72px 40px 56px',textAlign:'center'}} data-screen-label="Product Detail — Hero">
+    <div style={{maxWidth:900,margin:'0 auto'}}>
+      <div style={{fontSize:13,color:'#6b6b70',letterSpacing:1,textTransform:'uppercase',marginBottom:14}}>{p.line}</div>
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:'clamp(38px,5.5vw,64px)',margin:'0 0 18px',lineHeight:1.02,letterSpacing:'-1.5px',color:'#141416'}}>{p.name}</h1>
+      <p style={{fontSize:18,color:'#4a4a4e',maxWidth:560,margin:'0 auto 28px',lineHeight:1.6}}>{p.description}</p>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:8}}>
+        <Stars rating={p.rating}/><span style={{fontSize:13,color:'#6b6b70'}}>{p.rating} · {p.reviews} reviews</span>
+      </div>
+      <div style={{display:'flex',alignItems:'baseline',justifyContent:'center',gap:12,marginBottom:36}}>
+        {p.salePrice ? <>
+          <span style={{fontSize:26,fontWeight:700,color:'var(--paint-orange)'}}>{window.fmtPrice(p.salePrice)}</span>
+          <span style={{fontSize:16,color:'#8a8a8e',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
+        </> : <span style={{fontSize:26,fontWeight:700,color:'#141416'}}>{window.fmtPrice(p.price)}</span>}
+      </div>
+    </div>
+    <div style={{maxWidth:640,margin:'0 auto',aspectRatio:'1',borderRadius:32,overflow:'hidden',position:'relative',background:'#fff',boxShadow:'0 40px 80px -20px rgba(0,0,0,0.15)',marginBottom:28}}>
+      {p.badge && <span style={{position:'absolute',top:20,right:20,zIndex:3,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 10px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
+      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'56px'}}>
+        {media[active] === '__video__'
+          ? <video ref={videoRef} muted loop playsInline controls style={{maxWidth:'100%',maxHeight:'100%',borderRadius:16}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
+          : (hasReal ? <img src={p.images[active]} style={{maxWidth:'100%',maxHeight:'100%',objectFit:'contain',filter:'drop-shadow(0 30px 40px rgba(0,0,0,0.18))'}}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
+        }
+      </div>
+      {media.length > 1 && <div style={{position:'absolute',bottom:20,left:0,right:0,display:'flex',justifyContent:'center',gap:7}}>
+        {media.map((m,i) => <span key={i} onClick={()=>setActive(i)} style={{width:7,height:7,borderRadius:'50%',cursor:'pointer',background: i===active ? '#141416' : '#14141633'}}></span>)}
+      </div>}
+    </div>
+    <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:'center',marginBottom:36}}>
+      <span style={{fontSize:13,color:'#6b6b70',marginRight:4}}>Color</span>
+      {colors.map((c,i) => <span key={c} onClick={()=>setActive(i % media.length)} style={{width:26,height:26,borderRadius:'50%',background:c,border: (i % media.length)===active ? '2px solid #141416' : '2px solid transparent',cursor:'pointer',boxShadow:'0 0 0 1px #ffffff44 inset'}}></span>)}
+    </div>
+    <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',maxWidth:480,margin:'0 auto'}}>
+      <QtyStepper qty={qty} setQty={setQty} max={Math.max(1,p.stock)}/>
+      <Button variant="primary" size="lg" onClick={onAdd} disabled={p.stock<=0} style={{minWidth:200}}>{p.stock<=0 ? 'Out of Stock' : added ? 'Added ✓' : 'Add to Cart'}</Button>
+    </div>
+    <div style={{marginTop:14}}><Button variant="secondary" size="md" onClick={onBuy}>Buy Now</Button></div>
+    <StockLabel stock={p.stock}/>
+  </section>;
+}
+
+function StickyBar({ p, onAdd, added, visible }){
+  const price = p.salePrice || p.price;
+  return <div style={{position:'sticky',top:80,zIndex:20,background:'rgba(247,247,245,0.94)',backdropFilter:'blur(10px)',borderBottom:'1px solid #00000012',transform: visible ? 'translateY(0)' : 'translateY(-100%)',transition:'transform .3s ease',padding:'14px 40px',display:'flex',alignItems:'center',justifyContent:'space-between',maxWidth:1280,margin:'0 auto'}}>
+    <div style={{display:'flex',alignItems:'center',gap:14}}>
+      <span style={{fontSize:15,fontWeight:700,color:'#141416'}}>{p.name}</span>
+      <span style={{fontSize:14,color:'#6b6b70'}}>{window.fmtPrice(price)}</span>
+    </div>
+    <Button variant="primary" size="md" onClick={onAdd} disabled={p.stock<=0}>{added ? 'Added ✓' : 'Add to Cart'}</Button>
+  </div>;
+}
+
+function FeatureRow({ img, eyebrow, title, text, reverse }){
+  return <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'center',maxWidth:1100,margin:'0 auto',padding:'80px 40px',direction: reverse ? 'rtl' : 'ltr'}}>
+    <div style={{aspectRatio:'4/3',borderRadius:24,overflow:'hidden',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)',direction:'ltr'}}>
+      {img ? <img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-feature-${title}`} style={{width:'100%',height:'100%'}} placeholder={title}></image-slot>}
+    </div>
+    <div style={{direction:'ltr'}}>
+      <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:14}}>{eyebrow}</div>
+      <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:32,margin:'0 0 16px',color:'var(--text-primary)'}}>{title}</h3>
+      <p style={{fontSize:16,color:'var(--text-secondary)',lineHeight:1.7}}>{text}</p>
+    </div>
   </div>;
 }
 
@@ -71,54 +119,41 @@ function App(){
   const p = window.PRODUCTS.find(x=>x.id===id) || window.PRODUCTS[0];
   const [qty,setQty] = React.useState(1);
   const [added,setAdded] = React.useState(false);
-  const price = p.salePrice || p.price;
+  const [stickyVisible,setStickyVisible] = React.useState(false);
   const related = window.PRODUCTS.filter(x => x.id!==p.id && (x.universe===p.universe || x.type===p.type)).slice(0,4);
 
-  const addToCart = () => { setAdded(true); setTimeout(()=>setAdded(false),2200); };
+  React.useEffect(()=>{
+    const onScroll = () => setStickyVisible(window.scrollY > 640);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  },[]);
+
+  const addToCart = () => { window.addToCart(p.id, qty); setAdded(true); setTimeout(()=>setAdded(false),2200); };
+  const buyNow = () => { window.addToCart(p.id, qty); location.href='cart.html'; };
 
   return <div>
     <Header active=""/>
-    <div style={{maxWidth:1280,margin:'0 auto',padding:'32px 40px 0'}} data-screen-label="Product Detail">
+    <StickyBar p={p} onAdd={addToCart} added={added} visible={stickyVisible}/>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 40px 0',background:'#F7F7F5'}}>
       <Breadcrumb items={['Shop','Toys & Plush',p.name]}/>
     </div>
 
-    <section style={{maxWidth:1280,margin:'0 auto',padding:'32px 40px 96px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'start'}}>
-      <Gallery p={p}/>
+    <Hero p={p} qty={qty} setQty={setQty} added={added} onAdd={addToCart} onBuy={buyNow}/>
 
-      <div>
-        <div style={{fontSize:12,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{p.line}</div>
-        <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:38,margin:'0 0 14px',lineHeight:1.1}}>{p.name}</h1>
-        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:20}}>
-          <Stars rating={p.rating}/>
-          <span style={{fontSize:13,color:'var(--text-muted)'}}>{p.rating} · {p.reviews} reviews</span>
-        </div>
-        <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:8}}>
-          {p.salePrice ? <>
-            <span style={{fontSize:32,fontWeight:700,color:'var(--paint-orange)'}}>{window.fmtPrice(p.salePrice)}</span>
-            <span style={{fontSize:18,color:'var(--text-muted-soft)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
-          </> : <span style={{fontSize:32,fontWeight:700}}>{window.fmtPrice(p.price)}</span>}
-        </div>
-        <StockLabel stock={p.stock}/>
-        {p.stock > 5 && <div style={{fontSize:13,color:'var(--color-success)',marginBottom:8}}>In Stock — ready to ship</div>}
-        <p style={{fontSize:15,color:'var(--text-secondary)',lineHeight:1.7,margin:'20px 0 28px'}}>{p.description}</p>
+    <FeatureRow img={p.images && p.images[1]} eyebrow="Built To Play" title={`Why ${p.universe} Fans Love It`} text={`Every FunX ${p.type.toLowerCase()} is engineered for real play, not just a shelf. ${p.name} brings the ${p.universe} universe to life with authentic detailing and durable construction.`}/>
+    <FeatureRow img={p.images && p.images[2]} eyebrow="Details That Matter" title="Crafted For Collectors" text={p.isCollectible ? `This numbered piece is logged from checkout to delivery — a collectible worth protecting and worth playing with.` : `Sample-tested by our team before it ever ships, so what arrives matches what you saw.`} reverse/>
 
-        <div style={{display:'flex',gap:14,marginBottom:28}}>
-          <QtyStepper qty={qty} setQty={setQty} max={Math.max(1,p.stock)}/>
-          <Button variant="primary" size="lg" onClick={addToCart} disabled={p.stock<=0} style={{flex:1}}>{p.stock<=0 ? 'Out of Stock' : added ? 'Added ✓' : 'Add to Cart'}</Button>
-        </div>
-        <Button variant="secondary" size="lg" style={{width:'100%',marginBottom:32}} onClick={()=>location.href='cart.html'}>Buy Now</Button>
-
-        <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:24,marginBottom:32}}>
-          <SpecRow label="Brand" value={p.brand}/>
-          <SpecRow label="Universe" value={p.universe}/>
-          <SpecRow label="Material" value={p.material}/>
-          <SpecRow label="Color" value={p.color}/>
-          <SpecRow label="Electronic" value={p.electronic ? 'Yes' : 'No'}/>
-          <SpecRow label="Recommended Age" value={p.age}/>
-          <SpecRow label="Box Dimensions" value={p.boxDims}/>
-          <SpecRow label="Weight" value={p.weight}/>
-        </div>
-
+    <section style={{maxWidth:760,margin:'0 auto',padding:'0 40px 96px'}}>
+      <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:28,textAlign:'center',marginBottom:32}}>Specifications</h3>
+      <SpecRow label="Brand" value={p.brand}/>
+      <SpecRow label="Universe" value={p.universe}/>
+      <SpecRow label="Material" value={p.material}/>
+      <SpecRow label="Color" value={p.color}/>
+      <SpecRow label="Electronic" value={p.electronic ? 'Yes' : 'No'}/>
+      <SpecRow label="Recommended Age" value={p.age}/>
+      <SpecRow label="Box Dimensions" value={p.boxDims}/>
+      <SpecRow label="Weight" value={p.weight}/>
+      <div style={{marginTop:32}}>
         <Accordion items={[
           {title:'Shipping & Returns',content:'Ships in 2 business days if in stock. 30-day returns on unworn pieces in original packaging — see our Shipping and Returns pages for full details.'},
           {title:'Authentication',content: p.isCollectible ? 'This is a numbered edition \u2014 your order is logged in our system and traceable from checkout to delivery.' : "Every FunX product is sample-tested by our team before it ever goes live on the site."},
@@ -137,4 +172,5 @@ function App(){
 }
 ReactDOM.render(<App/>, document.getElementById('root'));
 </script>
+<script src="motion.js"></script>
 </body></html>

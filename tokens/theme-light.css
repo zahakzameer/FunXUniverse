@@ -1,0 +1,16 @@
+html[data-theme="light"]{
+--surface-canvas:#FBFBFA;
+--surface-sunken:#F1F0EC;
+--surface-card:#FFFFFF;
+--surface-card-raised:#F5F4EF;
+--surface-panel:#F3F2ED;
+--surface-overlay:rgba(255,255,255,0.85);
+--border-hairline:#E1DFD6;
+--border-hairline-soft:#EAE8E0;
+--border-strong:#C7C4B8;
+--text-primary:#17171A;
+--text-secondary:#4A4A4E;
+--text-muted:#7A7A80;
+--text-muted-soft:#9A9A9E;
+}
+html[data-theme="light"] body{background:var(--surface-canvas)}

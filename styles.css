@@ -1,7 +1,7 @@
-@import 'fonts.css';
-@import 'colors.css';
-@import 'typography.css';
-@import 'spacing.css';
-@import 'radius.css';
-@import 'shadows.css';
-@import 'motion.css';
+@import 'tokens/fonts.css';
+@import 'tokens/colors.css';
+@import 'tokens/typography.css';
+@import 'tokens/spacing.css';
+@import 'tokens/radius.css';
+@import 'tokens/shadows.css';
+@import 'tokens/motion.css';

@@ -3,11 +3,15 @@
 <meta charset="utf-8">
 <title>The FunX Universe</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="tokens/theme-light.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="_ds_bundle.js"></script>
 <script src="image-slot.js"></script>
+<link rel="stylesheet" href="motion.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
 </head>
 <body>
@@ -64,19 +68,37 @@ function FeaturedGrid(){
   </section>;
 }
 
-function StoryBand(){
-  const { Card } = window.FunXDesignSystem_bbd8ae;
-  return <section style={{background:'var(--surface-sunken)',padding:'96px 0'}}>
-    <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'center'}}>
-      <div style={{borderRadius:24,overflow:'hidden',height:440}}><image-slot id="story-home" placeholder="Photo — founder Muhammad bin Zameer with the FunX catalog"></image-slot></div>
-      <div>
-        <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:16}}>Founded 2026</div>
-        <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,lineHeight:1.05,margin:'0 0 22px'}}>Built by Someone Who Never Stopped Playing</h2>
-        <p style={{fontSize:17,lineHeight:1.7,color:'var(--text-secondary)',marginBottom:28,maxWidth:460}}>Muhammad bin Zameer started FunX at 25, after two earlier startups, because the one shelf that never got boring was the one lined with toys. FunX is that shelf, built into a store — with a mission to reach players everywhere.</p>
-        <Card variant="dark" padding="lg" style={{maxWidth:460}}>
-          <p style={{fontStyle:'italic',fontSize:15,margin:'0 0 10px',color:'var(--text-primary)'}}>"I stopped trying to build what a company was supposed to look like, and started building the store I actually wanted."</p>
-          <div style={{fontSize:13,color:'var(--text-muted)'}}>— Muhammad bin Zameer, Founder</div>
-        </Card>
+function TrustStrip(){
+  const items = [['🚚','Free Shipping','On orders over Rs. 5,000'],['🛡️','Safe & Secure','100% secure payments'],['⭐','Premium Quality','Toys you can trust'],['↩️','Easy Returns','Hassle free returns'],['🏆','FunX Rewards','Earn while you play']];
+  return <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:24,borderTop:'1px solid var(--border-hairline-soft)',borderBottom:'1px solid var(--border-hairline-soft)',padding:'32px 0'}}>
+      {items.map(([icon,t,s]) => <div key={t} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,textAlign:'center'}}>
+        <span style={{fontSize:28}}>{icon}</span>
+        <div style={{fontSize:14,fontWeight:600}}>{t}</div>
+        <div style={{fontSize:12,color:'var(--text-muted)'}}>{s}</div>
+      </div>)}
+    </div>
+  </section>;
+}
+
+function StoryAndExplorer(){
+  return <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:32}}>
+    <div style={{position:'relative',borderRadius:'var(--radius-2xl)',overflow:'hidden',minHeight:280,background:'linear-gradient(135deg,#7C4DFF33,#F16A3E33)',border:'1px solid var(--border-hairline)',padding:40,display:'flex',flexDirection:'column',justifyContent:'flex-end'}}>
+      <image-slot id="story-cta-art" style={{position:'absolute',inset:0}} placeholder="Photo — child unboxing a FunX toy at night"></image-slot>
+      <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(11,11,13,0.85),rgba(11,11,13,0.15))'}}></div>
+      <div style={{position:'relative'}}>
+        <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--paint-yellow)',textTransform:'uppercase',marginBottom:10}}>Every Toy Has a Story</div>
+        <p style={{fontSize:15,color:'var(--text-secondary)',marginBottom:20,maxWidth:340}}>Discover the stories behind your favorite toys and the adventures they come from.</p>
+        <Button variant="primary" size="md" onClick={()=>location.href='story.html'}>Discover Stories</Button>
+      </div>
+    </div>
+    <div style={{position:'relative',borderRadius:'var(--radius-2xl)',overflow:'hidden',minHeight:280,background:'linear-gradient(135deg,#3DDBFF22,#FFC93C22)',border:'1px solid var(--border-hairline)',padding:40,display:'flex',flexDirection:'column',justifyContent:'flex-end'}}>
+      <image-slot id="explorer-cta-art" style={{position:'absolute',inset:0}} placeholder="Photo — kid holding FunX explorer badge"></image-slot>
+      <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(11,11,13,0.85),rgba(11,11,13,0.15))'}}></div>
+      <div style={{position:'relative'}}>
+        <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:10}}>Become a FunX Explorer</div>
+        <p style={{fontSize:15,color:'var(--text-secondary)',marginBottom:20,maxWidth:340}}>Join our universe, earn badges, unlock rewards and get special access to new toys.</p>
+        <Button variant="secondary" size="md" onClick={()=>location.href='account.html'}>Join Now</Button>
       </div>
     </div>
   </section>;
@@ -84,7 +106,7 @@ function StoryBand(){
 
 function NewStrip(){
   const items = window.PRODUCTS.filter(p=>p.isNew).slice(0,4);
-  return <section style={{maxWidth:1280,margin:'0 auto',padding:'96px 40px'}}>
+  return <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px'}}>
     <SectionHeading eyebrow="Just Landed" title="New Arrivals" cta="View all" ctaHref="new.html"/>
     <ProductGrid products={items} cols={4}/>
   </section>;
@@ -96,7 +118,7 @@ function Newsletter(){
   return <section style={{maxWidth:1280,margin:'0 auto 96px',padding:'0 40px'}}>
     <div style={{borderRadius:'var(--radius-2xl)',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',padding:'64px',textAlign:'center'}}>
       <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:36,margin:'0 0 12px'}}>Find Magical Deals, First</h2>
-      <p style={{color:'var(--text-muted)',maxWidth:440,margin:'0 auto 28px'}}>Sign up for early access to numbered drops and collector-only offers.</p>
+      <p style={{color:'var(--text-muted)',maxWidth:440,margin:'0 auto 28px'}}>Sign up for early access to new drops and explorer-only offers.</p>
       {subscribed ? <div style={{fontSize:14,color:'var(--color-success)'}}>✓ You're on the list.</div> : <form onSubmit={(e)=>{e.preventDefault(); if(email.trim()) setSubscribed(true);}} style={{display:'flex',gap:10,justifyContent:'center',maxWidth:420,margin:'0 auto'}}>
         <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required placeholder="you@example.com" style={{flex:1,height:48,borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-card)',color:'var(--text-primary)',padding:'0 16px',fontSize:14,outline:'none'}}/>
         <button style={{height:48,padding:'0 24px',borderRadius:'var(--radius-md)',border:'none',background:'var(--color-primary)',color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer'}}>Sign Up</button>
@@ -111,13 +133,15 @@ function App(){
     <Hero/>
     <CategoryNav/>
     <FeaturedGrid/>
-    <StoryBand/>
+    <TrustStrip/>
+    <StoryAndExplorer/>
     <NewStrip/>
-    <PromoBanner title="Earn Toward Your Next Numbered Run" sub="Join the Collector's Circle and earn credit on every order." cta="Learn More"/>
     <Newsletter/>
     <Footer/>
   </div>;
 }
 ReactDOM.render(<App/>, document.getElementById('root'));
 </script>
+<script src="motion.js"></script>
+<script src="hero-portal.js"></script>
 </body></html>
