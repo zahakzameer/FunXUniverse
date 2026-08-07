@@ -35,7 +35,7 @@ function useAdminSession(){
   const loadProfile = React.useCallback((uid) => {
     if (!uid) { setProfile(null); return; }
     setProfileLoading(true);
-    window.supabaseClient.from('admin_users').select('*').eq('id', uid).single()
+    window.supabaseClient.from('profiles').select('*').eq('id', uid).single()
       .then(({ data }) => { setProfile(data || null); setProfileLoading(false); });
   }, []);
 
@@ -270,7 +270,7 @@ function ProductForm({ initial, onSaved, onCancel }){
 }
 
 /* ── products tab ──────────────────────────────────────────────────────── */
-function ProductsTab({ perms }){
+function ProductsTab({ canManage }){
   const [products,setProducts] = React.useState(null);
   const [dialog,setDialog] = React.useState(null); // null | 'new' | product row
   const [error,setError] = React.useState('');
@@ -295,7 +295,7 @@ function ProductsTab({ perms }){
     {error && <div style={{fontSize:13,color:'var(--color-error)',marginBottom:16}}>{error}</div>}
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
       <div style={{color:'var(--text-muted)',fontSize:14}}>{products ? `${products.length} products` : 'Loading…'}</div>
-      {perms.can_add && <Button variant="primary" size="md" onClick={()=>setDialog('new')}>+ Add Product</Button>}
+      {canManage && <Button variant="primary" size="md" onClick={()=>setDialog('new')}>+ Add Product</Button>}
     </div>
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
       {(products||[]).map(p => <Card key={p.id} variant="dark" padding="sm" style={{display:'flex',alignItems:'center',gap:16}}>
@@ -306,8 +306,8 @@ function ProductsTab({ perms }){
           <div style={{fontWeight:600,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
           <div style={{fontSize:12,color:'var(--text-muted)'}}>{p.id} · {window.fmtPrice(p.price)}{p.badge ? ` · ${p.badge}` : ''}</div>
         </div>
-        {perms.can_edit && <Button variant="secondary" size="sm" onClick={()=>setDialog(p)}>Edit</Button>}
-        {perms.can_delete && <Button variant="secondary" size="sm" onClick={()=>remove(p.id)}>Delete</Button>}
+        {canManage && <Button variant="secondary" size="sm" onClick={()=>setDialog(p)}>Edit</Button>}
+        {canManage && <Button variant="secondary" size="sm" onClick={()=>remove(p.id)}>Delete</Button>}
       </Card>)}
     </div>
     <Dialog open={!!dialog} title={dialog==='new' ? 'Add Product' : 'Edit Product'} onClose={()=>setDialog(null)}>
@@ -319,42 +319,105 @@ function ProductsTab({ perms }){
   </div>;
 }
 
-/* ── users tab ─────────────────────────────────────────────────────────── */
-function UsersTab({ selfId }){
+/* ── manage staff tab (admin only) ───────────────────────────────────────── */
+const MODULES = [['products','Products'],['accounts','Accounts'],['orders','Orders'],['marketing','Marketing']];
+
+function StaffRow({ u, selfId, onChange }){
+  const setRole = (e) => {
+    const role = e.target.value;
+    onChange(u.id, role === 'staff' ? { role, permissions: u.permissions } : { role, permissions: [] });
+  };
+  const togglePerm = (mod) => (e) => {
+    const next = e.target.checked ? [...u.permissions, mod] : u.permissions.filter(m => m !== mod);
+    onChange(u.id, { permissions: next });
+  };
+  return <Card variant="dark" padding="sm">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+      <div>
+        <div style={{fontWeight:600,fontSize:14}}>{u.name || u.email}{u.id===selfId && <span style={{color:'var(--text-muted)',fontWeight:400}}> (you)</span>}</div>
+        <div style={{fontSize:12,color:'var(--text-muted)'}}>{u.email}</div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+        <Select value={u.role} onChange={setRole} options={['customer','staff','admin']}/>
+        {u.role === 'staff' && MODULES.map(([mod,label]) => <Checkbox key={mod} label={label} checked={u.permissions.includes(mod)} onChange={togglePerm(mod)}/>)}
+      </div>
+    </div>
+  </Card>;
+}
+
+function StaffTab({ selfId }){
   const [users,setUsers] = React.useState(null);
+  const [search,setSearch] = React.useState('');
   const [error,setError] = React.useState('');
 
   const load = React.useCallback(() => {
-    window.supabaseClient.from('admin_users').select('*').order('created_at').then(({ data, error }) => {
+    const base = window.supabaseClient.from('profiles').select('*').order('created_at');
+    const query = search.trim() ? base.ilike('email', `%${search.trim()}%`) : base.neq('role', 'customer');
+    query.then(({ data, error }) => {
       if (error) { setError(error.message); return; }
       setUsers(data);
     });
-  }, []);
+  }, [search]);
   React.useEffect(load, [load]);
 
-  const togglePerm = (user, key) => (checked) => {
-    window.supabaseClient.from('admin_users').update({ [key]: checked }).eq('id', user.id).then(({ error }) => {
+  const onChange = (id, patch) => {
+    window.supabaseClient.from('profiles').update(patch).eq('id', id).then(({ error }) => {
       if (error) { setError(error.message); return; }
       load();
     });
   };
 
-  const PERMS = [['can_add','Add'],['can_edit','Edit'],['can_delete','Delete'],['can_manage_users','Manage Users']];
+  return <div>
+    {error && <div style={{fontSize:13,color:'var(--color-error)',marginBottom:16}}>{error}</div>}
+    <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:16}}>New sign-ups start as customers with no admin access. Search by email to find someone and promote them.</p>
+    <div style={{marginBottom:20}}><Input placeholder="Search by email…" value={search} onChange={(e)=>setSearch(e.target.value)}/></div>
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {(users||[]).length === 0 && <p style={{color:'var(--text-muted)',fontSize:14}}>{search ? 'No matching accounts.' : 'No staff or admins yet besides you.'}</p>}
+      {(users||[]).map(u => <StaffRow key={u.id} u={u} selfId={selfId} onChange={onChange}/>)}
+    </div>
+  </div>;
+}
+
+/* ── accounts tab ─────────────────────────────────────────────────────────── */
+function AccountsTab(){
+  const [search,setSearch] = React.useState('');
+  const [customers,setCustomers] = React.useState(null);
+  const [error,setError] = React.useState('');
+
+  React.useEffect(() => {
+    let query = window.supabaseClient.from('profiles').select('*').order('created_at', { ascending: false }).limit(50);
+    if (search.trim()) query = query.ilike('email', `%${search.trim()}%`);
+    query.then(({ data, error }) => {
+      if (error) { setError(error.message); return; }
+      setCustomers(data);
+    });
+  }, [search]);
 
   return <div>
     {error && <div style={{fontSize:13,color:'var(--color-error)',marginBottom:16}}>{error}</div>}
-    <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:20}}>New sign-ups appear here with no permissions until you grant them. Ask them to create an account from the sign-in screen first.</p>
+    <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:16}}>Search customer accounts by email.</p>
+    <div style={{marginBottom:20}}><Input placeholder="Search by email…" value={search} onChange={(e)=>setSearch(e.target.value)}/></div>
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
-      {(users||[]).map(u => <Card key={u.id} variant="dark" padding="sm">
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
-          <div style={{fontWeight:600,fontSize:14}}>{u.email}{u.id===selfId && <span style={{color:'var(--text-muted)',fontWeight:400}}> (you)</span>}</div>
-          <div style={{display:'flex',gap:20,flexWrap:'wrap'}}>
-            {PERMS.map(([key,label]) => <Checkbox key={key} label={label} checked={!!u[key]} onChange={(e)=>togglePerm(u,key)(e.target.checked)}/>)}
+      {(customers||[]).length === 0 && <p style={{color:'var(--text-muted)',fontSize:14}}>No matching accounts.</p>}
+      {(customers||[]).map(c => <Card key={c.id} variant="dark" padding="sm">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
+          <div>
+            <div style={{fontWeight:600,fontSize:14}}>{c.name || '(no name set)'}</div>
+            <div style={{fontSize:12,color:'var(--text-muted)'}}>{c.email} · {c.country || 'No country set'}</div>
           </div>
+          <div style={{fontSize:12,color:'var(--text-muted)'}}>Joined {new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
         </div>
       </Card>)}
     </div>
   </div>;
+}
+
+/* ── placeholder tabs (no data model behind these yet) ────────────────────── */
+function ComingSoonTab({ title }){
+  return <Card variant="dark" padding="lg" style={{textAlign:'center'}}>
+    <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:22,margin:'0 0 10px'}}>{title}</h3>
+    <p style={{color:'var(--text-muted)',fontSize:14}}>Access control for this module is live — the feature itself is coming in a later update.</p>
+  </Card>;
 }
 
 /* ── app shell ─────────────────────────────────────────────────────────── */
@@ -379,13 +442,25 @@ function AdminApp(){
   if (!session) return <div><Header active=""/><LoginScreen/><Footer/></div>;
   if (profileLoading || profile === undefined) return <div style={{minHeight:'60vh'}}/>;
 
-  const perms = profile || { can_add:false, can_edit:false, can_delete:false, can_manage_users:false };
-  const hasAnyAccess = perms.can_add || perms.can_edit || perms.can_delete || perms.can_manage_users;
+  const perms = profile || { role:'customer', permissions:[] };
+  const isAdmin = perms.role === 'admin';
+  const hasModule = (mod) => isAdmin || (perms.role === 'staff' && perms.permissions.includes(mod));
+  const hasAnyAccess = isAdmin || (perms.role === 'staff' && perms.permissions.length > 0);
   const signOut = () => window.supabaseClient.auth.signOut();
 
   if (!hasAnyAccess) return <div><Header active=""/><WaitingForAccess profile={profile} onSignOut={signOut}/><Footer/></div>;
 
-  const tabs = perms.can_manage_users ? ['Products','Users'] : ['Products'];
+  const tabs = [
+    hasModule('products') && 'Products',
+    hasModule('accounts') && 'Accounts',
+    hasModule('orders') && 'Orders',
+    hasModule('marketing') && 'Marketing',
+    isAdmin && 'Manage Staff',
+  ].filter(Boolean);
+  // A staff member's default tab might not be one they actually have (e.g.
+  // only 'accounts' assigned) — fall back to their first real tab instead
+  // of leaving the content area blank.
+  const activeTab = tabs.includes(tab) ? tab : tabs[0];
 
   return <div>
     <Header active=""/>
@@ -394,9 +469,12 @@ function AdminApp(){
         <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:36,margin:0}}>Admin</h1>
         <Button variant="secondary" size="sm" onClick={signOut}>Sign Out ({profile.email})</Button>
       </div>
-      <div style={{marginBottom:28}}><Tabs tabs={tabs} active={tab} onChange={setTab}/></div>
-      {tab==='Products' && <ProductsTab perms={perms}/>}
-      {tab==='Users' && perms.can_manage_users && <UsersTab selfId={session.user.id}/>}
+      <div style={{marginBottom:28}}><Tabs tabs={tabs} active={activeTab} onChange={setTab}/></div>
+      {activeTab==='Products' && <ProductsTab canManage={hasModule('products')}/>}
+      {activeTab==='Accounts' && <AccountsTab/>}
+      {activeTab==='Orders' && <ComingSoonTab title="Orders"/>}
+      {activeTab==='Marketing' && <ComingSoonTab title="Marketing"/>}
+      {activeTab==='Manage Staff' && <StaffTab selfId={session.user.id}/>}
     </section>
     <Footer/>
   </div>;
