@@ -215,11 +215,180 @@ function AccountLink(){
   return <a href="account.html" style={linkStyle} title={session.user.email}>{ICONS.user}<span style={{fontSize:13,fontWeight:600}}>{firstName}</span></a>;
 }
 
+/* ── Shared auth forms ─────────────────────────────────────────────────────
+   Used by account.html's full sign-in/signup page AND the AuthPromptDialog
+   below (triggered when a signed-out visitor tries to wishlist something).
+   Kept in one place instead of two copies so an auth bug only needs fixing
+   once. */
+function ModeSwitch({ mode, setMode }){
+  return <div style={{display:'flex',borderRadius:'var(--radius-md)',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',padding:4,marginBottom:32}}>
+    {['sign-in','create'].map(m => <div key={m} onClick={()=>setMode(m)} style={{flex:1,textAlign:'center',padding:'10px 0',borderRadius:'var(--radius-sm)',cursor:'pointer',fontSize:14,fontWeight:600,background:mode===m?'var(--color-primary)':'transparent',color:mode===m?'#fff':'var(--text-secondary)',transition:'background var(--duration-fast)'}}>{m==='sign-in'?'Sign In':'Create Account'}</div>)}
+  </div>;
+}
+
+function SignInForm({ onSuccess }){
+  const { Input, Button, Checkbox } = window.FunXDesignSystem_bbd8ae;
+  const [form,setForm] = React.useState({email:'',password:'',remember:true});
+  const [error,setError] = React.useState('');
+  const [pending,setPending] = React.useState(false);
+  const update = (k) => (e) => setForm({...form,[k]: e.target.type==='checkbox' ? e.target.checked : e.target.value});
+
+  const submit = (e) => {
+    e.preventDefault();
+    setError(''); setPending(true);
+    // Read by the storage adapter (above) on the very next auth write — must
+    // be set before signInWithPassword actually persists the token.
+    localStorage.setItem('funx_remember_me', form.remember ? 'true' : 'false');
+    supabaseClient.auth.signInWithPassword({ email: form.email, password: form.password }).then(({ error }) => {
+      setPending(false);
+      // Supabase's own "Invalid login credentials" is already generic by
+      // design (doesn't say which of email/password was wrong) — shown as-is.
+      if (error) { setError(error.message); return; }
+      onSuccess();
+    });
+  };
+
+  return <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
+    <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
+    <Input label="Password" type="password" placeholder="••••••••" value={form.password} onChange={update('password')} required/>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:24,fontSize:13}}>
+      <Checkbox label="Keep me signed in" checked={form.remember} onChange={update('remember')}/>
+      <a href="forgot-password.html" style={{color:'var(--text-link)'}}>Forgot password?</a>
+    </div>
+    {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
+    <Button variant="primary" size="lg" disabled={pending}>{pending ? 'Signing in…' : 'Sign In'}</Button>
+  </form>;
+}
+
+function CreateForm({ onSignedUp }){
+  const { Input, Button, Select } = window.FunXDesignSystem_bbd8ae;
+  const [form,setForm] = React.useState({name:'',email:'',password:'',confirm:'',country:'Pakistan'});
+  const [error,setError] = React.useState('');
+  const [pending,setPending] = React.useState(false);
+  const update = (k) => (e) => setForm({...form,[k]:e.target.value});
+
+  const submit = (e) => {
+    e.preventDefault();
+    setError('');
+    if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (form.password !== form.confirm) { setError("Passwords don't match."); return; }
+    setPending(true);
+    supabaseClient.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: { data: { name: form.name, country: form.country } },
+    }).then(({ data, error }) => {
+      setPending(false);
+      if (error) {
+        setError(/already registered|already exists|user already/i.test(error.message)
+          ? 'This email is already registered — try signing in instead.'
+          : error.message);
+        return;
+      }
+      // Projects with "Confirm email" turned off return an active session
+      // immediately; otherwise data.session is null until the email link is
+      // clicked — the caller decides what each case means for it.
+      onSignedUp(!!data.session);
+    });
+  };
+
+  return <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
+    <Input label="Full name" placeholder="Jordan Rivera" value={form.name} onChange={update('name')} required/>
+    <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
+    <Select label="Country" value={form.country} onChange={update('country')} options={COUNTRIES}/>
+    <Input label="Password" type="password" placeholder="At least 8 characters" value={form.password} onChange={update('password')} required/>
+    <Input label="Confirm password" type="password" placeholder="Re-enter your password" value={form.confirm} onChange={update('confirm')} required/>
+    {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
+    <Button variant="primary" size="lg" disabled={pending}>{pending ? 'Creating account…' : 'Create Account'}</Button>
+    <p style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6,margin:0}}>By creating an account you agree to our Terms and Privacy Policy.</p>
+  </form>;
+}
+
+/* ── Wishlist ──────────────────────────────────────────────────────────────
+   Same event-driven pattern as CartDrawer above (funx-cart-open /
+   funx-cart-updated): a global dialog rendered once inside Header, driven
+   by a custom event, rather than every page having to know about it. */
+function useWishlist(){
+  const session = useSession();
+  const [ids,setIds] = React.useState(new Set());
+
+  const load = React.useCallback(() => {
+    if (!session) { setIds(new Set()); return; }
+    supabaseClient.from('wishlists').select('product_id').eq('user_id', session.user.id).then(({ data }) => {
+      setIds(new Set((data||[]).map(r=>r.product_id)));
+    });
+  }, [session && session.user.id]);
+  React.useEffect(load, [load]);
+
+  const actuallyToggle = (productId) => {
+    if (ids.has(productId)) {
+      setIds(prev => { const next = new Set(prev); next.delete(productId); return next; });
+      supabaseClient.from('wishlists').delete().eq('user_id', session.user.id).eq('product_id', productId)
+        .then(({ error }) => { if (error) load(); });
+    } else {
+      setIds(prev => new Set(prev).add(productId));
+      supabaseClient.from('wishlists').insert({ user_id: session.user.id, product_id: productId })
+        .then(({ error }) => { if (error) load(); });
+    }
+  };
+
+  const toggle = (productId) => {
+    if (!session) {
+      window.dispatchEvent(new CustomEvent('funx-auth-required', { detail: { onSuccess: () => actuallyToggle(productId) } }));
+      return;
+    }
+    actuallyToggle(productId);
+  };
+
+  return { isWishlisted: (id) => ids.has(id), toggle };
+}
+window.useWishlist = useWishlist;
+
+function AuthPromptDialog(){
+  const { Card, Button, Dialog } = window.FunXDesignSystem_bbd8ae;
+  const [open,setOpen] = React.useState(false);
+  const [mode,setMode] = React.useState('sign-in');
+  const [needsConfirmation,setNeedsConfirmation] = React.useState(false);
+  const pendingRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const onRequired = (e) => {
+      pendingRef.current = e.detail && e.detail.onSuccess;
+      setMode('sign-in'); setNeedsConfirmation(false); setOpen(true);
+    };
+    window.addEventListener('funx-auth-required', onRequired);
+    return () => window.removeEventListener('funx-auth-required', onRequired);
+  }, []);
+
+  const close = () => setOpen(false);
+  const handleSignedIn = () => { close(); if (pendingRef.current) pendingRef.current(); };
+  const handleSignedUp = (hasSession) => { if (hasSession) { handleSignedIn(); } else { setNeedsConfirmation(true); } };
+
+  return <Dialog open={open} title="" onClose={close}>
+    <Card variant="dark" padding="lg" style={{width:400,maxWidth:'90vw'}}>
+      {needsConfirmation ? <div style={{textAlign:'center',padding:'12px 0'}}>
+        <div style={{fontSize:36,marginBottom:14,color:'var(--color-success)'}}>✓</div>
+        <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:22,margin:'0 0 10px'}}>Check your email</h3>
+        <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:20}}>We've sent a confirmation link — verify your email, then sign in to save this item (it won't save automatically until you do).</p>
+        <Button variant="secondary" size="md" onClick={()=>{setNeedsConfirmation(false);setMode('sign-in');}}>Back to Sign In</Button>
+      </div> : <>
+        <div style={{textAlign:'center',marginBottom:24}}>
+          <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:10}}>Collector's Circle</div>
+          <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:26,margin:0}}>Sign in to save items</h3>
+        </div>
+        <ModeSwitch mode={mode} setMode={setMode}/>
+        {mode==='sign-in' ? <SignInForm onSuccess={handleSignedIn}/> : <CreateForm onSignedUp={handleSignedUp}/>}
+      </>}
+    </Card>
+  </Dialog>;
+}
+
 function Header({ active }) {
   const cartQty = useCartCount();
   return <header style={{position:'sticky',top:0,zIndex:30,fontFamily:'var(--font-body)'}}>
     <AnnouncementBar/>
     <CartDrawer/>
+    <AuthPromptDialog/>
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',height:80,padding:'0 40px',background:'rgba(11,11,13,0.86)',backdropFilter:'blur(10px)',borderBottom:'1px solid var(--border-hairline-soft)'}}>
       <a href="index.html" style={{display:'flex',alignItems:'center'}}><img src="assets/logo.svg" style={{height:34}}/></a>
       <nav style={{display:'flex',gap:36}}>
@@ -282,7 +451,8 @@ const BADGE_TONE = { 'New':'info', 'Best Seller':'gold', 'Limited Edition':'gold
 
 function ProductCard({ p }) {
   const [hover,setHover] = React.useState(false);
-  const [wish,setWish] = React.useState(false);
+  const { isWishlisted, toggle: toggleWishlist } = useWishlist();
+  const wish = isWishlisted(p.id);
   const videoRef = React.useRef(null);
   const { Badge } = window.FunXDesignSystem_bbd8ae;
   const hasRealImages = p.images && p.images[0];
@@ -295,7 +465,7 @@ function ProductCard({ p }) {
         <source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/>
       </video>}
       {p.badge && <span style={{position:'absolute',top:12,left:12,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 9px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
-      <span onClick={(e)=>{e.stopPropagation();setWish(!wish);}} style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416'}}>
+      <span onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}} style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416'}}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </span>
       {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:54,left:0,right:0,display:'flex',justifyContent:'center',gap:5,opacity:hover?0:1,transition:'opacity var(--duration-fast)'}}>
@@ -531,4 +701,4 @@ function StockLabel({ stock }) {
 
 function fmtPrice(n) { return `PKR ${Number(n).toLocaleString('en-PK')}`; }
 
-Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount });
+Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount, ModeSwitch, SignInForm, CreateForm });

@@ -18,89 +18,9 @@
 <div id="root"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--surface-canvas,#0b0b0d)"><svg width="32" height="32" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#F16A3E" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 60"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.8s" repeatCount="indefinite"/></circle></svg></div></div>
 <script type="text/babel" src="common.jsx"></script>
 <script type="text/babel">
-const { Input, Button, Card, Checkbox, Select } = window.FunXDesignSystem_bbd8ae;
-
-function ModeSwitch({ mode, setMode }){
-  return <div style={{display:'flex',borderRadius:'var(--radius-md)',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',padding:4,marginBottom:32}}>
-    {['sign-in','create'].map(m => <div key={m} onClick={()=>setMode(m)} style={{flex:1,textAlign:'center',padding:'10px 0',borderRadius:'var(--radius-sm)',cursor:'pointer',fontSize:14,fontWeight:600,background:mode===m?'var(--color-primary)':'transparent',color:mode===m?'#fff':'var(--text-secondary)',transition:'background var(--duration-fast)'}}>{m==='sign-in'?'Sign In':'Create Account'}</div>)}
-  </div>;
-}
-
-function SignInForm({ onSuccess }){
-  const [form,setForm] = React.useState({email:'',password:'',remember:true});
-  const [error,setError] = React.useState('');
-  const [pending,setPending] = React.useState(false);
-  const update = (k) => (e) => setForm({...form,[k]: e.target.type==='checkbox' ? e.target.checked : e.target.value});
-
-  const submit = (e) => {
-    e.preventDefault();
-    setError(''); setPending(true);
-    // Read by common.jsx's storage adapter on the very next auth write —
-    // must be set before signInWithPassword actually persists the token.
-    localStorage.setItem('funx_remember_me', form.remember ? 'true' : 'false');
-    window.supabaseClient.auth.signInWithPassword({ email: form.email, password: form.password }).then(({ error }) => {
-      setPending(false);
-      // Supabase's own "Invalid login credentials" is already generic by
-      // design (doesn't say which of email/password was wrong) — shown as-is.
-      if (error) { setError(error.message); return; }
-      onSuccess();
-    });
-  };
-
-  return <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
-    <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
-    <Input label="Password" type="password" placeholder="••••••••" value={form.password} onChange={update('password')} required/>
-    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:24,fontSize:13}}>
-      <Checkbox label="Keep me signed in" checked={form.remember} onChange={update('remember')}/>
-      <a href="forgot-password.html" style={{color:'var(--text-link)'}}>Forgot password?</a>
-    </div>
-    {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
-    <Button variant="primary" size="lg" disabled={pending}>{pending ? 'Signing in…' : 'Sign In'}</Button>
-  </form>;
-}
-
-function CreateForm({ onNeedsConfirmation }){
-  const [form,setForm] = React.useState({name:'',email:'',password:'',confirm:'',country:'Pakistan'});
-  const [error,setError] = React.useState('');
-  const [pending,setPending] = React.useState(false);
-  const update = (k) => (e) => setForm({...form,[k]:e.target.value});
-
-  const submit = (e) => {
-    e.preventDefault();
-    setError('');
-    if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    if (form.password !== form.confirm) { setError("Passwords don't match."); return; }
-    setPending(true);
-    window.supabaseClient.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: { data: { name: form.name, country: form.country } },
-    }).then(({ data, error }) => {
-      setPending(false);
-      if (error) {
-        setError(/already registered|already exists|user already/i.test(error.message)
-          ? 'This email is already registered — try signing in instead.'
-          : error.message);
-        return;
-      }
-      // Projects with "Confirm email" turned off return an active session
-      // immediately; otherwise data.session is null until the email link is clicked.
-      if (data.session) { location.href = 'index.html'; return; }
-      onNeedsConfirmation();
-    });
-  };
-
-  return <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
-    <Input label="Full name" placeholder="Jordan Rivera" value={form.name} onChange={update('name')} required/>
-    <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
-    <Select label="Country" value={form.country} onChange={update('country')} options={window.COUNTRIES}/>
-    <Input label="Password" type="password" placeholder="At least 8 characters" value={form.password} onChange={update('password')} required/>
-    <Input label="Confirm password" type="password" placeholder="Re-enter your password" value={form.confirm} onChange={update('confirm')} required/>
-    {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
-    <Button variant="primary" size="lg" disabled={pending}>{pending ? 'Creating account…' : 'Create Account'}</Button>
-    <p style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6,margin:0}}>By creating an account you agree to our Terms and Privacy Policy.</p>
-  </form>;
-}
+// ModeSwitch, SignInForm, and CreateForm now live in common.jsx (shared
+// with the wishlist sign-in prompt) — this page just uses them.
+const { Input, Button, Card, Select } = window.FunXDesignSystem_bbd8ae;
 
 function AuthCard(){
   const [mode,setMode] = React.useState('sign-in');
@@ -117,7 +37,7 @@ function AuthCard(){
         <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:36,margin:0}}>{mode==='sign-in' ? 'Sign In' : 'Create Account'}</h1>
       </div>
       <ModeSwitch mode={mode} setMode={setMode}/>
-      {mode==='sign-in' ? <SignInForm onSuccess={()=>{location.href='index.html';}}/> : <CreateForm onNeedsConfirmation={()=>setSignedUp(true)}/>}
+      {mode==='sign-in' ? <SignInForm onSuccess={()=>{location.href='index.html';}}/> : <CreateForm onSignedUp={(hasSession)=>{ if (hasSession) { location.href='index.html'; } else { setSignedUp(true); } }}/>}
     </>}
   </Card>;
 }

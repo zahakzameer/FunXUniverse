@@ -38,6 +38,14 @@ function SpecRow({ label, value }){
   </div>;
 }
 
+function WishlistButton({ productId }){
+  const { isWishlisted, toggle } = window.useWishlist();
+  const wish = isWishlisted(productId);
+  return <button onClick={()=>toggle(productId)} title={wish ? 'Remove from wishlist' : 'Save to wishlist'} style={{width:48,height:48,borderRadius:'50%',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:wish?'var(--paint-red)':'var(--text-secondary)',flexShrink:0}}>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+  </button>;
+}
+
 function Hero({ p, qty, setQty, added, onAdd, onBuy }){
   const hasReal = p.images && p.images[0];
   const media = p.hasVideo ? [...p.images, '__video__'] : p.images;
@@ -84,6 +92,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
     <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',maxWidth:480,margin:'0 auto'}}>
       <QtyStepper qty={qty} setQty={setQty} max={Math.max(1,p.stock)}/>
       <Button variant="primary" size="lg" onClick={onAdd} disabled={p.stock<=0} style={{minWidth:200}}>{p.stock<=0 ? 'Out of Stock' : added ? 'Added ✓' : 'Add to Cart'}</Button>
+      <WishlistButton productId={p.id}/>
     </div>
     <div style={{marginTop:14}}><Button variant="secondary" size="md" onClick={onBuy}>Buy Now</Button></div>
     <StockLabel stock={p.stock}/>
