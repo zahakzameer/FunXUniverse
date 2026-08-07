@@ -7,6 +7,7 @@
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="_ds_bundle.js"></script>
 <script src="image-slot.js"></script>
 <link rel="stylesheet" href="motion.css">
@@ -14,7 +15,7 @@
 <style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--surface-canvas,#0b0b0d)"><svg width="32" height="32" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#F16A3E" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 60"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.8s" repeatCount="indefinite"/></circle></svg></div></div>
 <script type="text/babel" src="common.jsx"></script>
 <script type="text/babel">
 const { Button } = window.FunXDesignSystem_bbd8ae;
@@ -59,7 +60,7 @@ function App(){
     <Footer/>
   </div>;
 }
-ReactDOM.render(<App/>, document.getElementById('root'));
+window.PRODUCTS_PROMISE.then(() => ReactDOM.render(<App/>, document.getElementById('root')));
 </script>
 <script src="motion.js"></script>
 </body></html>

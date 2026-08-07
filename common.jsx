@@ -6,6 +6,36 @@ const NAV_LINKS = [
   { label: 'Sale', href: 'sale.html' },
 ];
 
+// Pakistan first (primary/launch market), then the rest of the world
+// alphabetically — reused by account signup and, later, shipping forms.
+const COUNTRIES = [
+  'Pakistan',
+  'Afghanistan','Albania','Algeria','Argentina','Armenia','Australia','Austria','Azerbaijan',
+  'Bahrain','Bangladesh','Belarus','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Brunei','Bulgaria',
+  'Cambodia','Canada','Chile','China','Colombia','Costa Rica','Croatia','Cyprus','Czechia',
+  'Denmark','Dominican Republic',
+  'Ecuador','Egypt','Estonia','Ethiopia',
+  'Finland','France',
+  'Georgia','Germany','Ghana','Greece',
+  'Hong Kong','Hungary',
+  'Iceland','India','Indonesia','Iraq','Ireland','Israel','Italy',
+  'Japan','Jordan',
+  'Kazakhstan','Kenya','Kuwait',
+  'Latvia','Lebanon','Libya','Lithuania','Luxembourg',
+  'Malaysia','Maldives','Malta','Mauritius','Mexico','Moldova','Mongolia','Montenegro','Morocco',
+  'Nepal','Netherlands','New Zealand','Nigeria','North Macedonia','Norway',
+  'Oman',
+  'Peru','Philippines','Poland','Portugal',
+  'Qatar',
+  'Romania','Russia',
+  'Saudi Arabia','Serbia','Singapore','Slovakia','Slovenia','South Africa','South Korea','Spain','Sri Lanka','Sweden','Switzerland',
+  'Taiwan','Tanzania','Thailand','Tunisia','Turkey',
+  'Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan',
+  'Vietnam',
+  'Yemen',
+  'Zambia','Zimbabwe',
+];
+
 const NAV_MENUS = {
   'New': { cols: [
     { title:'Just Landed', links: [['New Arrivals','new.html'],['This Week','new.html'],['Coming Soon','new.html']] },
@@ -176,6 +206,15 @@ function ThemeToggle(){
   return <span onClick={()=>setTheme(theme==='light'?'dark':'light')} style={{cursor:'pointer',display:'flex',color:'inherit'}} title={theme==='light'?'Switch to dark mode':'Switch to light mode'}>{theme==='light'?ICONS.moon:ICONS.sun}</span>;
 }
 
+function AccountLink(){
+  const session = useSession();
+  const linkStyle = {cursor:'pointer',display:'flex',alignItems:'center',gap:6,color:'inherit'};
+  if (!session) return <a href="account.html" style={linkStyle} title="Login">{ICONS.user}<span style={{fontSize:13,fontWeight:600}}>Login</span></a>;
+  const meta = session.user.user_metadata || {};
+  const firstName = (meta.name || session.user.email.split('@')[0]).split(' ')[0];
+  return <a href="account.html" style={linkStyle} title={session.user.email}>{ICONS.user}<span style={{fontSize:13,fontWeight:600}}>{firstName}</span></a>;
+}
+
 function Header({ active }) {
   const cartQty = useCartCount();
   return <header style={{position:'sticky',top:0,zIndex:30,fontFamily:'var(--font-body)'}}>
@@ -190,7 +229,7 @@ function Header({ active }) {
         <ThemeToggle/>
         <a href="search.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title="Search">{ICONS.search}</a>
         <a href="wishlist.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title="Wishlist">{ICONS.heart}</a>
-        <a href="account.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title="Account">{ICONS.user}</a>
+        <AccountLink/>
         <a href="cart.html" style={{cursor:'pointer',display:'flex',color:'inherit',position:'relative'}} title="Cart">{ICONS.cart}{cartQty > 0 && <span style={{position:'absolute',top:-7,right:-9,background:'var(--color-primary)',color:'#fff',fontSize:9,fontWeight:700,minWidth:15,height:15,padding:'0 3px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}>{cartQty}</span>}</a>
       </div>
     </div>
@@ -253,7 +292,7 @@ function ProductCard({ p }) {
     <div style={{aspectRatio:'1',background:'var(--surface-gallery)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
       {hasRealImages ? <img src={p.images[0]} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:hover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:hover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
       {p.hasVideo && <video ref={videoRef} muted loop playsInline preload="none" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:hover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',pointerEvents:'none'}}>
-        <source src={`videos/${p.id}.mp4`} type="video/mp4"/>
+        <source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/>
       </video>}
       {p.badge && <span style={{position:'absolute',top:12,left:12,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 9px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
       <span onClick={(e)=>{e.stopPropagation();setWish(!wish);}} style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416'}}>
@@ -347,108 +386,115 @@ function PromoBanner({ title, sub, cta, ctaHref='account.html' }) {
   </section>;
 }
 
-const PRODUCTS = [
-  {id:'p1',name:'GT Vector 12 Drift Racer',line:'RC Spray Drift · 2-in-1 4WD',price:4430,badge:'Best Seller',rating:4.7,reviews:132,age:'8+',universe:'GT Vector',type:'RC Vehicle',isNew:false,isTrending:true,isCollectible:false,isSale:false,images:['assets/products/p1-box-front.jpg','assets/products/p1-full-kit.jpg','assets/products/p1-action-rear.jpg','assets/products/p1-collage.jpg','assets/products/p1-box-info.jpg']},
-  {id:'p2',name:'Chrome Falcon Mk.II',line:'Aerodrome · Die-Cast',price:5750,badge:'Best Seller',rating:4.6,reviews:89,age:'13+',universe:'Aerodrome',type:'Die-Cast',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p3',name:'Ochre Rambler',line:'Skyline Riders · Die-Cast',price:6960,rating:4.3,reviews:52,age:'8+',universe:'Skyline Riders',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:5570},
-  {id:'p4',name:'Nightshift Racer',line:'Ironclad Legion · Action Figure',price:4280,badge:'New',rating:4.1,reviews:23,age:'8+',universe:'Ironclad Legion',type:'Action Figure',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p5',name:'Sundown Coupe',line:'Skyline Riders · Die-Cast',price:5500,badge:'Limited Edition',rating:4.9,reviews:201,age:'13+',universe:'Skyline Riders',type:'Die-Cast',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p6',name:'Voltage Rider',line:'Ironclad Legion · Action Figure',price:6920,rating:4.4,reviews:67,age:'8+',universe:'Ironclad Legion',type:'Action Figure',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p7',name:'Rangehead Overland Rig',line:'Rangehead · Die-Cast',price:4130,badge:'New',rating:4.7,reviews:12,age:'13+',universe:'Rangehead',type:'Die-Cast',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p8',name:'Ironclad Sentinel',line:'Ironclad Legion · Action Figure',price:5450,badge:'Exclusive',rating:4.9,reviews:145,age:'13+',universe:'Ironclad Legion',type:'Action Figure',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p9',name:'Midnight Voltage Coupe',line:'Voltage Corps · Die-Cast',price:6770,rating:4.2,reviews:34,age:'13+',universe:'Voltage Corps',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:5420},
-  {id:'p10',name:'Aerodrome Squadron Set',line:'Aerodrome · Die-Cast · 3-Pc.',price:3360,badge:'Exclusive',rating:4.8,reviews:41,age:'13+',universe:'Aerodrome',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p11',name:'Rangehead Trailhand',line:'Rangehead · Action Figure',price:4790,badge:'New',rating:4.0,reviews:8,age:'8+',universe:'Rangehead',type:'Action Figure',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p12',name:'Voltage Corps Prototype',line:'Voltage Corps · Action Figure',price:6100,badge:'Limited Edition',rating:4.6,reviews:76,age:'13+',universe:'Voltage Corps',type:'Action Figure',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p13',name:'1966 Sable Wagon',line:'Skyline Riders · Die-Cast',price:3420,rating:4.5,reviews:58,age:'13+',universe:'Skyline Riders',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:true,isSale:true,salePrice:2740},
-  {id:'p14',name:'Ironclad Recon Unit',line:'Ironclad Legion · Action Figure',price:4640,badge:'New',rating:4.3,reviews:15,age:'8+',universe:'Ironclad Legion',type:'Action Figure',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p15',name:'Aerodrome Ace Pilot',line:'Aerodrome · Action Figure',price:5940,rating:4.1,reviews:29,age:'8+',universe:'Aerodrome',type:'Action Figure',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p16',name:'Rangehead Convoy Truck',line:'Rangehead · Die-Cast',price:3170,badge:'Best Seller',rating:4.7,reviews:98,age:'13+',universe:'Rangehead',type:'Die-Cast',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p17',name:'Voltage Streak GT',line:'Voltage Corps · Die-Cast',price:4490,rating:4.4,reviews:44,age:'13+',universe:'Voltage Corps',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:3590},
-  {id:'p18',name:'Skyline Anniversary Coupe',line:'Skyline Riders · Die-Cast · Numbered',price:5710,badge:'Limited Edition',rating:5.0,reviews:19,age:'13+',universe:'Skyline Riders',type:'Die-Cast',isNew:true,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p19',name:'Ironclad Vanguard',line:'Ironclad Legion · Action Figure',price:3130,rating:4.5,reviews:63,age:'13+',universe:'Ironclad Legion',type:'Action Figure',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p20',name:'Aerodrome Jetstream',line:'Aerodrome · Die-Cast',price:3310,badge:'New',rating:4.2,reviews:6,age:'13+',universe:'Aerodrome',type:'Die-Cast',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p21',name:'Rangehead Trail Scout',line:'Rangehead · Action Figure',price:4530,rating:3.9,reviews:11,age:'8+',universe:'Rangehead',type:'Action Figure',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:3620},
-  {id:'p22',name:'Voltage Corps Display Case',line:'Voltage Corps · Accessory',price:5950,rating:4.6,reviews:37,age:'All Ages',universe:'Voltage Corps',type:'Accessory',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p23',name:'Skyline Chrome Edition',line:'Skyline Riders · Die-Cast',price:3210,badge:'Exclusive',rating:4.8,reviews:82,age:'13+',universe:'Skyline Riders',type:'Die-Cast',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p24',name:'Ironclad Legion Founders Set',line:'Ironclad Legion · Action Figure · 4-Pc.',price:4480,badge:'Limited Edition',rating:4.9,reviews:27,age:'13+',universe:'Ironclad Legion',type:'Action Figure',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p25',name:'Turbo Rider',line:'GT Vector · Action Figure · Poseable',price:5800,salePrice:4640,badge:'Sale',rating:3.8,reviews:5,age:'8+',universe:'GT Vector',type:'Action Figure',isNew:true,isTrending:true,isCollectible:true,isSale:true},
-  {id:'p26',name:'Shadow Cruiser',line:'Aerodrome · Display Accessory',price:3020,badge:'Best Seller',rating:3.9,reviews:18,age:'All Ages',universe:'Aerodrome',type:'Accessory',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p27',name:'Blaze Warden',line:'Skyline Riders · RC · 2.4GHz Remote',price:4240,badge:'Limited Edition',rating:4.0,reviews:31,age:'8+',universe:'Skyline Riders',type:'RC Vehicle',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p28',name:'Nova Voyager',line:'Ironclad Legion · Die-Cast · Alloy Build',price:5630,badge:'Exclusive',rating:4.1,reviews:44,age:'13+',universe:'Ironclad Legion',type:'Die-Cast',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p29',name:'Storm Runner',line:'Rangehead · Action Figure · Poseable',price:6870,badge:'Sale',rating:4.2,reviews:57,age:'8+',universe:'Rangehead',type:'Action Figure',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p30',name:'Rapid Guardian',line:'Voltage Corps · Display Accessory',price:3260,rating:4.3,reviews:70,age:'All Ages',universe:'Voltage Corps',type:'Accessory',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p31',name:'Vortex Blazer',line:'Nova Squad · RC · 2.4GHz Remote',price:4480,salePrice:3580,badge:'Sale',rating:4.4,reviews:83,age:'8+',universe:'Nova Squad',type:'RC Vehicle',isNew:false,isTrending:true,isCollectible:false,isSale:true},
-  {id:'p32',name:'Apex Scout',line:'Titan Works · Die-Cast · Alloy Build',price:5750,badge:'New',rating:4.5,reviews:96,age:'13+',universe:'Titan Works',type:'Die-Cast',isNew:true,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p33',name:'Comet Trooper',line:'Blaze Circuit · Action Figure · Poseable',price:3010,badge:'Best Seller',rating:4.6,reviews:109,age:'8+',universe:'Blaze Circuit',type:'Action Figure',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p34',name:'Ember Drifter',line:'Frostbyte · Display Accessory',price:4330,badge:'Limited Edition',rating:4.7,reviews:122,age:'All Ages',universe:'Frostbyte',type:'Accessory',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p35',name:'Frost Hunter',line:'GT Vector · RC · 2.4GHz Remote',price:5550,badge:'Exclusive',rating:4.8,reviews:135,age:'8+',universe:'GT Vector',type:'RC Vehicle',isNew:true,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p36',name:'Talon Rambler',line:'Aerodrome · Die-Cast · Alloy Build',price:6900,badge:'Sale',rating:4.9,reviews:148,age:'13+',universe:'Aerodrome',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p37',name:'Onyx Racer',line:'Skyline Riders · Action Figure · Poseable',price:4180,salePrice:3340,badge:'Sale',rating:3.8,reviews:161,age:'8+',universe:'Skyline Riders',type:'Action Figure',isNew:false,isTrending:true,isCollectible:false,isSale:true},
-  {id:'p38',name:'Rogue Striker',line:'Ironclad Legion · Display Accessory',price:5400,rating:3.9,reviews:174,age:'All Ages',universe:'Ironclad Legion',type:'Accessory',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p39',name:'Surge Sentinel',line:'Rangehead · RC · 2.4GHz Remote',price:6820,badge:'New',rating:4.0,reviews:7,age:'8+',universe:'Rangehead',type:'RC Vehicle',isNew:true,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p40',name:'Havoc Rider',line:'Voltage Corps · Die-Cast · Alloy Build',price:3010,badge:'Best Seller',rating:4.1,reviews:20,age:'13+',universe:'Voltage Corps',type:'Die-Cast',isNew:true,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p41',name:'Cipher Cruiser',line:'Nova Squad · Action Figure · Poseable',price:4320,badge:'Limited Edition',rating:4.2,reviews:33,age:'8+',universe:'Nova Squad',type:'Action Figure',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p42',name:'Nitro Warden',line:'Titan Works · Display Accessory',price:5640,badge:'Exclusive',rating:4.3,reviews:46,age:'All Ages',universe:'Titan Works',type:'Accessory',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p43',name:'Falcon Voyager',line:'Blaze Circuit · RC · 2.4GHz Remote',price:6860,salePrice:5490,badge:'Sale',rating:4.4,reviews:59,age:'8+',universe:'Blaze Circuit',type:'RC Vehicle',isNew:false,isTrending:true,isCollectible:false,isSale:true},
-  {id:'p44',name:'Ranger Runner',line:'Frostbyte · Die-Cast · Alloy Build',price:4180,rating:4.5,reviews:72,age:'13+',universe:'Frostbyte',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p45',name:'Turbo Guardian',line:'GT Vector · Action Figure · Poseable',price:5390,rating:4.6,reviews:85,age:'8+',universe:'GT Vector',type:'Action Figure',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p46',name:'Shadow Blazer',line:'Aerodrome · Display Accessory',price:6710,badge:'New',rating:4.7,reviews:98,age:'All Ages',universe:'Aerodrome',type:'Accessory',isNew:true,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p47',name:'Blaze Scout',line:'Skyline Riders · RC · 2.4GHz Remote',price:3930,badge:'Best Seller',rating:4.8,reviews:111,age:'8+',universe:'Skyline Riders',type:'RC Vehicle',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p48',name:'Nova Trooper',line:'Ironclad Legion · Die-Cast · Alloy Build',price:5350,badge:'Limited Edition',rating:4.9,reviews:124,age:'13+',universe:'Ironclad Legion',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p49',name:'Storm Drifter',line:'Rangehead · Action Figure · Poseable',price:6590,salePrice:5270,badge:'Sale',rating:3.8,reviews:137,age:'8+',universe:'Rangehead',type:'Action Figure',isNew:false,isTrending:true,isCollectible:false,isSale:true},
-  {id:'p50',name:'Rapid Hunter',line:'Voltage Corps · Display Accessory',price:6750,badge:'Sale',rating:3.9,reviews:150,age:'All Ages',universe:'Voltage Corps',type:'Accessory',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p51',name:'Vortex Rambler',line:'Nova Squad · RC · 2.4GHz Remote',price:4170,rating:4.0,reviews:163,age:'8+',universe:'Nova Squad',type:'RC Vehicle',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p52',name:'Apex Racer',line:'Titan Works · Die-Cast · Alloy Build',price:5440,rating:4.1,reviews:176,age:'13+',universe:'Titan Works',type:'Die-Cast',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p53',name:'Comet Striker',line:'Blaze Circuit · Action Figure · Poseable',price:6710,badge:'New',rating:4.2,reviews:9,age:'8+',universe:'Blaze Circuit',type:'Action Figure',isNew:true,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p54',name:'Ember Sentinel',line:'Frostbyte · Display Accessory',price:4020,badge:'Best Seller',rating:4.3,reviews:22,age:'All Ages',universe:'Frostbyte',type:'Accessory',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p55',name:'Frost Rider',line:'GT Vector · RC · 2.4GHz Remote',price:5240,salePrice:4190,badge:'Sale',rating:4.4,reviews:35,age:'8+',universe:'GT Vector',type:'RC Vehicle',isNew:true,isTrending:true,isCollectible:false,isSale:true},
-  {id:'p56',name:'Talon Cruiser',line:'Aerodrome · Die-Cast · Alloy Build',price:6660,badge:'Exclusive',rating:4.5,reviews:48,age:'13+',universe:'Aerodrome',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p57',name:'Onyx Warden',line:'Skyline Riders · Action Figure · Poseable',price:3880,badge:'Sale',rating:4.6,reviews:61,age:'8+',universe:'Skyline Riders',type:'Action Figure',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p58',name:'Rogue Voyager',line:'Ironclad Legion · Display Accessory',price:5090,rating:4.7,reviews:74,age:'All Ages',universe:'Ironclad Legion',type:'Accessory',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p59',name:'Surge Runner',line:'Rangehead · RC · 2.4GHz Remote',price:6410,rating:4.8,reviews:87,age:'8+',universe:'Rangehead',type:'RC Vehicle',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p60',name:'Havoc Guardian',line:'Voltage Corps · Die-Cast · Alloy Build',price:6720,badge:'New',rating:4.9,reviews:100,age:'13+',universe:'Voltage Corps',type:'Die-Cast',isNew:true,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p61',name:'Cipher Blazer',line:'Nova Squad · Action Figure · Poseable',price:3970,salePrice:3180,badge:'Sale',rating:3.8,reviews:113,age:'8+',universe:'Nova Squad',type:'Action Figure',isNew:false,isTrending:true,isCollectible:false,isSale:true},
-  {id:'p62',name:'Nitro Scout',line:'Titan Works · Display Accessory',price:5230,badge:'Limited Edition',rating:3.9,reviews:126,age:'All Ages',universe:'Titan Works',type:'Accessory',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p63',name:'Falcon Trooper',line:'Blaze Circuit · RC · 2.4GHz Remote',price:6550,badge:'Exclusive',rating:4.0,reviews:139,age:'8+',universe:'Blaze Circuit',type:'RC Vehicle',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p64',name:'Ranger Drifter',line:'Frostbyte · Die-Cast · Alloy Build',price:4850,badge:'Sale',rating:4.1,reviews:152,age:'13+',universe:'Frostbyte',type:'Die-Cast',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p65',name:'Turbo Hunter',line:'GT Vector · Action Figure · Poseable',price:6220,rating:4.2,reviews:165,age:'8+',universe:'GT Vector',type:'Action Figure',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p66',name:'Shadow Rambler',line:'Aerodrome · Display Accessory',price:3490,rating:4.3,reviews:178,age:'All Ages',universe:'Aerodrome',type:'Accessory',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p67',name:'Blaze Racer',line:'Skyline Riders · RC · 2.4GHz Remote',price:4800,salePrice:3840,badge:'Sale',rating:4.4,reviews:11,age:'8+',universe:'Skyline Riders',type:'RC Vehicle',isNew:false,isTrending:true,isCollectible:true,isSale:true},
-  {id:'p68',name:'Nova Striker',line:'Ironclad Legion · Die-Cast · Alloy Build',price:6120,badge:'Best Seller',rating:4.5,reviews:24,age:'13+',universe:'Ironclad Legion',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p69',name:'Storm Sentinel',line:'Rangehead · Action Figure · Poseable',price:3340,badge:'Limited Edition',rating:4.6,reviews:37,age:'8+',universe:'Rangehead',type:'Action Figure',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p70',name:'Rapid Rider',line:'Voltage Corps · Display Accessory',price:3630,badge:'Exclusive',rating:4.7,reviews:50,age:'All Ages',universe:'Voltage Corps',type:'Accessory',isNew:true,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p71',name:'Vortex Cruiser',line:'Nova Squad · RC · 2.4GHz Remote',price:4950,badge:'Sale',rating:4.8,reviews:63,age:'8+',universe:'Nova Squad',type:'RC Vehicle',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p72',name:'Apex Warden',line:'Titan Works · Die-Cast · Alloy Build',price:6160,rating:4.9,reviews:76,age:'13+',universe:'Titan Works',type:'Die-Cast',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p73',name:'Comet Voyager',line:'Blaze Circuit · Action Figure · Poseable',price:3490,salePrice:2790,badge:'Sale',rating:3.8,reviews:89,age:'8+',universe:'Blaze Circuit',type:'Action Figure',isNew:false,isTrending:true,isCollectible:false,isSale:true},
-  {id:'p74',name:'Ember Runner',line:'Frostbyte · Display Accessory',price:4800,badge:'New',rating:3.9,reviews:102,age:'All Ages',universe:'Frostbyte',type:'Accessory',isNew:true,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p75',name:'Cloudpaw Bear',line:'Plush Forest · Plush · 14in',price:3450,badge:'Best Seller',rating:4.8,reviews:64,age:'All Ages',universe:'Plush Forest',type:'Plush',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p76',name:'Marshwhistle Otter',line:'Plush Forest · Plush · 12in',price:3020,rating:4.6,reviews:38,age:'All Ages',universe:'Plush Forest',type:'Plush',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p77',name:'Duskling Fox Cub',line:'Plush Forest · Plush · 10in',price:3980,badge:'New',rating:4.4,reviews:14,age:'All Ages',universe:'Plush Forest',type:'Plush',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p78',name:'Snoreleaf Sloth',line:'Plush Forest · Plush · Weighted 16in',price:5230,badge:'Exclusive',rating:4.9,reviews:91,age:'All Ages',universe:'Plush Forest',type:'Plush',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p79',name:'Puffling Penguin Trio',line:'Plush Forest · Plush · 3-Pc.',price:4610,rating:4.3,reviews:22,age:'All Ages',universe:'Plush Forest',type:'Plush',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:3690},
-  {id:'p80',name:'Cirrus Skybuild Tower',line:'Blockworks · Building Blocks · 480-Pc.',price:6400,badge:'Best Seller',rating:4.7,reviews:56,age:'8+',universe:'Blockworks',type:'Building Blocks',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p81',name:'Ironvale Fortress Set',line:'Blockworks · Building Blocks · 620-Pc.',price:6980,badge:'Limited Edition',rating:4.9,reviews:33,age:'8+',universe:'Blockworks',type:'Building Blocks',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p82',name:'Harborlight Crane Rig',line:'Blockworks · Building Blocks · 340-Pc.',price:4390,badge:'New',rating:4.2,reviews:9,age:'8+',universe:'Blockworks',type:'Building Blocks',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p83',name:'Nova Outpost Modular Base',line:'Blockworks · Building Blocks · 710-Pc.',price:6850,rating:4.6,reviews:47,age:'13+',universe:'Blockworks',type:'Building Blocks',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p84',name:'Riverside Cottage Build',line:'Blockworks · Building Blocks · 390-Pc.',price:3760,rating:4.1,reviews:18,age:'8+',universe:'Blockworks',type:'Building Blocks',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:3010},
-  {id:'p85',name:'Skyline Riders Circuit Puzzle',line:'Puzzle Works · Jigsaw · 500-Pc.',price:3150,rating:4.4,reviews:26,age:'8+',universe:'Puzzle Works',type:'Puzzle',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p86',name:'Aerodrome Skymap Puzzle',line:'Puzzle Works · Jigsaw · 1000-Pc.',price:4020,badge:'Best Seller',rating:4.7,reviews:41,age:'13+',universe:'Puzzle Works',type:'Puzzle',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p87',name:'Ironclad Legion Night Ops Puzzle',line:'Puzzle Works · Jigsaw · 750-Pc.',price:3540,badge:'New',rating:4.0,reviews:7,age:'8+',universe:'Puzzle Works',type:'Puzzle',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p88',name:'Voltage Corps Glow Puzzle',line:'Puzzle Works · Jigsaw · Glow-in-Dark 400-Pc.',price:4870,badge:'Exclusive',rating:4.8,reviews:52,age:'8+',universe:'Puzzle Works',type:'Puzzle',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p89',name:'Harlow Studio Doll',line:'Kindred Circle · Doll · 18in Poseable',price:5480,badge:'Best Seller',rating:4.9,reviews:73,age:'8+',universe:'Kindred Circle',type:'Doll',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p90',name:'Marin Voyager Doll',line:'Kindred Circle · Doll · 18in Poseable',price:5480,rating:4.5,reviews:29,age:'8+',universe:'Kindred Circle',type:'Doll',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p91',name:'Kindred Circle Cafe Playset',line:'Kindred Circle · Doll Accessory Set',price:4260,badge:'New',rating:4.3,reviews:11,age:'6+',universe:'Kindred Circle',type:'Doll',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p92',name:'Rosette Bloom Doll',line:'Kindred Circle · Doll · 18in Poseable',price:5480,badge:'Limited Edition',rating:5.0,reviews:16,age:'8+',universe:'Kindred Circle',type:'Doll',isNew:false,isTrending:false,isCollectible:true,isSale:false},
-  {id:'p93',name:'Kindred Circle Studio Wardrobe',line:'Kindred Circle · Doll Accessory · 6-Pc.',price:3390,rating:4.2,reviews:19,age:'6+',universe:'Kindred Circle',type:'Doll',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:2710},
-  {id:'p94',name:'Rangehead Trail Blaster Water Gun',line:'Basecamp Outdoor · Water Toy',price:3080,badge:'Best Seller',rating:4.4,reviews:37,age:'6+',universe:'Basecamp Outdoor',type:'Outdoor Toy',isNew:false,isTrending:true,isCollectible:false,isSale:false},
-  {id:'p95',name:'Skyline Riders Kick Scooter',line:'Basecamp Outdoor · Ride-On',price:6710,badge:'New',rating:4.6,reviews:24,age:'6+',universe:'Basecamp Outdoor',type:'Outdoor Toy',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p96',name:'Nova Squad Sidewalk Chalk Set',line:'Basecamp Outdoor · Arts & Craft · 24-Pc.',price:3020,rating:4.1,reviews:8,age:'3+',universe:'Nova Squad',type:'Outdoor Toy',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p97',name:'Aerodrome Sky Glider Kite',line:'Basecamp Outdoor · Outdoor Toy',price:3460,badge:'Sale',rating:4.3,reviews:15,age:'6+',universe:'Aerodrome',type:'Outdoor Toy',isNew:false,isTrending:false,isCollectible:false,isSale:true,salePrice:2770},
-  {id:'p98',name:'GT Vector Trail Skateboard',line:'Basecamp Outdoor · Ride-On',price:6390,badge:'Exclusive',rating:4.7,reviews:44,age:'8+',universe:'GT Vector',type:'Outdoor Toy',isNew:false,isTrending:true,isCollectible:true,isSale:false},
-  {id:'p99',name:'Frostbyte Bounce Trampoline Set',line:'Basecamp Outdoor · Outdoor Toy',price:6970,rating:4.5,reviews:31,age:'6+',universe:'Frostbyte',type:'Outdoor Toy',isNew:false,isTrending:false,isCollectible:false,isSale:false},
-  {id:'p100',name:'Titan Works Backyard Obstacle Kit',line:'Basecamp Outdoor · Outdoor Toy · Set',price:6510,badge:'New',rating:4.2,reviews:6,age:'6+',universe:'Titan Works',type:'Outdoor Toy',isNew:true,isTrending:false,isCollectible:false,isSale:false},
-];
+/* ── Supabase-backed product catalog ──────────────────────────────────────
+   Products used to be a hardcoded array here. They now live in Supabase
+   (see supabase/schema.sql + supabase/seed.sql) so the admin panel
+   (admin.html) can add/edit/delete them and have changes go live with no
+   rebuild. window.PRODUCTS starts as an empty array and is populated once
+   window.PRODUCTS_PROMISE resolves — every page waits on that promise
+   before calling ReactDOM.render (see the end of each page's own script),
+   since Header's CartDrawer reads window.PRODUCTS on every page, not just
+   product-listing pages. */
+const SUPABASE_URL = 'https://czfavdtjrfqwwwfhesbx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_dbCHTyN_VJxbuDhARXiCoA_VtCWf2g-';
+
+// "Remember me" storage: account.html's sign-in form sets funx_remember_me
+// before calling signInWithPassword. When it's explicitly 'false' (unchecked),
+// the session token goes in sessionStorage (cleared on browser close) instead
+// of localStorage. DEFAULT IS PERSISTENT (localStorage) when the flag is
+// unset — admin.html has no "remember me" checkbox at all and already
+// depends on plain persistent localStorage; defaulting to session-only here
+// would silently break that already-working, tested login.
+const rememberMeStorage = {
+  getItem: (key) => {
+    const remember = localStorage.getItem('funx_remember_me') !== 'false';
+    return (remember ? localStorage : sessionStorage).getItem(key);
+  },
+  setItem: (key, value) => {
+    const remember = localStorage.getItem('funx_remember_me') !== 'false';
+    (remember ? localStorage : sessionStorage).setItem(key, value);
+  },
+  removeItem: (key) => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  },
+};
+
+// createClient() throws SYNCHRONOUSLY on an invalid URL (e.g. the
+// placeholder above before it's been configured), which would otherwise
+// halt this whole script mid-file and take every page down with it. Guard
+// it so a bad/missing config degrades to an empty catalog instead of a
+// hard crash on every single page.
+let supabaseClient = null;
+try {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: rememberMeStorage },
+  });
+} catch (err) {
+  console.error('[funx] Supabase not configured yet (set SUPABASE_URL / SUPABASE_ANON_KEY in common.jsx):', err.message);
+}
+window.supabaseClient = supabaseClient;
+
+function useSession(){
+  const [session,setSession] = React.useState(undefined); // undefined = loading, null = signed out
+  React.useEffect(() => {
+    if (!supabaseClient) { setSession(null); return; }
+    // Single source of truth via onAuthStateChange only (fires once immediately
+    // with the current session, then again on real changes) — mixing this with
+    // a separate getSession() call is the exact race that caused admin.html's
+    // "signs out every time" bug earlier this session. Not repeating that here.
+    const { data: sub } = supabaseClient.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess || null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+  return session;
+}
+window.useSession = useSession;
+
+function applyDisplayFormatting(row) {
+  return {
+    ...row,
+    salePrice: row.sale_price,
+    isNew: row.is_new,
+    isTrending: row.is_trending,
+    isCollectible: row.is_collectible,
+    isSale: row.is_sale,
+    boxDims: (row.box_length_in != null && row.box_width_in != null && row.box_height_in != null)
+      ? `${row.box_length_in}" x ${row.box_width_in}" x ${row.box_height_in}"`
+      : undefined,
+    weight: row.weight_lb != null ? `${row.weight_lb} lb` : undefined,
+    hasVideo: !!row.video_url,
+    videoSrc: row.video_url || undefined,
+  };
+}
+
+window.PRODUCTS = [];
+// Every page gates its first render on this promise (see the end of each
+// page's own script), so it must ALWAYS resolve — never reject, and never
+// stay pending — or every page is stuck on its loading spinner forever.
+// That's why every branch below (no client, query error, thrown exception)
+// funnels into the same "resolve with an empty catalog" fallback.
+window.PRODUCTS_PROMISE = supabaseClient
+  ? supabaseClient
+      .from('products')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[funx] failed to load products from Supabase:', error.message || error);
+          window.PRODUCTS = [];
+          return window.PRODUCTS;
+        }
+        window.PRODUCTS = data.map(applyDisplayFormatting);
+        return window.PRODUCTS;
+      })
+      .catch((err) => {
+        console.error('[funx] product fetch threw:', err);
+        window.PRODUCTS = [];
+        return window.PRODUCTS;
+      })
+  : Promise.resolve(window.PRODUCTS);
 
 const JOURNAL_POSTS = [
   {slug:'why-i-started-funx',category:'Founder’s Note',date:'Jan 12, 2026',readTime:'5 min read',title:'Why I Started FunX at 25',excerpt:'Two failed startups, a shelf full of toy cars, and a simple realization: I never actually stopped playing.',body:[
@@ -477,19 +523,6 @@ const JOURNAL_POSTS = [
   ]},
 ];
 
-PRODUCTS.forEach(p => {
-  if (!p.images) p.images = [1,2,3].map(n => `https://picsum.photos/seed/${p.id}-${n}/800/800`);
-  if (p.stock === undefined) p.stock = 25;
-  if (!p.brand) p.brand = 'FunX';
-  if (!p.material) p.material = p.type==='Die-Cast' ? 'Zinc Alloy Die-Cast' : p.type==='RC Vehicle' ? 'ABS Polymer & Die-Cast Alloy' : 'Painted PVC & ABS';
-  if (!p.color) p.color = 'As Shown';
-  if (p.electronic === undefined) p.electronic = p.type==='RC Vehicle';
-  if (!p.boxDims) p.boxDims = p.type==='RC Vehicle' ? '14" x 9" x 6"' : (p.line||'').includes('3-Pc') ? '16" x 10" x 5"' : '9" x 5" x 4"';
-  if (!p.weight) p.weight = p.type==='RC Vehicle' ? '2.4 lb' : '1.1 lb';
-  if (!p.description) p.description = `The ${p.name} is built for ${p.universe} fans who actually want to play \u2014 ${p.badge==='Limited Edition'||p.isCollectible ? 'a numbered piece worth keeping on the shelf, and worth taking down.' : 'solid enough for daily play, sharp enough to display.'}`;
-  if (p.hasVideo === undefined) p.hasVideo = p.id === 'p1';
-});
-
 function StockLabel({ stock }) {
   if (stock <= 0) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-error)',marginTop:4}}>Out of Stock</div>;
   if (stock <= 5) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-warning)',marginTop:4}}>Only {stock} left</div>;
@@ -498,4 +531,4 @@ function StockLabel({ stock }) {
 
 function fmtPrice(n) { return `PKR ${Number(n).toLocaleString('en-PK')}`; }
 
-Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, PRODUCTS, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount });
+Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount });

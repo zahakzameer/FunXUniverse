@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Admin — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--surface-canvas,#0b0b0d)"><svg width="32" height="32" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#F16A3E" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 60"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.8s" repeatCount="indefinite"/></circle></svg></div></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Input, Button, Card, Checkbox, Select, Switch, Tabs, Dialog, Badge } = window.FunXDesignSystem_bbd8ae;
+
+const PRODUCT_TYPES = ['Die-Cast','RC Vehicle','Action Figure','Accessory','Plush','Building Blocks','Puzzle','Doll','Outdoor Toy'];
+const BADGE_OPTIONS = ['', 'Best Seller', 'New', 'Sale', 'Limited Edition', 'Exclusive'];
+const BLANK_PRODUCT = {
+  id:'', name:'', description:'', brand:'FunX', line:'', universe:'', type:'Die-Cast', age:'',
+  material:'', color:'', electronic:false, price:'', sale_price:'', badge:'', rating:'', reviews:'',
+  stock:25, box_length_in:'', box_width_in:'', box_height_in:'', weight_lb:'',
+  is_new:false, is_trending:false, is_collectible:false, is_sale:false,
+  images:[], video_url:'', sort_order:0,
+};
+
+/* ── auth/session ─────────────────────────────────────────────────────── */
+function useAdminSession(){
+  const [session,setSession] = React.useState(undefined); // undefined = loading, null = signed out
+  const [profile,setProfile] = React.useState(null);
+  const [profileLoading,setProfileLoading] = React.useState(false);
+
+  const loadProfile = React.useCallback((uid) => {
+    if (!uid) { setProfile(null); return; }
+    setProfileLoading(true);
+    window.supabaseClient.from('admin_users').select('*').eq('id', uid).single()
+      .then(({ data }) => { setProfile(data || null); setProfileLoading(false); });
+  }, []);
+
+  React.useEffect(() => {
+    // Single source of truth for session state. Mixing this with a separate
+    // getSession() call that also calls setSession() is a known race: onAuthState
+    // Change's initial firing can arrive AFTER getSession() resolves and, if the
+    // client's local state wasn't fully hydrated yet, clobber a correct session
+    // with null — which looked like "randomly signed out on reload".
+    // onAuthStateChange always fires once immediately with the current state
+    // (INITIAL_SESSION), then again on real changes, so this alone is enough.
+    const { data: sub } = window.supabaseClient.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess || null);
+      loadProfile(sess && sess.user.id);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [loadProfile]);
+
+  return { session, profile, profileLoading, reloadProfile: () => loadProfile(session && session.user.id) };
+}
+
+/* ── login / signup ───────────────────────────────────────────────────── */
+function ModeSwitch({ mode, setMode }){
+  return <div style={{display:'flex',borderRadius:'var(--radius-md)',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',padding:4,marginBottom:32}}>
+    {['sign-in','create'].map(m => <div key={m} onClick={()=>setMode(m)} style={{flex:1,textAlign:'center',padding:'10px 0',borderRadius:'var(--radius-sm)',cursor:'pointer',fontSize:14,fontWeight:600,background:mode===m?'var(--color-primary)':'transparent',color:mode===m?'#fff':'var(--text-secondary)',transition:'background var(--duration-fast)'}}>{m==='sign-in'?'Sign In':'Create Account'}</div>)}
+  </div>;
+}
+
+function LoginScreen(){
+  const [mode,setMode] = React.useState('sign-in');
+  const [form,setForm] = React.useState({email:'',password:''});
+  const [error,setError] = React.useState('');
+  const [pending,setPending] = React.useState(false);
+  const [signedUp,setSignedUp] = React.useState(false);
+  const update = (k) => (e) => setForm({...form,[k]:e.target.value});
+
+  const submit = (e) => {
+    e.preventDefault();
+    setError(''); setPending(true);
+    const call = mode==='sign-in'
+      ? window.supabaseClient.auth.signInWithPassword({ email: form.email, password: form.password })
+      : window.supabaseClient.auth.signUp({ email: form.email, password: form.password });
+    call.then(({ error }) => {
+      setPending(false);
+      if (error) { setError(error.message); return; }
+      if (mode==='create') setSignedUp(true);
+    });
+  };
+
+  return <section style={{minHeight:'calc(100vh - 76px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'64px 40px',background:'var(--surface-sunken)'}}>
+    <Card variant="dark" padding="lg" style={{width:440,boxShadow:'var(--shadow-3)'}}>
+      {signedUp ? <div style={{textAlign:'center',padding:'24px 8px'}}>
+        <div style={{fontSize:40,marginBottom:16,color:'var(--color-success)'}}>✓</div>
+        <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:24,margin:'0 0 10px'}}>Account created</h3>
+        <p style={{color:'var(--text-muted)',fontSize:14}}>Your account starts with no admin access. Ask an existing admin to grant you permissions, then sign in.</p>
+        <Button variant="secondary" size="md" onClick={()=>{setSignedUp(false);setMode('sign-in');}}>Back to Sign In</Button>
+      </div> : <>
+        <div style={{textAlign:'center',marginBottom:28}}>
+          <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:12}}>FunX Admin</div>
+          <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:32,margin:0}}>{mode==='sign-in' ? 'Sign In' : 'Create Account'}</h1>
+        </div>
+        <ModeSwitch mode={mode} setMode={setMode}/>
+        <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
+          <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
+          <Input label="Password" type="password" placeholder="••••••••" value={form.password} onChange={update('password')} required/>
+          {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
+          <Button variant="primary" size="lg" disabled={pending}>{pending ? 'Please wait…' : (mode==='sign-in' ? 'Sign In' : 'Create Account')}</Button>
+        </form>
+      </>}
+    </Card>
+  </section>;
+}
+
+function WaitingForAccess({ profile, onSignOut }){
+  return <section style={{minHeight:'calc(100vh - 76px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'64px 40px',background:'var(--surface-sunken)'}}>
+    <Card variant="dark" padding="lg" style={{width:440,textAlign:'center'}}>
+      <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:24,margin:'0 0 10px'}}>Waiting for access</h3>
+      <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:24}}>Signed in as <strong>{profile && profile.email}</strong>, but this account doesn't have any admin permissions yet. Ask an existing admin to grant you access from the Users tab.</p>
+      <Button variant="secondary" size="md" onClick={onSignOut}>Sign Out</Button>
+    </Card>
+  </section>;
+}
+
+/* ── image / video upload widget ──────────────────────────────────────── */
+function UploadSlot({ url, onUpload, onRemove, uploading, accept, label }){
+  const inputRef = React.useRef(null);
+  return <div style={{width:120,height:120,borderRadius:'var(--radius-md)',border:'1px dashed var(--border-hairline)',background:'var(--surface-panel)',position:'relative',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',cursor:'pointer'}}
+    onClick={()=>inputRef.current && inputRef.current.click()}>
+    <input ref={inputRef} type="file" accept={accept} style={{display:'none'}} onChange={(e)=>{ const f=e.target.files[0]; if (f) onUpload(f); e.target.value=''; }}/>
+    {uploading ? <span style={{fontSize:12,color:'var(--text-muted)'}}>Uploading…</span>
+      : url ? <>
+        {accept.startsWith('video') ? <video src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} muted/> : <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}}/>}
+        <span onClick={(e)=>{e.stopPropagation();onRemove();}} style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',background:'rgba(0,0,0,0.7)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>✕</span>
+      </> : <span style={{fontSize:12,color:'var(--text-muted)',textAlign:'center',padding:8}}>{label}</span>}
+  </div>;
+}
+
+function uploadToStorage(file, folder){
+  const path = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+  return window.supabaseClient.storage.from('product-images').upload(path, file)
+    .then(({ error }) => {
+      if (error) throw error;
+      return window.supabaseClient.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    });
+}
+
+/* ── product form ──────────────────────────────────────────────────────── */
+function ProductForm({ initial, onSaved, onCancel }){
+  const isEdit = !!(initial && initial.id);
+  const [form,setForm] = React.useState(() => {
+    // DB rows use null for empty optional fields (sale_price, badge, video_url,
+    // box/weight dims, etc.); React controlled inputs need '' instead, or they
+    // warn about switching between controlled/uncontrolled.
+    const merged = { ...BLANK_PRODUCT, ...(initial||{}) };
+    Object.keys(merged).forEach(k => { if (merged[k] === null) merged[k] = BLANK_PRODUCT[k]; });
+    return merged;
+  });
+  const [uploadingIdx,setUploadingIdx] = React.useState(-1);
+  const [uploadingVideo,setUploadingVideo] = React.useState(false);
+  const [error,setError] = React.useState('');
+  const [saving,setSaving] = React.useState(false);
+
+  const set = (k) => (e) => setForm({...form, [k]: e.target.type==='checkbox' ? e.target.checked : e.target.value});
+  const setBool = (k) => (checked) => setForm({...form, [k]: checked});
+
+  const images = form.images || [];
+  const addImageSlot = images.length < 5;
+
+  const uploadImage = (idx, file) => {
+    setUploadingIdx(idx);
+    uploadToStorage(file, form.id || 'unassigned').then((url) => {
+      const next = [...images];
+      if (idx < next.length) next[idx] = url; else next.push(url);
+      setForm(f => ({...f, images: next}));
+      setUploadingIdx(-1);
+    }).catch(err => { setError(err.message); setUploadingIdx(-1); });
+  };
+  const removeImage = (idx) => setForm(f => ({...f, images: images.filter((_,i)=>i!==idx)}));
+
+  const uploadVideo = (file) => {
+    setUploadingVideo(true);
+    uploadToStorage(file, form.id || 'unassigned').then((url) => {
+      setForm(f => ({...f, video_url: url}));
+      setUploadingVideo(false);
+    }).catch(err => { setError(err.message); setUploadingVideo(false); });
+  };
+
+  const save = (e) => {
+    e.preventDefault();
+    setError('');
+    if (!form.id.trim()) { setError('Product ID is required (e.g. p101).'); return; }
+    if (!form.name.trim()) { setError('Name is required.'); return; }
+    setSaving(true);
+    const row = {
+      id: form.id.trim(), name: form.name, description: form.description, brand: form.brand || 'FunX',
+      line: form.line, universe: form.universe, type: form.type, age: form.age,
+      material: form.material, color: form.color, electronic: !!form.electronic,
+      price: Number(form.price) || 0, sale_price: form.sale_price === '' ? null : Number(form.sale_price),
+      badge: form.badge || null, rating: Number(form.rating) || 0, reviews: Number(form.reviews) || 0,
+      stock: Number(form.stock) || 0,
+      box_length_in: form.box_length_in === '' ? null : Number(form.box_length_in),
+      box_width_in: form.box_width_in === '' ? null : Number(form.box_width_in),
+      box_height_in: form.box_height_in === '' ? null : Number(form.box_height_in),
+      weight_lb: form.weight_lb === '' ? null : Number(form.weight_lb),
+      is_new: !!form.is_new, is_trending: !!form.is_trending, is_collectible: !!form.is_collectible, is_sale: !!form.is_sale,
+      images: images, video_url: form.video_url || null,
+      sort_order: Number(form.sort_order) || 0,
+    };
+    window.supabaseClient.from('products').upsert(row).then(({ error }) => {
+      setSaving(false);
+      if (error) { setError(error.message); return; }
+      onSaved();
+    });
+  };
+
+  return <form onSubmit={save} style={{display:'flex',flexDirection:'column',gap:16,maxHeight:'70vh',overflowY:'auto',padding:'4px 4px 4px 0'}}>
+    {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+      <Input label="Product ID" placeholder="p101" value={form.id} onChange={set('id')} disabled={isEdit} required/>
+      <Input label="Name" value={form.name} onChange={set('name')} required/>
+    </div>
+    <Input label="Description" value={form.description} onChange={set('description')}/>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+      <Input label="Line" placeholder="Skyline Riders · Die-Cast" value={form.line} onChange={set('line')}/>
+      <Input label="Universe" value={form.universe} onChange={set('universe')}/>
+      <Select label="Type" value={form.type} onChange={set('type')} options={PRODUCT_TYPES}/>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+      <Input label="Age" placeholder="8+" value={form.age} onChange={set('age')}/>
+      <Input label="Material" value={form.material} onChange={set('material')}/>
+      <Input label="Color" value={form.color} onChange={set('color')}/>
+    </div>
+    <Switch label="Electronic / powered" checked={!!form.electronic} onChange={setBool('electronic')}/>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+      <Input label="Price (PKR)" type="number" value={form.price} onChange={set('price')} required/>
+      <Input label="Sale price (optional)" type="number" value={form.sale_price} onChange={set('sale_price')}/>
+      <Select label="Badge" value={form.badge} onChange={set('badge')} options={BADGE_OPTIONS}/>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+      <Input label="Rating" type="number" step="0.1" min="0" max="5" value={form.rating} onChange={set('rating')}/>
+      <Input label="Reviews" type="number" value={form.reviews} onChange={set('reviews')}/>
+      <Input label="Stock" type="number" value={form.stock} onChange={set('stock')}/>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16}}>
+      <Input label="Box L (in)" type="number" value={form.box_length_in} onChange={set('box_length_in')}/>
+      <Input label="Box W (in)" type="number" value={form.box_width_in} onChange={set('box_width_in')}/>
+      <Input label="Box H (in)" type="number" value={form.box_height_in} onChange={set('box_height_in')}/>
+      <Input label="Weight (lb)" type="number" step="0.1" value={form.weight_lb} onChange={set('weight_lb')}/>
+    </div>
+    <div style={{display:'flex',gap:24,flexWrap:'wrap'}}>
+      <Checkbox label="New" checked={!!form.is_new} onChange={(e)=>setBool('is_new')(e.target.checked)}/>
+      <Checkbox label="Trending" checked={!!form.is_trending} onChange={(e)=>setBool('is_trending')(e.target.checked)}/>
+      <Checkbox label="Collectible" checked={!!form.is_collectible} onChange={(e)=>setBool('is_collectible')(e.target.checked)}/>
+      <Checkbox label="On Sale" checked={!!form.is_sale} onChange={(e)=>setBool('is_sale')(e.target.checked)}/>
+    </div>
+    <div>
+      <div style={{fontSize:13,fontWeight:600,marginBottom:8,color:'var(--text-secondary)'}}>Images (up to 5)</div>
+      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+        {images.map((url,idx) => <UploadSlot key={idx} url={url} accept="image/*" label="Photo" uploading={uploadingIdx===idx} onUpload={(f)=>uploadImage(idx,f)} onRemove={()=>removeImage(idx)}/>)}
+        {addImageSlot && <UploadSlot url="" accept="image/*" label="Add photo" uploading={uploadingIdx===images.length} onUpload={(f)=>uploadImage(images.length,f)} onRemove={()=>{}}/>}
+      </div>
+    </div>
+    <div>
+      <div style={{fontSize:13,fontWeight:600,marginBottom:8,color:'var(--text-secondary)'}}>Video (optional)</div>
+      <UploadSlot url={form.video_url} accept="video/*" label="Add video" uploading={uploadingVideo} onUpload={uploadVideo} onRemove={()=>setForm(f=>({...f,video_url:''}))}/>
+    </div>
+    <div style={{display:'flex',gap:12,justifyContent:'flex-end',marginTop:8}}>
+      <Button variant="secondary" size="md" onClick={onCancel} type="button">Cancel</Button>
+      <Button variant="primary" size="md" disabled={saving}>{saving ? 'Saving…' : 'Save Product'}</Button>
+    </div>
+  </form>;
+}
+
+/* ── products tab ──────────────────────────────────────────────────────── */
+function ProductsTab({ perms }){
+  const [products,setProducts] = React.useState(null);
+  const [dialog,setDialog] = React.useState(null); // null | 'new' | product row
+  const [error,setError] = React.useState('');
+
+  const load = React.useCallback(() => {
+    window.supabaseClient.from('products').select('*').order('sort_order').then(({ data, error }) => {
+      if (error) { setError(error.message); return; }
+      setProducts(data);
+    });
+  }, []);
+  React.useEffect(load, [load]);
+
+  const remove = (id) => {
+    if (!confirm(`Delete product ${id}? This can't be undone.`)) return;
+    window.supabaseClient.from('products').delete().eq('id', id).then(({ error }) => {
+      if (error) { setError(error.message); return; }
+      load();
+    });
+  };
+
+  return <div>
+    {error && <div style={{fontSize:13,color:'var(--color-error)',marginBottom:16}}>{error}</div>}
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+      <div style={{color:'var(--text-muted)',fontSize:14}}>{products ? `${products.length} products` : 'Loading…'}</div>
+      {perms.can_add && <Button variant="primary" size="md" onClick={()=>setDialog('new')}>+ Add Product</Button>}
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {(products||[]).map(p => <Card key={p.id} variant="dark" padding="sm" style={{display:'flex',alignItems:'center',gap:16}}>
+        <div style={{width:52,height:52,borderRadius:'var(--radius-sm)',background:'var(--surface-gallery)',overflow:'hidden',flexShrink:0}}>
+          {p.images && p.images[0] && <img src={p.images[0]} style={{width:'100%',height:'100%',objectFit:'cover'}}/>}
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontWeight:600,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+          <div style={{fontSize:12,color:'var(--text-muted)'}}>{p.id} · {window.fmtPrice(p.price)}{p.badge ? ` · ${p.badge}` : ''}</div>
+        </div>
+        {perms.can_edit && <Button variant="secondary" size="sm" onClick={()=>setDialog(p)}>Edit</Button>}
+        {perms.can_delete && <Button variant="secondary" size="sm" onClick={()=>remove(p.id)}>Delete</Button>}
+      </Card>)}
+    </div>
+    <Dialog open={!!dialog} title={dialog==='new' ? 'Add Product' : 'Edit Product'} onClose={()=>setDialog(null)}>
+      <Card variant="dark" padding="lg" style={{width:640,maxWidth:'90vw'}}>
+        <h3 style={{marginTop:0,fontFamily:'var(--font-display)',fontStyle:'italic'}}>{dialog==='new' ? 'Add Product' : `Edit ${dialog && dialog.id}`}</h3>
+        {dialog && <ProductForm initial={dialog==='new' ? null : dialog} onCancel={()=>setDialog(null)} onSaved={()=>{setDialog(null);load();}}/>}
+      </Card>
+    </Dialog>
+  </div>;
+}
+
+/* ── users tab ─────────────────────────────────────────────────────────── */
+function UsersTab({ selfId }){
+  const [users,setUsers] = React.useState(null);
+  const [error,setError] = React.useState('');
+
+  const load = React.useCallback(() => {
+    window.supabaseClient.from('admin_users').select('*').order('created_at').then(({ data, error }) => {
+      if (error) { setError(error.message); return; }
+      setUsers(data);
+    });
+  }, []);
+  React.useEffect(load, [load]);
+
+  const togglePerm = (user, key) => (checked) => {
+    window.supabaseClient.from('admin_users').update({ [key]: checked }).eq('id', user.id).then(({ error }) => {
+      if (error) { setError(error.message); return; }
+      load();
+    });
+  };
+
+  const PERMS = [['can_add','Add'],['can_edit','Edit'],['can_delete','Delete'],['can_manage_users','Manage Users']];
+
+  return <div>
+    {error && <div style={{fontSize:13,color:'var(--color-error)',marginBottom:16}}>{error}</div>}
+    <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:20}}>New sign-ups appear here with no permissions until you grant them. Ask them to create an account from the sign-in screen first.</p>
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {(users||[]).map(u => <Card key={u.id} variant="dark" padding="sm">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div style={{fontWeight:600,fontSize:14}}>{u.email}{u.id===selfId && <span style={{color:'var(--text-muted)',fontWeight:400}}> (you)</span>}</div>
+          <div style={{display:'flex',gap:20,flexWrap:'wrap'}}>
+            {PERMS.map(([key,label]) => <Checkbox key={key} label={label} checked={!!u[key]} onChange={(e)=>togglePerm(u,key)(e.target.checked)}/>)}
+          </div>
+        </div>
+      </Card>)}
+    </div>
+  </div>;
+}
+
+/* ── app shell ─────────────────────────────────────────────────────────── */
+function NotConfigured(){
+  return <div><Header active=""/>
+    <section style={{minHeight:'calc(100vh - 76px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'64px 40px',background:'var(--surface-sunken)'}}>
+      <Card variant="dark" padding="lg" style={{width:480,textAlign:'center'}}>
+        <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:24,margin:'0 0 10px'}}>Supabase isn't configured yet</h3>
+        <p style={{color:'var(--text-muted)',fontSize:14}}>Set SUPABASE_URL and SUPABASE_ANON_KEY near the top of common.jsx, then reload this page.</p>
+      </Card>
+    </section>
+    <Footer/>
+  </div>;
+}
+
+function AdminApp(){
+  if (!window.supabaseClient) return <NotConfigured/>;
+  const { session, profile, profileLoading } = useAdminSession();
+  const [tab,setTab] = React.useState('Products');
+
+  if (session === undefined) return <div style={{minHeight:'60vh'}}/>;
+  if (!session) return <div><Header active=""/><LoginScreen/><Footer/></div>;
+  if (profileLoading || profile === undefined) return <div style={{minHeight:'60vh'}}/>;
+
+  const perms = profile || { can_add:false, can_edit:false, can_delete:false, can_manage_users:false };
+  const hasAnyAccess = perms.can_add || perms.can_edit || perms.can_delete || perms.can_manage_users;
+  const signOut = () => window.supabaseClient.auth.signOut();
+
+  if (!hasAnyAccess) return <div><Header active=""/><WaitingForAccess profile={profile} onSignOut={signOut}/><Footer/></div>;
+
+  const tabs = perms.can_manage_users ? ['Products','Users'] : ['Products'];
+
+  return <div>
+    <Header active=""/>
+    <section style={{maxWidth:1100,margin:'0 auto',padding:'48px 40px 96px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+        <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:36,margin:0}}>Admin</h1>
+        <Button variant="secondary" size="sm" onClick={signOut}>Sign Out ({profile.email})</Button>
+      </div>
+      <div style={{marginBottom:28}}><Tabs tabs={tabs} active={tab} onChange={setTab}/></div>
+      {tab==='Products' && <ProductsTab perms={perms}/>}
+      {tab==='Users' && perms.can_manage_users && <UsersTab selfId={session.user.id}/>}
+    </section>
+    <Footer/>
+  </div>;
+}
+window.PRODUCTS_PROMISE.then(() => ReactDOM.render(<AdminApp/>, document.getElementById('root')));
+</script>
+</body></html>
