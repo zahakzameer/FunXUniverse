@@ -22,9 +22,9 @@
 const { Accordion, Breadcrumb } = window.FunXDesignSystem_bbd8ae;
 
 const METHODS = [
-  ['Standard','5–7 business days','Free over PKR 150 · PKR 14 otherwise'],
-  ['Expedited','2–3 business days','PKR 28'],
-  ['White-Glove (Numbered Editions)','5–9 business days','PKR 65 · includes foam crate & signature'],
+  ['Standard','5–7 business days','Free over PKR 5,000 · PKR 350 otherwise'],
+  ['Expedited','2–3 business days','PKR 700'],
+  ['White-Glove (Numbered Editions)','5–9 business days','PKR 1,500 · includes foam crate & signature'],
 ];
 
 function App(){
@@ -49,7 +49,7 @@ function App(){
 
     <section style={{maxWidth:900,margin:'0 auto',padding:'0 40px 64px'}}>
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24}}>
-        {[['Foam-lined crates','Every numbered edition ships in a custom foam-cut box, not a padded envelope.'],['Signature on delivery','Orders over PKR 200 require a signature — no exceptions, no porch drop-offs.'],['International','We ship to 24 countries; duties are calculated and shown at checkout, never after.']].map(([t,d]) => <div key={t} style={{padding:24,border:'1px solid var(--border-hairline-soft)',borderRadius:'var(--radius-lg)'}}>
+        {[['Foam-lined crates','Every numbered edition ships in a custom foam-cut box, not a padded envelope.'],['Signature on delivery','Orders over PKR 5,000 require a signature — no exceptions, no porch drop-offs.'],['International','We ship to 24 countries; duties are calculated and shown at checkout, never after.']].map(([t,d]) => <div key={t} style={{padding:24,border:'1px solid var(--border-hairline-soft)',borderRadius:'var(--radius-lg)'}}>
           <div style={{fontSize:15,fontWeight:600,marginBottom:10}}>{t}</div>
           <div style={{fontSize:13,color:'var(--text-muted)',lineHeight:1.6}}>{d}</div>
         </div>)}

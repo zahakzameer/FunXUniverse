@@ -20,7 +20,11 @@
 <script type="text/babel" src="common.jsx"></script>
 <script type="text/babel">
 const { Tag } = window.FunXDesignSystem_bbd8ae;
-const POPULAR = ['Skyline Riders','Ironclad Legion','Numbered Edition','Aerodrome','Under PKR 150'];
+// Prices are stored in PKR (the base currency — see common.jsx), so the
+// budget threshold is defined in PKR and only the displayed label is
+// converted via fmtPrice for whatever currency the visitor has selected.
+const BUDGET_MAX_PKR = 4000;
+const POPULAR_TAGS = ['Skyline Riders','Ironclad Legion','Numbered Edition','Aerodrome'];
 
 function SearchBar({ query, setQuery }){
   return <div style={{maxWidth:720,margin:'0 auto',position:'relative'}}>
@@ -31,28 +35,38 @@ function SearchBar({ query, setQuery }){
 
 function App(){
   const [query,setQuery] = React.useState('');
+  const [budgetOnly,setBudgetOnly] = React.useState(false);
+  const budgetLabel = `Under ${window.fmtPrice(BUDGET_MAX_PKR)}`;
   const q = query.trim().toLowerCase();
-  const results = q ? window.PRODUCTS.filter(p => (p.name+' '+p.line+' '+p.universe+' '+p.type).toLowerCase().includes(q)) : [];
+  const active = budgetOnly || !!q;
+  const results = budgetOnly
+    ? window.PRODUCTS.filter(p => (p.salePrice||p.price) < BUDGET_MAX_PKR)
+    : (q ? window.PRODUCTS.filter(p => (p.name+' '+p.line+' '+p.universe+' '+p.type).toLowerCase().includes(q)) : []);
+
+  const selectTag = (t) => { setBudgetOnly(false); setQuery(t); };
+  const selectBudget = () => { setQuery(''); setBudgetOnly(true); };
+  const updateQuery = (e) => { setBudgetOnly(false); setQuery(e.target.value); };
 
   return <div>
     <Header active=""/>
     <section style={{padding:'80px 40px 24px',textAlign:'center'}} data-screen-label="Search">
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:48,margin:'0 0 32px'}}>Search the Universe</h1>
-      <SearchBar query={query} setQuery={setQuery}/>
+      <SearchBar query={query} setQuery={(v)=>updateQuery({target:{value:v}})}/>
       <div style={{display:'flex',gap:10,justifyContent:'center',marginTop:24,flexWrap:'wrap'}}>
         <span style={{fontSize:13,color:'var(--text-muted)',marginRight:4,alignSelf:'center'}}>Popular:</span>
-        {POPULAR.map(t => <div key={t} onClick={()=>setQuery(t)} style={{cursor:'pointer'}}><Tag>{t}</Tag></div>)}
+        {POPULAR_TAGS.map(t => <div key={t} onClick={()=>selectTag(t)} style={{cursor:'pointer'}}><Tag>{t}</Tag></div>)}
+        <div onClick={selectBudget} style={{cursor:'pointer'}}><Tag>{budgetLabel}</Tag></div>
       </div>
     </section>
 
     <section style={{maxWidth:1280,margin:'0 auto',padding:'56px 40px 96px'}}>
-      {!q && <div style={{textAlign:'center',color:'var(--text-muted)',fontSize:15,padding:'40px 0'}}>Start typing to search across every FunX universe.</div>}
-      {q && results.length === 0 && <div style={{textAlign:'center',padding:'40px 0'}}>
-        <div style={{fontSize:18,fontWeight:600,marginBottom:8}}>No results for "{query}"</div>
+      {!active && <div style={{textAlign:'center',color:'var(--text-muted)',fontSize:15,padding:'40px 0'}}>Start typing to search across every FunX universe.</div>}
+      {active && results.length === 0 && <div style={{textAlign:'center',padding:'40px 0'}}>
+        <div style={{fontSize:18,fontWeight:600,marginBottom:8}}>No results for "{budgetOnly ? budgetLabel : query}"</div>
         <p style={{color:'var(--text-muted)',fontSize:14}}>Try a universe name like Skyline Riders or Ironclad Legion.</p>
       </div>}
-      {q && results.length > 0 && <>
-        <div style={{fontSize:13,color:'var(--text-muted)',marginBottom:24}}>{results.length} results for "{query}"</div>
+      {active && results.length > 0 && <>
+        <div style={{fontSize:13,color:'var(--text-muted)',marginBottom:24}}>{results.length} results for "{budgetOnly ? budgetLabel : query}"</div>
         <ProductGrid products={results} cols={4}/>
       </>}
     </section>
