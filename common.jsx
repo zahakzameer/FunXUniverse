@@ -725,7 +725,7 @@ function SectionHeading({ eyebrow, title, cta, ctaHref }) {
   </div>;
 }
 
-function FilterGroup({ title, options, type='checkbox' }) {
+function FilterGroup({ title, options, selected=[], onToggle }) {
   const { Checkbox } = window.FunXDesignSystem_bbd8ae;
   const [open,setOpen] = React.useState(true);
   return <div style={{borderBottom:'1px solid var(--border-hairline-soft)',padding:'18px 0'}}>
@@ -733,14 +733,18 @@ function FilterGroup({ title, options, type='checkbox' }) {
       {title}<span style={{transform:open?'rotate(90deg)':'rotate(0)',transition:'transform var(--duration-fast)',color:'var(--text-muted)'}}>{ICONS.chevron}</span>
     </div>
     {open && <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:11}}>
-      {options.map(o => <Checkbox key={o} label={o}/>)}
+      {options.map(o => <Checkbox key={o} label={o} checked={selected.includes(o)} onChange={()=>onToggle && onToggle(o)}/>)}
     </div>}
   </div>;
 }
 
-function FilterSidebar({ groups }) {
+function FilterSidebar({ groups, onClear }) {
+  const hasActive = groups.some(g => g.selected && g.selected.length > 0);
   return <aside style={{width:236,flexShrink:0}}>
-    <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:8,fontFamily:'var(--font-display)',fontStyle:'italic'}}>Filter</div>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:8}}>
+      <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-display)',fontStyle:'italic'}}>Filter</div>
+      {hasActive && onClear && <span onClick={onClear} style={{fontSize:12,color:'var(--text-muted)',cursor:'pointer',textDecoration:'underline'}}>Clear all</span>}
+    </div>
     {groups.map(g => <FilterGroup key={g.title} {...g}/>)}
   </aside>;
 }

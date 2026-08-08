@@ -38,21 +38,53 @@ function Toolbar({ count, sort, setSort }){
   </div>;
 }
 
+// Filter option labels are display copy, not raw data values, so each
+// group needs a predicate mapping a product to whether a given option
+// matches it. Category labels in particular don't equal p.type verbatim
+// ("Die-Cast Vehicles" vs "Die-Cast"), hence the explicit map.
+const CATEGORY_TO_TYPE = { 'Die-Cast Vehicles':'Die-Cast', 'Action Figures':'Action Figure', 'RC Vehicles':'RC Vehicle', 'Accessories':'Accessory' };
+const PRICE_MATCHERS = {
+  'Under PKR 3,500': p => (p.salePrice||p.price) < 3500,
+  'PKR 3,500–4,500': p => (p.salePrice||p.price) >= 3500 && (p.salePrice||p.price) < 4500,
+  'PKR 4,500–5,500': p => (p.salePrice||p.price) >= 4500 && (p.salePrice||p.price) < 5500,
+  'PKR 5,500+': p => (p.salePrice||p.price) >= 5500,
+};
+const AVAILABILITY_MATCHERS = {
+  'In Stock': p => p.stock > 0,
+  'Numbered Edition': p => p.isCollectible,
+  'On Sale': p => p.isSale,
+};
+
+function useFilters(groupTitles){
+  const [filters,setFilters] = React.useState(() => Object.fromEntries(groupTitles.map(t=>[t,[]])));
+  const toggle = (title,option) => setFilters(f => ({...f, [title]: f[title].includes(option) ? f[title].filter(x=>x!==option) : [...f[title], option]}));
+  const clear = () => setFilters(Object.fromEntries(groupTitles.map(t=>[t,[]])));
+  return { filters, toggle, clear };
+}
+
 function App(){
   const [sort,setSort] = React.useState('Featured');
   const [visible,setVisible] = React.useState(12);
-  let list = window.PRODUCTS.filter(p=>p.type==='Die-Cast'||p.type==='Action Figure'||p.type==='RC Vehicle');
+  const { filters, toggle, clear } = useFilters(['Category','Universe','Age','Price','Availability']);
+
+  let list = window.PRODUCTS.filter(p=>p.type==='Die-Cast'||p.type==='Action Figure'||p.type==='RC Vehicle'||p.type==='Accessory');
+  if (filters.Category.length) list = list.filter(p => filters.Category.some(o => p.type===CATEGORY_TO_TYPE[o]));
+  if (filters.Universe.length) list = list.filter(p => filters.Universe.includes(p.universe));
+  if (filters.Age.length) list = list.filter(p => filters.Age.includes(p.age));
+  if (filters.Price.length) list = list.filter(p => filters.Price.some(o => PRICE_MATCHERS[o](p)));
+  if (filters.Availability.length) list = list.filter(p => filters.Availability.some(o => AVAILABILITY_MATCHERS[o](p)));
+
   if(sort==='Price: Low to High') list = [...list].sort((a,b)=>(a.salePrice||a.price)-(b.salePrice||b.price));
   if(sort==='Price: High to Low') list = [...list].sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
   if(sort==='Best Selling') list = [...list].sort((a,b)=>b.reviews-a.reviews);
   if(sort==='Newest') list = [...list].sort((a,b)=>(b.isNew?1:0)-(a.isNew?1:0));
 
   const groups = [
-    {title:'Category', options:['Die-Cast Vehicles','Action Figures','RC Vehicles','Accessories']},
-    {title:'Universe', options:['Skyline Riders','Ironclad Legion','Aerodrome','Rangehead','Voltage Corps']},
-    {title:'Age', options:['All Ages','8+','13+']},
-    {title:'Price', options:['Under PKR 3,500','PKR 3,500–4,500','PKR 4,500–5,500','PKR 5,500+']},
-    {title:'Availability', options:['In Stock','Numbered Edition','On Sale']},
+    {title:'Category', options:['Die-Cast Vehicles','Action Figures','RC Vehicles','Accessories'], selected:filters.Category, onToggle:(o)=>toggle('Category',o)},
+    {title:'Universe', options:['Skyline Riders','Ironclad Legion','Aerodrome','Rangehead','Voltage Corps'], selected:filters.Universe, onToggle:(o)=>toggle('Universe',o)},
+    {title:'Age', options:['All Ages','8+','13+'], selected:filters.Age, onToggle:(o)=>toggle('Age',o)},
+    {title:'Price', options:['Under PKR 3,500','PKR 3,500–4,500','PKR 4,500–5,500','PKR 5,500+'], selected:filters.Price, onToggle:(o)=>toggle('Price',o)},
+    {title:'Availability', options:['In Stock','Numbered Edition','On Sale'], selected:filters.Availability, onToggle:(o)=>toggle('Availability',o)},
   ];
 
   return <div>
@@ -65,7 +97,7 @@ function App(){
       {label:'New This Week',href:'new.html'},
     ]}/>
     <section id="grid" style={{maxWidth:1280,margin:'0 auto',padding:'80px 40px 0',display:'flex',gap:48}}>
-      <FilterSidebar groups={groups}/>
+      <FilterSidebar groups={groups} onClear={clear}/>
       <div style={{flex:1}}>
         <Toolbar count={list.length} sort={sort} setSort={setSort}/>
         <ProductGrid products={list.slice(0,visible)} cols={4}/>

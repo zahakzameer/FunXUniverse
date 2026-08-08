@@ -28,17 +28,45 @@ function PageHeader(){
   </div>;
 }
 
+// There's no dedicated edition-type field on products, so this matches
+// against name/line text — a heuristic, not a canonical category. A real
+// edition_type column on the product would be the cleaner long-term fix.
+const EDITION_MATCHERS = {
+  'Anniversary': p => /anniversary/i.test(p.name+' '+p.line),
+  'Founders Set': p => /founders/i.test(p.name+' '+p.line),
+  'Display Case': p => /display/i.test(p.name+' '+p.line),
+  'Numbered': p => !/anniversary|founders|display/i.test(p.name+' '+p.line) && (p.badge==='Limited Edition' || p.badge==='Exclusive'),
+};
+const PRICE_MATCHERS = {
+  'Under PKR 4,000': p => (p.salePrice||p.price) < 4000,
+  'PKR 4,000–5,500': p => (p.salePrice||p.price) >= 4000 && (p.salePrice||p.price) < 5500,
+  'PKR 5,500+': p => (p.salePrice||p.price) >= 5500,
+};
+
+function useFilters(groupTitles){
+  const [filters,setFilters] = React.useState(() => Object.fromEntries(groupTitles.map(t=>[t,[]])));
+  const toggle = (title,option) => setFilters(f => ({...f, [title]: f[title].includes(option) ? f[title].filter(x=>x!==option) : [...f[title], option]}));
+  const clear = () => setFilters(Object.fromEntries(groupTitles.map(t=>[t,[]])));
+  return { filters, toggle, clear };
+}
+
 function App(){
   const [sort,setSort] = React.useState('Featured');
   const [visible,setVisible] = React.useState(12);
+  const { filters, toggle, clear } = useFilters(['Edition Type','Universe','Price']);
+
   let list = window.PRODUCTS.filter(p=>p.isCollectible);
+  if (filters['Edition Type'].length) list = list.filter(p => filters['Edition Type'].some(o => EDITION_MATCHERS[o](p)));
+  if (filters.Universe.length) list = list.filter(p => filters.Universe.includes(p.universe));
+  if (filters.Price.length) list = list.filter(p => filters.Price.some(o => PRICE_MATCHERS[o](p)));
+
   if(sort==='Price: Low to High') list = [...list].sort((a,b)=>(a.salePrice||a.price)-(b.salePrice||b.price));
   if(sort==='Price: High to Low') list = [...list].sort((a,b)=>(b.salePrice||b.price)-(a.salePrice||a.price));
 
   const groups = [
-    {title:'Edition Type', options:['Numbered','Anniversary','Founders Set','Display Case']},
-    {title:'Universe', options:['Skyline Riders','Ironclad Legion','Aerodrome','Voltage Corps']},
-    {title:'Price', options:['Under PKR 4,000','PKR 4,000–5,500','PKR 5,500+']},
+    {title:'Edition Type', options:['Numbered','Anniversary','Founders Set','Display Case'], selected:filters['Edition Type'], onToggle:(o)=>toggle('Edition Type',o)},
+    {title:'Universe', options:['Skyline Riders','Ironclad Legion','Aerodrome','Voltage Corps'], selected:filters.Universe, onToggle:(o)=>toggle('Universe',o)},
+    {title:'Price', options:['Under PKR 4,000','PKR 4,000–5,500','PKR 5,500+'], selected:filters.Price, onToggle:(o)=>toggle('Price',o)},
   ];
 
   return <div>
@@ -51,7 +79,7 @@ function App(){
       {label:'Display Cases',href:'#grid'},
     ]}/>
     <section id="grid" style={{maxWidth:1280,margin:'0 auto',padding:'80px 40px 0',display:'flex',gap:48}}>
-      <FilterSidebar groups={groups}/>
+      <FilterSidebar groups={groups} onClear={clear}/>
       <div style={{flex:1}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28,flexWrap:'wrap',gap:16}}>
           <div><Breadcrumb items={['Shop','Collectibles']}/><div style={{fontSize:13,color:'var(--text-muted)',marginTop:8}}>{list.length} products</div></div>
