@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Product — The FunX Universe</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tokens/theme-light.css">
@@ -78,7 +79,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
       <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'56px'}}>
         {media[active] === '__video__'
           ? <video ref={videoRef} muted loop playsInline controls style={{maxWidth:'100%',maxHeight:'100%',borderRadius:16}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
-          : (hasReal ? <img src={p.images[active]} style={{maxWidth:'100%',maxHeight:'100%',objectFit:'contain',filter:'drop-shadow(0 30px 40px rgba(0,0,0,0.18))'}}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
+          : (hasReal ? <img src={p.images[active]} alt={p.name} style={{maxWidth:'100%',maxHeight:'100%',objectFit:'contain',filter:'drop-shadow(0 30px 40px rgba(0,0,0,0.18))'}}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
         }
       </div>
       {media.length > 1 && <div style={{position:'absolute',bottom:20,left:0,right:0,display:'flex',justifyContent:'center',gap:7}}>
@@ -96,6 +97,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
     </div>
     <div style={{marginTop:14}}><Button variant="secondary" size="md" onClick={onBuy}>Buy Now</Button></div>
     <StockLabel stock={p.stock}/>
+    <p style={{fontSize:12,color:'var(--text-muted)',marginTop:10}}>Shipping calculated at checkout.</p>
   </section>;
 }
 
@@ -113,7 +115,7 @@ function StickyBar({ p, onAdd, added, visible }){
 function FeatureRow({ img, eyebrow, title, text, reverse }){
   return <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'center',maxWidth:1100,margin:'0 auto',padding:'80px 40px',direction: reverse ? 'rtl' : 'ltr'}}>
     <div style={{aspectRatio:'4/3',borderRadius:24,overflow:'hidden',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)',direction:'ltr'}}>
-      {img ? <img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-feature-${title}`} style={{width:'100%',height:'100%'}} placeholder={title}></image-slot>}
+      {img ? <img src={img} alt={title} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-feature-${title}`} style={{width:'100%',height:'100%'}} placeholder={title}></image-slot>}
     </div>
     <div style={{direction:'ltr'}}>
       <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:14}}>{eyebrow}</div>

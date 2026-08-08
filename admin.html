@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin — The FunX Universe</title>
 <link rel="stylesheet" href="styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -127,8 +128,8 @@ function UploadSlot({ url, onUpload, onRemove, uploading, accept, label }){
     <input ref={inputRef} type="file" accept={accept} style={{display:'none'}} onChange={(e)=>{ const f=e.target.files[0]; if (f) onUpload(f); e.target.value=''; }}/>
     {uploading ? <span style={{fontSize:12,color:'var(--text-muted)'}}>Uploading…</span>
       : url ? <>
-        {accept.startsWith('video') ? <video src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} muted/> : <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}}/>}
-        <span onClick={(e)=>{e.stopPropagation();onRemove();}} style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',background:'rgba(0,0,0,0.7)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>✕</span>
+        {accept.startsWith('video') ? <video src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} muted/> : <img src={url} alt={label} style={{width:'100%',height:'100%',objectFit:'cover'}}/>}
+        <button onClick={(e)=>{e.stopPropagation();onRemove();}} aria-label="Remove image" style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',background:'rgba(0,0,0,0.7)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,border:'none',cursor:'pointer',padding:0}}>✕</button>
       </> : <span style={{fontSize:12,color:'var(--text-muted)',textAlign:'center',padding:8}}>{label}</span>}
   </div>;
 }
@@ -300,7 +301,7 @@ function ProductsTab({ canManage }){
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
       {(products||[]).map(p => <Card key={p.id} variant="dark" padding="sm" style={{display:'flex',alignItems:'center',gap:16}}>
         <div style={{width:52,height:52,borderRadius:'var(--radius-sm)',background:'var(--surface-gallery)',overflow:'hidden',flexShrink:0}}>
-          {p.images && p.images[0] && <img src={p.images[0]} style={{width:'100%',height:'100%',objectFit:'cover'}}/>}
+          {p.images && p.images[0] && <img src={p.images[0]} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>}
         </div>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontWeight:600,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>

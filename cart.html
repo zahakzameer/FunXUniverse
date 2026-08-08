@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your Collection — The FunX Universe</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tokens/theme-light.css">
@@ -40,9 +41,9 @@ function CartRow({ item, onQty, onRemove }){
       <QtyStepper qty={item.qty} setQty={(q)=>onQty(p.id,q)}/>
     </div>
     <div style={{fontSize:16,fontWeight:700,color:'var(--paint-orange)',justifySelf:'end'}}>{window.fmtPrice((p.salePrice||p.price)*item.qty)}</div>
-    <span onClick={()=>onRemove(p.id)} style={{cursor:'pointer',color:'var(--text-muted)',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%'}} title="Remove">
+    <button onClick={()=>onRemove(p.id)} style={{cursor:'pointer',color:'var(--text-muted)',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:'none',border:'none'}} title="Remove" aria-label={`Remove ${p.name} from cart`}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </span>
+    </button>
   </div>;
 }
 
@@ -66,8 +67,7 @@ function App(){
   const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)}));
   const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
   const discount = applied ? Math.round(subtotal*0.1) : 0;
-  const shipping = (subtotal-discount) >= 150 ? 0 : 14;
-  const total = subtotal - discount + shipping;
+  const total = subtotal - discount;
 
   const setQty = (id,q) => setItems(v => v.map(i => i.id===id ? {...i,qty:q} : i));
   const remove = (id) => setItems(v => v.filter(i => i.id!==id));
@@ -93,8 +93,7 @@ function App(){
         {applied && <div style={{fontSize:12,color:'var(--color-success)',marginBottom:12}}>Promo applied — 10% off subtotal.</div>}
         <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Subtotal</span><span>{window.fmtPrice(subtotal)}</span></div>
         {applied && <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--color-success)',marginBottom:12}}><span>Discount</span><span>-{window.fmtPrice(discount)}</span></div>}
-        <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Shipping</span><span>{shipping===0?'Free':window.fmtPrice(shipping)}</span></div>
-        {shipping > 0 && <div style={{fontSize:12,color:'var(--color-warning)',marginBottom:12}}>Add {window.fmtPrice(150-subtotal)} more for free shipping.</div>}
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Shipping</span><span style={{color:'var(--text-muted)'}}>Calculated at checkout</span></div>
         <div style={{borderTop:'1px solid var(--border-hairline)',margin:'16px 0',paddingTop:16,display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:17}}><span>Total</span><span>{window.fmtPrice(total)}</span></div>
         <Button variant="primary" size="lg" onClick={()=>location.href='track-order.html'} style={{width:'100%'}}>Checkout</Button>
       </div>

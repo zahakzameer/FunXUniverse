@@ -36,6 +36,86 @@ const COUNTRIES = [
   'Zambia','Zimbabwe',
 ];
 
+// ISO 4217 currency for each COUNTRIES entry — drives auto-detected display
+// currency (see useCurrency() below). Eurozone members all map to EUR.
+const COUNTRY_CURRENCY = {
+  'Pakistan':'PKR','Afghanistan':'AFN','Albania':'ALL','Algeria':'DZD','Argentina':'ARS','Armenia':'AMD','Australia':'AUD','Austria':'EUR','Azerbaijan':'AZN',
+  'Bahrain':'BHD','Bangladesh':'BDT','Belarus':'BYN','Belgium':'EUR','Bolivia':'BOB','Bosnia and Herzegovina':'BAM','Brazil':'BRL','Brunei':'BND','Bulgaria':'BGN',
+  'Cambodia':'KHR','Canada':'CAD','Chile':'CLP','China':'CNY','Colombia':'COP','Costa Rica':'CRC','Croatia':'EUR','Cyprus':'EUR','Czechia':'CZK',
+  'Denmark':'DKK','Dominican Republic':'DOP',
+  'Ecuador':'USD','Egypt':'EGP','Estonia':'EUR','Ethiopia':'ETB',
+  'Finland':'EUR','France':'EUR',
+  'Georgia':'GEL','Germany':'EUR','Ghana':'GHS','Greece':'EUR',
+  'Hong Kong':'HKD','Hungary':'HUF',
+  'Iceland':'ISK','India':'INR','Indonesia':'IDR','Iraq':'IQD','Ireland':'EUR','Israel':'ILS','Italy':'EUR',
+  'Japan':'JPY','Jordan':'JOD',
+  'Kazakhstan':'KZT','Kenya':'KES','Kuwait':'KWD',
+  'Latvia':'EUR','Lebanon':'LBP','Libya':'LYD','Lithuania':'EUR','Luxembourg':'EUR',
+  'Malaysia':'MYR','Maldives':'MVR','Malta':'EUR','Mauritius':'MUR','Mexico':'MXN','Moldova':'MDL','Mongolia':'MNT','Montenegro':'EUR','Morocco':'MAD',
+  'Nepal':'NPR','Netherlands':'EUR','New Zealand':'NZD','Nigeria':'NGN','North Macedonia':'MKD','Norway':'NOK',
+  'Oman':'OMR',
+  'Peru':'PEN','Philippines':'PHP','Poland':'PLN','Portugal':'EUR',
+  'Qatar':'QAR',
+  'Romania':'RON','Russia':'RUB',
+  'Saudi Arabia':'SAR','Serbia':'RSD','Singapore':'SGD','Slovakia':'EUR','Slovenia':'EUR','South Africa':'ZAR','South Korea':'KRW','Spain':'EUR','Sri Lanka':'LKR','Sweden':'SEK','Switzerland':'CHF',
+  'Taiwan':'TWD','Tanzania':'TZS','Thailand':'THB','Tunisia':'TND','Turkey':'TRY',
+  'Uganda':'UGX','Ukraine':'UAH','United Arab Emirates':'AED','United Kingdom':'GBP','United States':'USD','Uruguay':'UYU','Uzbekistan':'UZS',
+  'Vietnam':'VND',
+  'Yemen':'YER',
+  'Zambia':'ZMW','Zimbabwe':'ZWL',
+};
+
+// Maps a browser locale region subtag (the part after the dash, e.g. 'US' in
+// 'en-US') to a currency, for visitors we've never seen a profile.country
+// for yet. Deliberately small — just enough for the major regions likely to
+// hit this site — falls back to PKR for anything not listed.
+const LOCALE_REGION_CURRENCY = {
+  US:'USD', GB:'GBP', CA:'CAD', AU:'AUD', NZ:'NZD',
+  IN:'INR', PK:'PKR', BD:'BDT', LK:'LKR', NP:'NPR',
+  AE:'AED', SA:'SAR', QA:'QAR', KW:'KWD', BH:'BHD', OM:'OMR',
+  DE:'EUR', FR:'EUR', ES:'EUR', IT:'EUR', NL:'EUR', IE:'EUR', PT:'EUR', BE:'EUR', AT:'EUR', FI:'EUR', GR:'EUR',
+  JP:'JPY', CN:'CNY', SG:'SGD', MY:'MYR', HK:'HKD', KR:'KRW', TH:'THB', PH:'PHP', ID:'IDR', VN:'VND',
+  ZA:'ZAR', NG:'NGN', KE:'KES', EG:'EGP',
+  BR:'BRL', MX:'MXN',
+  TR:'TRY', RU:'RUB',
+};
+
+// Drives the shipping-address form's region/postal-code labels (account.html).
+// Deliberately small — the countries where a generic "State / Region" +
+// "Postal code" label would read oddly to a local customer — everything
+// else falls back to that generic pair below. `postal: null` means the
+// country has no meaningful postal-code system, so the field is hidden
+// entirely rather than shown as a pointless required-looking blank.
+const COUNTRY_ADDRESS_HINTS = {
+  'Pakistan': { region: 'Province', postal: 'Postal code' },
+  'United States': { region: 'State', postal: 'ZIP code' },
+  'Canada': { region: 'Province', postal: 'Postal code' },
+  'United Kingdom': { region: 'County', postal: 'Postcode' },
+  'Australia': { region: 'State / Territory', postal: 'Postcode' },
+  'India': { region: 'State', postal: 'PIN code' },
+  'United Arab Emirates': { region: 'Emirate', postal: null },
+  'Saudi Arabia': { region: 'Region', postal: 'Postal code' },
+  'Qatar': { region: 'Zone', postal: null },
+  'Kuwait': { region: 'Governorate', postal: 'Postal code' },
+  'Bahrain': { region: 'Governorate', postal: 'Postal code' },
+  'Oman': { region: 'Governorate', postal: 'Postal code' },
+  'Japan': { region: 'Prefecture', postal: 'Postal code' },
+  'China': { region: 'Province', postal: 'Postal code' },
+  'Germany': { region: 'State', postal: 'Postal code' },
+  'Ireland': { region: 'County', postal: 'Eircode' },
+  'Bangladesh': { region: 'Division', postal: 'Postal code' },
+  'Sri Lanka': { region: 'Province', postal: 'Postal code' },
+  'Nepal': { region: 'Province', postal: 'Postal code' },
+  'Malaysia': { region: 'State', postal: 'Postal code' },
+  'Brazil': { region: 'State', postal: 'CEP' },
+  'Mexico': { region: 'State', postal: 'Postal code' },
+};
+const DEFAULT_ADDRESS_HINT = { region: 'State / Region', postal: 'Postal code' };
+function getAddressHint(country){
+  return COUNTRY_ADDRESS_HINTS[country] || DEFAULT_ADDRESS_HINT;
+}
+window.getAddressHint = getAddressHint;
+
 const NAV_MENUS = {
   'New': { cols: [
     { title:'Just Landed', links: [['New Arrivals','new.html'],['This Week','new.html'],['Coming Soon','new.html']] },
@@ -66,6 +146,7 @@ const ICONS = {
   sun: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>,
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>,
   chevron: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>,
+  menu: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>,
   star: (filled) => <svg width="13" height="13" viewBox="0 0 24 24" fill={filled ? 'var(--paint-yellow)' : 'none'} stroke="var(--paint-yellow)" strokeWidth="1.5"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1z"/></svg>,
   instagram: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>,
   facebook: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M15 8.5h2V5h-2a4 4 0 0 0-4 4v2H9v3.5h2V21h3v-6.5h2.4l.6-3.5H14v-1.5c0-.55.45-1 1-1z"/></svg>,
@@ -80,6 +161,61 @@ const SOCIAL_LINKS = [
   { label: 'Facebook', href: 'https://facebook.com/thefunxuniverse', icon: 'facebook' },
   { label: 'TikTok', href: 'https://tiktok.com/@thefunxuniverse', icon: 'tiktok' },
 ];
+
+// Text genuinely reused across shared components (Header, CartDrawer, auth
+// forms, Footer, ProductCard) — the components every page renders, so this
+// is where a future translation pass would start. Per-page marketing copy
+// (hero headlines, About-page prose, etc.) stays where it is — translating
+// that for real needs actual localization, not just a moved string.
+const STRINGS = {
+  nav: { search:'Search', wishlist:'Wishlist', cart:'Cart', login:'Login', currency:'Currency' },
+  cart: {
+    title: 'Added to Your Collection',
+    empty: 'Your collection is empty.',
+    qty: (n) => `Qty ${n}`,
+    subtotal: 'Subtotal',
+    viewCart: 'View Cart',
+    continueShopping: 'Continue Shopping',
+  },
+  auth: {
+    signIn: 'Sign In',
+    createAccount: 'Create Account',
+    signingIn: 'Signing in…',
+    creatingAccount: 'Creating account…',
+    emailLabel: 'Email',
+    emailPlaceholder: 'you@example.com',
+    passwordLabel: 'Password',
+    passwordPlaceholder: '••••••••',
+    confirmPasswordLabel: 'Confirm password',
+    confirmPasswordPlaceholder: 'Re-enter your password',
+    fullNameLabel: 'Full name',
+    fullNamePlaceholder: 'Jordan Rivera',
+    countryLabel: 'Country',
+    signupPasswordPlaceholder: 'At least 8 characters',
+    rememberMe: 'Keep me signed in',
+    forgotPassword: 'Forgot password?',
+    termsNotice: 'By creating an account you agree to our Terms and Privacy Policy.',
+    signInToSave: 'Sign in to save items',
+    collectorsCircle: "Collector's Circle",
+    checkEmail: 'Check your email',
+    checkEmailBody: "We've sent a confirmation link — verify your email, then sign in to save this item (it won't save automatically until you do).",
+    backToSignIn: 'Back to Sign In',
+  },
+  product: {
+    quickAdd: 'Quick Add',
+    outOfStock: 'Out of Stock',
+    onlyNLeft: (n) => `Only ${n} left`,
+  },
+  footer: {
+    stayInLoop: 'Stay in the loop',
+    newsletterSub: 'New drops and provenance stories, monthly.',
+    join: 'Join',
+    subscribed: '✓ Subscribed — welcome to the Circle.',
+    terms: 'Terms',
+    privacy: 'Privacy',
+  },
+};
+window.STRINGS = STRINGS;
 
 function AnnouncementBar() {
   return null;
@@ -138,26 +274,26 @@ function CartDrawer(){
     <div onClick={()=>setOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:98,opacity:open?1:0,pointerEvents:open?'auto':'none',transition:'opacity .3s ease'}}></div>
     <div style={{position:'fixed',top:0,right:0,bottom:0,width:400,maxWidth:'92vw',background:'var(--surface-panel)',borderLeft:'1px solid var(--border-hairline)',zIndex:99,display:'flex',flexDirection:'column',transform: open ? 'translateX(0)' : 'translateX(100%)',transition:'transform .38s cubic-bezier(.16,.84,.44,1)',boxShadow:'-20px 0 60px rgba(0,0,0,0.4)'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'22px 24px',borderBottom:'1px solid var(--border-hairline-soft)'}}>
-        <h3 style={{fontSize:17,fontWeight:700,margin:0}}>Added to Your Collection</h3>
-        <span onClick={()=>setOpen(false)} style={{cursor:'pointer',color:'var(--text-muted)',fontSize:20,lineHeight:1}}>×</span>
+        <h3 style={{fontSize:17,fontWeight:700,margin:0}}>{STRINGS.cart.title}</h3>
+        <button onClick={()=>setOpen(false)} aria-label="Close cart" style={{cursor:'pointer',color:'var(--text-muted)',fontSize:20,lineHeight:1,background:'none',border:'none',padding:0,font:'inherit'}}>×</button>
       </div>
       <div style={{flex:1,overflowY:'auto',padding:'8px 24px'}}>
-        {cart.length === 0 ? <p style={{color:'var(--text-muted)',fontSize:14,marginTop:32}}>Your collection is empty.</p> : cart.map(item => <div key={item.id} style={{display:'flex',gap:14,padding:'16px 0',borderBottom:'1px solid var(--border-hairline-soft)',background: item.id===justAdded ? 'var(--surface-card-raised)' : 'transparent',borderRadius:8}}>
+        {cart.length === 0 ? <p style={{color:'var(--text-muted)',fontSize:14,marginTop:32}}>{STRINGS.cart.empty}</p> : cart.map(item => <div key={item.id} style={{display:'flex',gap:14,padding:'16px 0',borderBottom:'1px solid var(--border-hairline-soft)',background: item.id===justAdded ? 'var(--surface-card-raised)' : 'transparent',borderRadius:8}}>
           <div style={{width:64,height:64,flexShrink:0,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)'}}>
-            {item.p.images && item.p.images[0] ? <img src={item.p.images[0]} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`drawer-${item.p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${item.p.name}`}></image-slot>}
+            {item.p.images && item.p.images[0] ? <img src={item.p.images[0]} alt={item.p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`drawer-${item.p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${item.p.name}`}></image-slot>}
           </div>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>{item.p.name}</div>
-            <div style={{fontSize:12,color:'var(--text-muted)'}}>Qty {item.qty}</div>
+            <div style={{fontSize:12,color:'var(--text-muted)'}}>{STRINGS.cart.qty(item.qty)}</div>
           </div>
           <div style={{fontSize:14,fontWeight:700,color:'var(--paint-orange)',whiteSpace:'nowrap'}}>{window.fmtPrice((item.p.salePrice||item.p.price)*item.qty)}</div>
         </div>)}
       </div>
       {cart.length > 0 && <div style={{padding:'20px 24px',borderTop:'1px solid var(--border-hairline-soft)'}}>
-        <div style={{display:'flex',justifyContent:'space-between',fontSize:15,fontWeight:700,marginBottom:16}}><span>Subtotal</span><span>{window.fmtPrice(subtotal)}</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:15,fontWeight:700,marginBottom:16}}><span>{STRINGS.cart.subtotal}</span><span>{window.fmtPrice(subtotal)}</span></div>
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          <Button variant="primary" size="lg" onClick={()=>location.href='cart.html'} style={{width:'100%'}}>View Cart</Button>
-          <Button variant="secondary" size="md" onClick={()=>setOpen(false)} style={{width:'100%'}}>Continue Shopping</Button>
+          <Button variant="primary" size="lg" onClick={()=>location.href='cart.html'} style={{width:'100%'}}>{STRINGS.cart.viewCart}</Button>
+          <Button variant="secondary" size="md" onClick={()=>setOpen(false)} style={{width:'100%'}}>{STRINGS.cart.continueShopping}</Button>
         </div>
       </div>}
     </div>
@@ -181,7 +317,7 @@ function NavItem({ l, active }){
           </div>
         </div>)}
         <a href={menu.feature.href} style={{display:'flex',gap:16,textDecoration:'none',alignItems:'center',borderRadius:'var(--radius-lg)',overflow:'hidden',background:'var(--surface-panel)',border:'1px solid var(--border-hairline-soft)',padding:12}}>
-          <img src={menu.feature.img} style={{width:96,height:96,objectFit:'cover',borderRadius:'var(--radius-md)',flexShrink:0}}/>
+          <img src={menu.feature.img} alt={menu.feature.label} style={{width:96,height:96,objectFit:'cover',borderRadius:'var(--radius-md)',flexShrink:0}}/>
           <div>
             <div style={{fontSize:11,letterSpacing:1,color:'var(--paint-orange)',textTransform:'uppercase',fontWeight:700,marginBottom:4}}>Featured</div>
             <div style={{fontSize:15,fontWeight:600,color:'var(--text-primary)',marginBottom:4}}>{menu.feature.label}</div>
@@ -201,15 +337,39 @@ function useTheme(){
 }
 if (typeof window !== 'undefined') document.documentElement.setAttribute('data-theme', localStorage.getItem('funx_theme')||'dark');
 
+const MOBILE_BREAKPOINT = 860;
+function useIsMobile(){
+  const [isMobile,setIsMobile] = React.useState(()=> typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT);
+  React.useEffect(()=>{
+    const onResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  },[]);
+  return isMobile;
+}
+window.useIsMobile = useIsMobile;
+
 function ThemeToggle(){
   const [theme,setTheme] = useTheme();
-  return <span onClick={()=>setTheme(theme==='light'?'dark':'light')} style={{cursor:'pointer',display:'flex',color:'inherit'}} title={theme==='light'?'Switch to dark mode':'Switch to light mode'}>{theme==='light'?ICONS.moon:ICONS.sun}</span>;
+  const label = theme==='light'?'Switch to dark mode':'Switch to light mode';
+  return <button onClick={()=>setTheme(theme==='light'?'dark':'light')} style={{cursor:'pointer',display:'flex',color:'inherit',background:'none',border:'none',padding:0}} title={label} aria-label={label}>{theme==='light'?ICONS.moon:ICONS.sun}</button>;
+}
+
+const DISPLAY_CURRENCIES = ['PKR','USD','EUR','GBP','AUD','CAD','AED','SAR','INR'];
+
+function CurrencySwitcher(){
+  // A plain <select> — a real form control, keyboard-accessible by
+  // default, no extra ARIA wiring needed unlike the span-based toggles
+  // elsewhere in this header.
+  return <select value={getCurrentCurrency()} onChange={(e)=>window.setCurrency(e.target.value)} title={STRINGS.nav.currency} style={{background:'transparent',color:'inherit',border:'none',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+    {DISPLAY_CURRENCIES.map(c => <option key={c} value={c} style={{color:'#141416'}}>{c}</option>)}
+  </select>;
 }
 
 function AccountLink(){
   const session = useSession();
   const linkStyle = {cursor:'pointer',display:'flex',alignItems:'center',gap:6,color:'inherit'};
-  if (!session) return <a href="account.html" style={linkStyle} title="Login">{ICONS.user}<span style={{fontSize:13,fontWeight:600}}>Login</span></a>;
+  if (!session) return <a href="account.html" style={linkStyle} title={STRINGS.nav.login}>{ICONS.user}<span style={{fontSize:13,fontWeight:600}}>{STRINGS.nav.login}</span></a>;
   const meta = session.user.user_metadata || {};
   const firstName = (meta.name || session.user.email.split('@')[0]).split(' ')[0];
   return <a href="account.html" style={linkStyle} title={session.user.email}>{ICONS.user}<span style={{fontSize:13,fontWeight:600}}>{firstName}</span></a>;
@@ -222,7 +382,7 @@ function AccountLink(){
    once. */
 function ModeSwitch({ mode, setMode }){
   return <div style={{display:'flex',borderRadius:'var(--radius-md)',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',padding:4,marginBottom:32}}>
-    {['sign-in','create'].map(m => <div key={m} onClick={()=>setMode(m)} style={{flex:1,textAlign:'center',padding:'10px 0',borderRadius:'var(--radius-sm)',cursor:'pointer',fontSize:14,fontWeight:600,background:mode===m?'var(--color-primary)':'transparent',color:mode===m?'#fff':'var(--text-secondary)',transition:'background var(--duration-fast)'}}>{m==='sign-in'?'Sign In':'Create Account'}</div>)}
+    {['sign-in','create'].map(m => <div key={m} onClick={()=>setMode(m)} style={{flex:1,textAlign:'center',padding:'10px 0',borderRadius:'var(--radius-sm)',cursor:'pointer',fontSize:14,fontWeight:600,background:mode===m?'var(--color-primary)':'transparent',color:mode===m?'#fff':'var(--text-secondary)',transition:'background var(--duration-fast)'}}>{m==='sign-in'?STRINGS.auth.signIn:STRINGS.auth.createAccount}</div>)}
   </div>;
 }
 
@@ -249,14 +409,14 @@ function SignInForm({ onSuccess }){
   };
 
   return <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
-    <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
-    <Input label="Password" type="password" placeholder="••••••••" value={form.password} onChange={update('password')} required/>
+    <Input label={STRINGS.auth.emailLabel} type="email" placeholder={STRINGS.auth.emailPlaceholder} value={form.email} onChange={update('email')} required/>
+    <Input label={STRINGS.auth.passwordLabel} type="password" placeholder={STRINGS.auth.passwordPlaceholder} value={form.password} onChange={update('password')} required/>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:24,fontSize:13}}>
-      <Checkbox label="Keep me signed in" checked={form.remember} onChange={update('remember')}/>
-      <a href="forgot-password.html" style={{color:'var(--text-link)'}}>Forgot password?</a>
+      <Checkbox label={STRINGS.auth.rememberMe} checked={form.remember} onChange={update('remember')}/>
+      <a href="forgot-password.html" style={{color:'var(--text-link)'}}>{STRINGS.auth.forgotPassword}</a>
     </div>
     {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
-    <Button variant="primary" size="lg" disabled={pending}>{pending ? 'Signing in…' : 'Sign In'}</Button>
+    <Button variant="primary" size="lg" disabled={pending}>{pending ? STRINGS.auth.signingIn : STRINGS.auth.signIn}</Button>
   </form>;
 }
 
@@ -293,14 +453,14 @@ function CreateForm({ onSignedUp }){
   };
 
   return <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20}}>
-    <Input label="Full name" placeholder="Jordan Rivera" value={form.name} onChange={update('name')} required/>
-    <Input label="Email" type="email" placeholder="you@example.com" value={form.email} onChange={update('email')} required/>
-    <Select label="Country" value={form.country} onChange={update('country')} options={COUNTRIES}/>
-    <Input label="Password" type="password" placeholder="At least 8 characters" value={form.password} onChange={update('password')} required/>
-    <Input label="Confirm password" type="password" placeholder="Re-enter your password" value={form.confirm} onChange={update('confirm')} required/>
+    <Input label={STRINGS.auth.fullNameLabel} placeholder={STRINGS.auth.fullNamePlaceholder} value={form.name} onChange={update('name')} required/>
+    <Input label={STRINGS.auth.emailLabel} type="email" placeholder={STRINGS.auth.emailPlaceholder} value={form.email} onChange={update('email')} required/>
+    <Select label={STRINGS.auth.countryLabel} value={form.country} onChange={update('country')} options={COUNTRIES}/>
+    <Input label={STRINGS.auth.passwordLabel} type="password" placeholder={STRINGS.auth.signupPasswordPlaceholder} value={form.password} onChange={update('password')} required/>
+    <Input label={STRINGS.auth.confirmPasswordLabel} type="password" placeholder={STRINGS.auth.confirmPasswordPlaceholder} value={form.confirm} onChange={update('confirm')} required/>
     {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
-    <Button variant="primary" size="lg" disabled={pending}>{pending ? 'Creating account…' : 'Create Account'}</Button>
-    <p style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6,margin:0}}>By creating an account you agree to our Terms and Privacy Policy.</p>
+    <Button variant="primary" size="lg" disabled={pending}>{pending ? STRINGS.auth.creatingAccount : STRINGS.auth.createAccount}</Button>
+    <p style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.6,margin:0}}>{STRINGS.auth.termsNotice}</p>
   </form>;
 }
 
@@ -368,13 +528,13 @@ function AuthPromptDialog(){
     <Card variant="dark" padding="lg" style={{width:400,maxWidth:'90vw'}}>
       {needsConfirmation ? <div style={{textAlign:'center',padding:'12px 0'}}>
         <div style={{fontSize:36,marginBottom:14,color:'var(--color-success)'}}>✓</div>
-        <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:22,margin:'0 0 10px'}}>Check your email</h3>
-        <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:20}}>We've sent a confirmation link — verify your email, then sign in to save this item (it won't save automatically until you do).</p>
-        <Button variant="secondary" size="md" onClick={()=>{setNeedsConfirmation(false);setMode('sign-in');}}>Back to Sign In</Button>
+        <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:22,margin:'0 0 10px'}}>{STRINGS.auth.checkEmail}</h3>
+        <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:20}}>{STRINGS.auth.checkEmailBody}</p>
+        <Button variant="secondary" size="md" onClick={()=>{setNeedsConfirmation(false);setMode('sign-in');}}>{STRINGS.auth.backToSignIn}</Button>
       </div> : <>
         <div style={{textAlign:'center',marginBottom:24}}>
-          <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:10}}>Collector's Circle</div>
-          <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:26,margin:0}}>Sign in to save items</h3>
+          <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:10}}>{STRINGS.auth.collectorsCircle}</div>
+          <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:26,margin:0}}>{STRINGS.auth.signInToSave}</h3>
         </div>
         <ModeSwitch mode={mode} setMode={setMode}/>
         {mode==='sign-in' ? <SignInForm onSuccess={handleSignedIn}/> : <CreateForm onSignedUp={handleSignedUp}/>}
@@ -383,23 +543,61 @@ function AuthPromptDialog(){
   </Dialog>;
 }
 
+function MobileNavPanel({ open, onClose, active }){
+  React.useEffect(()=>{
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  },[open, onClose]);
+  return <React.Fragment>
+    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:98,opacity:open?1:0,pointerEvents:open?'auto':'none',transition:'opacity .3s ease'}}></div>
+    <div style={{position:'fixed',top:0,left:0,bottom:0,width:320,maxWidth:'86vw',background:'var(--surface-panel)',borderRight:'1px solid var(--border-hairline)',zIndex:99,display:'flex',flexDirection:'column',overflowY:'auto',transform: open ? 'translateX(0)' : 'translateX(-100%)',transition:'transform .38s cubic-bezier(.16,.84,.44,1)',boxShadow:'20px 0 60px rgba(0,0,0,0.4)'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'22px 24px',borderBottom:'1px solid var(--border-hairline-soft)'}}>
+        <img src="assets/logo.svg" alt="The FunX Universe" style={{height:28}}/>
+        <button onClick={onClose} aria-label="Close menu" style={{background:'none',border:'none',color:'var(--text-muted)',fontSize:22,lineHeight:1,cursor:'pointer',padding:0}}>×</button>
+      </div>
+      <nav style={{display:'flex',flexDirection:'column',padding:'8px 24px 0'}}>
+        {NAV_LINKS.map(l => <a key={l.label} href={l.href} onClick={onClose} style={{padding:'14px 0',borderBottom:'1px solid var(--border-hairline-soft)',fontSize:16,fontWeight:600,color:l.label===active?'var(--text-primary)':'var(--text-secondary)',textDecoration:'none'}}>{l.label}</a>)}
+      </nav>
+      <div style={{display:'flex',flexDirection:'column',padding:'16px 24px',gap:18}}>
+        <a href="search.html" onClick={onClose} style={{display:'flex',alignItems:'center',gap:12,color:'var(--text-secondary)',textDecoration:'none',fontSize:14,fontWeight:600}}>{ICONS.search}{STRINGS.nav.search}</a>
+        <a href="wishlist.html" onClick={onClose} style={{display:'flex',alignItems:'center',gap:12,color:'var(--text-secondary)',textDecoration:'none',fontSize:14,fontWeight:600}}>{ICONS.heart}{STRINGS.nav.wishlist}</a>
+        <AccountLink/>
+      </div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px',borderTop:'1px solid var(--border-hairline-soft)',marginTop:'auto'}}>
+        <CurrencySwitcher/>
+        <ThemeToggle/>
+      </div>
+    </div>
+  </React.Fragment>;
+}
+
 function Header({ active }) {
   const cartQty = useCartCount();
+  const isMobile = useIsMobile();
+  const [menuOpen,setMenuOpen] = React.useState(false);
+  React.useEffect(()=>{ if (!isMobile) setMenuOpen(false); },[isMobile]);
   return <header style={{position:'sticky',top:0,zIndex:30,fontFamily:'var(--font-body)'}}>
     <AnnouncementBar/>
     <CartDrawer/>
     <AuthPromptDialog/>
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',height:80,padding:'0 40px',background:'rgba(11,11,13,0.86)',backdropFilter:'blur(10px)',borderBottom:'1px solid var(--border-hairline-soft)'}}>
-      <a href="index.html" style={{display:'flex',alignItems:'center'}}><img src="assets/logo.svg" style={{height:34}}/></a>
-      <nav style={{display:'flex',gap:36}}>
+    {isMobile && <MobileNavPanel open={menuOpen} onClose={()=>setMenuOpen(false)} active={active}/>}
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',height:80,padding: isMobile ? '0 20px' : '0 40px',background:'rgba(11,11,13,0.86)',backdropFilter:'blur(10px)',borderBottom:'1px solid var(--border-hairline-soft)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:16}}>
+        {isMobile && <button onClick={()=>setMenuOpen(true)} aria-label="Open menu" style={{display:'flex',color:'inherit',background:'none',border:'none',cursor:'pointer',padding:0}}>{ICONS.menu}</button>}
+        <a href="index.html" style={{display:'flex',alignItems:'center'}}><img src="assets/logo.svg" alt="The FunX Universe" style={{height:34}}/></a>
+      </div>
+      {!isMobile && <nav style={{display:'flex',gap:36}}>
         {NAV_LINKS.map(l => <NavItem key={l.label} l={l} active={active}/>)}
-      </nav>
+      </nav>}
       <div style={{display:'flex',gap:22,alignItems:'center',color:'var(--text-secondary)'}}>
-        <ThemeToggle/>
-        <a href="search.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title="Search">{ICONS.search}</a>
-        <a href="wishlist.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title="Wishlist">{ICONS.heart}</a>
-        <AccountLink/>
-        <a href="cart.html" style={{cursor:'pointer',display:'flex',color:'inherit',position:'relative'}} title="Cart">{ICONS.cart}{cartQty > 0 && <span style={{position:'absolute',top:-7,right:-9,background:'var(--color-primary)',color:'#fff',fontSize:9,fontWeight:700,minWidth:15,height:15,padding:'0 3px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}>{cartQty}</span>}</a>
+        {!isMobile && <CurrencySwitcher/>}
+        {!isMobile && <ThemeToggle/>}
+        {!isMobile && <a href="search.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title={STRINGS.nav.search}>{ICONS.search}</a>}
+        {!isMobile && <a href="wishlist.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title={STRINGS.nav.wishlist}>{ICONS.heart}</a>}
+        {!isMobile && <AccountLink/>}
+        <a href="cart.html" style={{cursor:'pointer',display:'flex',color:'inherit',position:'relative'}} title={STRINGS.nav.cart}>{ICONS.cart}{cartQty > 0 && <span style={{position:'absolute',top:-7,right:-9,background:'var(--color-primary)',color:'#fff',fontSize:9,fontWeight:700,minWidth:15,height:15,padding:'0 3px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}>{cartQty}</span>}</a>
       </div>
     </div>
   </header>;
@@ -416,7 +614,7 @@ function Footer() {
   return <footer style={{background:'var(--surface-sunken)',borderTop:'1px solid var(--border-hairline-soft)',padding:'64px 40px 32px',fontFamily:'var(--font-body)',color:'var(--text-muted)'}}>
     <div style={{display:'grid',gridTemplateColumns:'1.7fr repeat(3,1fr) 1.2fr',gap:32,maxWidth:1280,margin:'0 auto'}}>
       <div>
-        <img src="assets/logo-mark.svg" style={{height:36,marginBottom:14}}/>
+        <img src="assets/logo-mark.svg" alt="The FunX Universe" style={{height:36,marginBottom:14}}/>
         <p style={{fontSize:13,maxWidth:220,lineHeight:1.6,marginBottom:16}}>Every toy has a story. We just help you find it.</p>
         <div style={{display:'flex',gap:12,marginBottom:20}}>
           {SOCIAL_LINKS.map(s => <a key={s.label} href={s.href} target="_blank" rel="noopener" aria-label={s.label} style={{width:34,height:34,borderRadius:'50%',border:'1px solid var(--border-hairline)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text-secondary)',textDecoration:'none'}}>{ICONS[s.icon]}</a>)}
@@ -432,17 +630,17 @@ function Footer() {
         {items.map(([label,href]) => <a key={label} href={href} style={{display:'block',fontSize:13,marginBottom:10,cursor:'pointer',color:'var(--text-muted)',textDecoration:'none'}}>{label}</a>)}
       </div>)}
       <div>
-        <div style={{color:'var(--text-secondary)',fontWeight:600,fontSize:13,marginBottom:14}}>Stay in the loop</div>
-        <p style={{fontSize:13,marginBottom:12,lineHeight:1.6}}>New drops and provenance stories, monthly.</p>
-        {subscribed ? <div style={{fontSize:13,color:'var(--color-success)'}}>✓ Subscribed — welcome to the Circle.</div> : <form onSubmit={(e)=>{e.preventDefault(); if(email.trim()) setSubscribed(true);}} style={{display:'flex',gap:8}}>
-          <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required placeholder="Email" style={{flex:1,height:40,borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',color:'var(--text-primary)',padding:'0 12px',fontSize:13,outline:'none'}}/>
-          <button style={{height:40,padding:'0 16px',borderRadius:'var(--radius-md)',border:'none',background:'var(--color-primary)',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer'}}>Join</button>
+        <div style={{color:'var(--text-secondary)',fontWeight:600,fontSize:13,marginBottom:14}}>{STRINGS.footer.stayInLoop}</div>
+        <p style={{fontSize:13,marginBottom:12,lineHeight:1.6}}>{STRINGS.footer.newsletterSub}</p>
+        {subscribed ? <div style={{fontSize:13,color:'var(--color-success)'}}>{STRINGS.footer.subscribed}</div> : <form onSubmit={(e)=>{e.preventDefault(); if(email.trim()) setSubscribed(true);}} style={{display:'flex',gap:8}}>
+          <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required placeholder={STRINGS.auth.emailLabel} style={{flex:1,height:40,borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',color:'var(--text-primary)',padding:'0 12px',fontSize:13,outline:'none'}}/>
+          <button style={{height:40,padding:'0 16px',borderRadius:'var(--radius-md)',border:'none',background:'var(--color-primary)',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer'}}>{STRINGS.footer.join}</button>
         </form>}
       </div>
     </div>
     <div style={{maxWidth:1280,margin:'48px auto 0',paddingTop:24,borderTop:'1px solid var(--border-hairline-soft)',fontSize:12,display:'flex',justifyContent:'space-between'}}>
       <span>© 2026 The FunX Universe</span>
-      <span style={{display:'flex',gap:20}}><a href="terms.html" style={{color:'var(--text-muted)'}}>Terms</a><a href="privacy.html" style={{color:'var(--text-muted)'}}>Privacy</a></span>
+      <span style={{display:'flex',gap:20}}><a href="terms.html" style={{color:'var(--text-muted)'}}>{STRINGS.footer.terms}</a><a href="privacy.html" style={{color:'var(--text-muted)'}}>{STRINGS.footer.privacy}</a></span>
     </div>
   </footer>;
 }
@@ -460,19 +658,23 @@ function ProductCard({ p }) {
   const onLeave = () => { setHover(false); const v = videoRef.current; if (v) { v.pause(); v.currentTime = 0; } };
   return <a href={`product.html?id=${p.id}`} onMouseEnter={onEnter} onMouseLeave={onLeave} style={{fontFamily:'var(--font-body)',cursor:'pointer',minWidth:0,display:'block',textDecoration:'none',color:'inherit'}}>
     <div style={{aspectRatio:'1',background:'var(--surface-gallery)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
-      {hasRealImages ? <img src={p.images[0]} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:hover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:hover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
+      {hasRealImages ? <img src={p.images[0]} alt={p.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:hover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:hover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
       {p.hasVideo && <video ref={videoRef} muted loop playsInline preload="none" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:hover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',pointerEvents:'none'}}>
         <source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/>
       </video>}
       {p.badge && <span style={{position:'absolute',top:12,left:12,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 9px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
-      <span onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}} style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416'}}>
+      <span
+        onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}}
+        onKeyDown={(e)=>{ if (e.key==='Enter'||e.key===' ') { e.stopPropagation();e.preventDefault();toggleWishlist(p.id); } }}
+        role="button" tabIndex={0} aria-pressed={wish} aria-label={wish?`Remove ${p.name} from wishlist`:`Add ${p.name} to wishlist`}
+        style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416',cursor:'pointer'}}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </span>
       {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:54,left:0,right:0,display:'flex',justifyContent:'center',gap:5,opacity:hover?0:1,transition:'opacity var(--duration-fast)'}}>
         {p.images.map((_,i) => <span key={i} style={{width:5,height:5,borderRadius:'50%',background:i===0?'#fff':'rgba(255,255,255,0.4)'}}></span>)}
       </div>}
       <div style={{position:'absolute',left:0,right:0,bottom:0,transform: hover && p.stock>0 ? 'translateY(0)' : 'translateY(100%)',transition:'transform var(--duration-base) var(--ease-decelerate)',padding:10}}>
-        <button disabled={p.stock<=0} onClick={(e)=>{e.preventDefault();e.stopPropagation(); if(p.stock>0) window.addToCart(p.id,1);}} style={{width:'100%',height:38,borderRadius:'var(--radius-md)',border:'none',background:'#141416',color:'#fff',fontSize:12,fontWeight:700,letterSpacing:'0.5px',cursor:'pointer'}}>Quick Add</button>
+        <button disabled={p.stock<=0} onClick={(e)=>{e.preventDefault();e.stopPropagation(); if(p.stock>0) window.addToCart(p.id,1);}} style={{width:'100%',height:38,borderRadius:'var(--radius-md)',border:'none',background:'#141416',color:'#fff',fontSize:12,fontWeight:700,letterSpacing:'0.5px',cursor:'pointer'}}>{STRINGS.product.quickAdd}</button>
       </div>
     </div>
     <StockLabel stock={p.stock}/>
@@ -645,26 +847,82 @@ window.PRODUCTS = [];
 // stay pending — or every page is stuck on its loading spinner forever.
 // That's why every branch below (no client, query error, thrown exception)
 // funnels into the same "resolve with an empty catalog" fallback.
-window.PRODUCTS_PROMISE = supabaseClient
-  ? supabaseClient
-      .from('products')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('[funx] failed to load products from Supabase:', error.message || error);
+/* ── currency ──────────────────────────────────────────────────────────────
+   All prices are stored in PKR (the base currency). Display-only
+   conversion using live rates from open.er-api.com — chosen specifically
+   because it's free, needs no API key/signup, AND actually covers PKR as a
+   base (the more commonly-recommended frankfurter.app is ECB-sourced and
+   doesn't publish PKR rates at all — confirmed by testing before wiring
+   this up, since a silently-unsupported base currency would have made the
+   whole feature quietly do nothing). */
+const CURRENCY_STORAGE_KEY = 'funx_currency';
+const CURRENCY_SOURCE_KEY = 'funx_currency_source'; // 'auto' | 'manual' — lets a later profile.country signal upgrade an auto-guess without ever overwriting a deliberate user choice
+const RATES_CACHE_KEY = 'funx_exchange_rates';
+const RATES_TTL_MS = 24 * 60 * 60 * 1000;
+
+if (typeof window !== 'undefined' && !localStorage.getItem(CURRENCY_STORAGE_KEY)) {
+  const region = ((navigator.language || 'en-US').split('-')[1] || '').toUpperCase();
+  localStorage.setItem(CURRENCY_STORAGE_KEY, LOCALE_REGION_CURRENCY[region] || 'PKR');
+  localStorage.setItem(CURRENCY_SOURCE_KEY, 'auto');
+}
+
+function getCurrentCurrency(){
+  try { return localStorage.getItem(CURRENCY_STORAGE_KEY) || 'PKR'; } catch (e) { return 'PKR'; }
+}
+window.getCurrentCurrency = getCurrentCurrency;
+
+function setCurrency(code){
+  try {
+    localStorage.setItem(CURRENCY_STORAGE_KEY, code);
+    localStorage.setItem(CURRENCY_SOURCE_KEY, 'manual');
+  } catch (e) {}
+  location.reload(); // simplest correct way to update every already-rendered price sitewide
+}
+window.setCurrency = setCurrency;
+
+window.EXCHANGE_RATES = null;
+function fetchExchangeRates(){
+  try {
+    const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || 'null');
+    if (cached && cached.fetchedAt && (Date.now() - cached.fetchedAt) < RATES_TTL_MS) {
+      window.EXCHANGE_RATES = cached.rates;
+      return Promise.resolve(cached.rates);
+    }
+  } catch (e) {}
+  return fetch('https://open.er-api.com/v6/latest/PKR')
+    .then(r => r.json())
+    .then(data => {
+      if (!data || data.result !== 'success' || !data.rates) return null;
+      window.EXCHANGE_RATES = data.rates;
+      try { localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ fetchedAt: Date.now(), rates: data.rates })); } catch (e) {}
+      return data.rates;
+    })
+    .catch(() => null); // never breaks the page — fmtPrice falls back to PKR when EXCHANGE_RATES is null
+}
+
+window.PRODUCTS_PROMISE = Promise.all([
+  supabaseClient
+    ? supabaseClient
+        .from('products')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('[funx] failed to load products from Supabase:', error.message || error);
+            window.PRODUCTS = [];
+            return window.PRODUCTS;
+          }
+          window.PRODUCTS = data.map(applyDisplayFormatting);
+          return window.PRODUCTS;
+        })
+        .catch((err) => {
+          console.error('[funx] product fetch threw:', err);
           window.PRODUCTS = [];
           return window.PRODUCTS;
-        }
-        window.PRODUCTS = data.map(applyDisplayFormatting);
-        return window.PRODUCTS;
-      })
-      .catch((err) => {
-        console.error('[funx] product fetch threw:', err);
-        window.PRODUCTS = [];
-        return window.PRODUCTS;
-      })
-  : Promise.resolve(window.PRODUCTS);
+        })
+    : Promise.resolve(window.PRODUCTS),
+  fetchExchangeRates(),
+]).then(([products]) => products);
 
 const JOURNAL_POSTS = [
   {slug:'why-i-started-funx',category:'Founder’s Note',date:'Jan 12, 2026',readTime:'5 min read',title:'Why I Started FunX at 25',excerpt:'Two failed startups, a shelf full of toy cars, and a simple realization: I never actually stopped playing.',body:[
@@ -694,11 +952,22 @@ const JOURNAL_POSTS = [
 ];
 
 function StockLabel({ stock }) {
-  if (stock <= 0) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-error)',marginTop:4}}>Out of Stock</div>;
-  if (stock <= 5) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-warning)',marginTop:4}}>Only {stock} left</div>;
+  if (stock <= 0) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-error)',marginTop:4}}>{STRINGS.product.outOfStock}</div>;
+  if (stock <= 5) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-warning)',marginTop:4}}>{STRINGS.product.onlyNLeft(stock)}</div>;
   return null;
 }
 
-function fmtPrice(n) { return `PKR ${Number(n).toLocaleString('en-PK')}`; }
+function fmtPrice(n) {
+  const amount = Number(n) || 0;
+  const code = getCurrentCurrency();
+  const rate = code !== 'PKR' && window.EXCHANGE_RATES && window.EXCHANGE_RATES[code];
+  if (!rate) return `PKR ${amount.toLocaleString('en-PK')}`; // no rate loaded yet, rate fetch failed, or explicitly PKR
+  const converted = amount * rate;
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: code, maximumFractionDigits: converted >= 100 ? 0 : 2 }).format(converted);
+  } catch (e) {
+    return `PKR ${amount.toLocaleString('en-PK')}`;
+  }
+}
 
 Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount, ModeSwitch, SignInForm, CreateForm });

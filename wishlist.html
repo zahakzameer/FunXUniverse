@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wishlist — The FunX Universe</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tokens/theme-light.css">
@@ -23,7 +24,7 @@ const { Button, Card } = window.FunXDesignSystem_bbd8ae;
 function WishRow({ p, onRemove, onMoveToCart }){
   return <div style={{display:'grid',gridTemplateColumns:'96px 1fr auto auto',alignItems:'center',gap:24,padding:'20px 8px',borderBottom:'1px solid var(--border-hairline-soft)'}}>
     <div style={{width:96,height:96,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)'}}>
-      {p.images && p.images[0] ? <img src={p.images[0]} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`wish-${p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${p.name}`}></image-slot>}
+      {p.images && p.images[0] ? <img src={p.images[0]} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`wish-${p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${p.name}`}></image-slot>}
     </div>
     <div>
       <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>{p.line}</div>
@@ -31,9 +32,9 @@ function WishRow({ p, onRemove, onMoveToCart }){
       <div style={{fontSize:15,fontWeight:700,color:'var(--paint-orange)'}}>{window.fmtPrice(p.salePrice||p.price)}</div>
     </div>
     <Button variant="secondary" size="sm" onClick={()=>onMoveToCart(p.id)}>Move to Cart</Button>
-    <span onClick={()=>onRemove(p.id)} style={{cursor:'pointer',color:'var(--text-muted)',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%'}} title="Remove">
+    <button onClick={()=>onRemove(p.id)} style={{cursor:'pointer',color:'var(--text-muted)',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:'none',border:'none'}} title="Remove" aria-label={`Remove ${p.name} from wishlist`}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </span>
+    </button>
   </div>;
 }
 
@@ -41,7 +42,7 @@ function SignInPrompt(){
   return <div style={{textAlign:'center',padding:'64px 0'}}>
     <Card variant="dark" padding="lg" style={{maxWidth:420,margin:'0 auto'}}>
       <p style={{color:'var(--text-muted)',fontSize:15,marginBottom:20}}>Sign in to see the pieces you've saved — your wishlist is tied to your account.</p>
-      <Button variant="primary" size="lg" onClick={()=>location.href='account.html'}>Sign In</Button>
+      <Button variant="primary" size="lg" onClick={()=>location.href='account.html'}>{window.STRINGS.auth.signIn}</Button>
     </Card>
   </div>;
 }

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sign In — The FunX Universe</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tokens/theme-light.css">
@@ -71,6 +72,7 @@ function Dashboard({ session }){
   }, [session.user.id]);
 
   const update = (k) => (e) => setForm({...form,[k]:e.target.value});
+  const hint = window.getAddressHint(form ? form.country : 'Pakistan');
 
   const save = (e) => {
     e.preventDefault();
@@ -113,10 +115,10 @@ function Dashboard({ session }){
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <Input label="Address line 1" value={form.line1} onChange={update('line1')}/>
             <Input label="Address line 2 (optional)" value={form.line2} onChange={update('line2')}/>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14}}>
+            <div style={{display:'grid',gridTemplateColumns:hint.postal===null?'1fr 1fr':'1fr 1fr 1fr',gap:14}}>
               <Input label="City" value={form.city} onChange={update('city')}/>
-              <Input label="State / Region" value={form.region} onChange={update('region')}/>
-              <Input label="Postal code" value={form.postal_code} onChange={update('postal_code')}/>
+              <Input label={hint.region} value={form.region} onChange={update('region')}/>
+              {hint.postal !== null && <Input label={hint.postal} value={form.postal_code} onChange={update('postal_code')}/>}
             </div>
           </div>
         </div>
