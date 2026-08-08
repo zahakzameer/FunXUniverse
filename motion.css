@@ -1,14 +1,6 @@
-.funx-motion,.funx-motion *{cursor:none!important}
-.funx-cursor-dot,.funx-cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:99999;border-radius:50%;transform:translate(-50%,-50%);will-change:transform;opacity:0;transition:opacity .2s}
-.funx-cursor-dot.is-visible,.funx-cursor-ring.is-visible{opacity:1}
-.funx-cursor-dot.is-visible{opacity:1}
-.funx-cursor-dot{width:6px;height:6px;background:#F16A3E}
-.funx-cursor-ring{width:34px;height:34px;border:1.5px solid rgba(241,106,62,0.6);transition:width .25s ease,height .25s ease,border-color .25s ease,background .25s ease,opacity .2s}
-.funx-cursor-ring.is-active{width:54px;height:54px;background:rgba(241,106,62,0.12);border-color:#FFC93C}
-.funx-reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.16,.84,.44,1),transform .8s cubic-bezier(.16,.84,.44,1)}
+.funx-reveal{opacity:0;transform:translateY(28px);transition:opacity var(--duration-slower) var(--ease-decelerate),transform var(--duration-slower) var(--ease-decelerate)}
 .funx-reveal.funx-in{opacity:1;transform:translateY(0)}
-.funx-reveal-item{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.16,.84,.44,1),transform .6s cubic-bezier(.16,.84,.44,1);transition-delay:var(--funx-delay,0ms)}
+.funx-reveal-item{opacity:0;transform:translateY(20px);transition:opacity var(--duration-slow) var(--ease-decelerate),transform var(--duration-slow) var(--ease-decelerate);transition-delay:var(--funx-delay,0ms)}
 .funx-reveal-item.funx-in{opacity:1;transform:translateY(0)}
-.funx-tilt{transition:transform .25s cubic-bezier(.16,.84,.44,1)}
-.funx-burst{position:fixed;z-index:99998;pointer-events:none;border-radius:50%;background:#FFC93C}
-@media(prefers-reduced-motion:reduce){.funx-reveal,.funx-reveal-item{opacity:1!important;transform:none!important;transition:none!important}.funx-motion,.funx-motion *{cursor:auto!important}.funx-cursor-dot,.funx-cursor-ring{display:none}}
+.funx-tilt{transition:transform var(--duration-base) var(--ease-decelerate)}
+@media(prefers-reduced-motion:reduce){.funx-reveal,.funx-reveal-item{opacity:1!important;transform:none!important;transition:none!important}}
