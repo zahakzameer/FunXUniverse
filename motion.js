@@ -100,6 +100,18 @@ function setupReveal(){
       el.classList.add('funx-reveal');
       requestAnimationFrame(function(){ io.observe(el); });
     });
+    // Stagger individual product cards on top of the section-level fade
+    // above — the section fades up as a block, then cards cascade in one
+    // after another. Delay is capped so a big grid doesn't crawl in.
+    document.querySelectorAll('a[href^="product.html?id="]').forEach(function(el){
+      if (seen.has(el)) return;
+      seen.add(el);
+      if (reduced) { el.classList.add('funx-in'); return; }
+      el.classList.add('funx-reveal-item');
+      var idx = el.parentElement ? Array.prototype.indexOf.call(el.parentElement.children, el) : 0;
+      el.style.setProperty('--funx-delay', (Math.min(idx, 7) * 60) + 'ms');
+      requestAnimationFrame(function(){ io.observe(el); });
+    });
   }
   scan();
   var root = document.getElementById('root');
