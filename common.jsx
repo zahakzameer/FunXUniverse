@@ -1,10 +1,15 @@
 const NAV_LINKS = [
-  { label: 'New', href: 'new.html' },
-  { label: 'Trending', href: 'trending.html' },
-  { label: 'Toys & Plush', href: 'toys-plush.html' },
-  { label: 'Collectibles', href: 'collectibles.html' },
-  { label: 'Sale', href: 'sale.html' },
+  { label: 'Shop All', href: 'shop-all.html' },
 ];
+
+// The 18 real categories from the product catalog — reused by the Shop All
+// mega-menu below and by shop-all.html's category filter.
+const CATEGORIES = [
+  'Action Figures','Baby Toys','Bags & Accessories','Building Blocks','Décor & Lighting','Die-Cast Vehicles',
+  'Dolls & Doll Houses','Educational Toys','Fidget & Skill Toys','Games & Puzzles','Household & Lifestyle','Keychains',
+  'Musical Toys','Novelty & Gadgets','Outdoor & Sports','Plush Toys','Remote Control Vehicles','Role Play & Pretend Play',
+];
+window.CATEGORIES = CATEGORIES;
 
 // Pakistan first (primary/launch market), then the rest of the world
 // alphabetically — reused by account signup and, later, shipping forms.
@@ -116,26 +121,14 @@ function getAddressHint(country){
 }
 window.getAddressHint = getAddressHint;
 
+function categoryLink(label){ return [label, `shop-all.html?category=${encodeURIComponent(label)}`]; }
+
 const NAV_MENUS = {
-  'New': { cols: [
-    { title:'Just Landed', links: [['New Arrivals','new.html'],['This Week','new.html'],['Coming Soon','new.html']] },
-    { title:'By Universe', links: [['Skyline Riders','toys-plush.html'],['Ironclad Legion','toys-plush.html'],['Aerodrome','toys-plush.html']] },
-  ], feature: { label:'GT Vector 12 Drift Racer', sub:'The newest RC in the FunX lineup', href:'product.html?id=p1', img:'https://picsum.photos/seed/p1-2/640/480' } },
-  'Trending': { cols: [
-    { title:'Most Collected', links: [['Best Sellers','trending.html'],['Top Rated','trending.html'],['Staff Picks','trending.html']] },
-    { title:'Explore', links: [['Die-Cast','trending.html'],['Action Figures','trending.html'],['RC Vehicles','trending.html']] },
-  ], feature: { label:'Sundown Coupe', sub:'Limited Edition — 4.9★ from collectors', href:'product.html?id=p5', img:'https://picsum.photos/seed/p5-2/640/480' } },
-  'Toys & Plush': { cols: [
-    { title:'Shop by Type', links: [['Die-Cast Vehicles','toys-plush.html'],['RC Vehicles','toys-plush.html'],['Action Figures','toys-plush.html'],['Accessories','toys-plush.html']] },
-    { title:'Shop by Universe', links: [['Skyline Riders','toys-plush.html'],['Rangehead','toys-plush.html'],['Voltage Corps','toys-plush.html']] },
-  ], feature: { label:'Ironclad Sentinel', sub:'Exclusive · numbered piece', href:'product.html?id=p8', img:'https://picsum.photos/seed/p8-2/640/480' } },
-  'Collectibles': { cols: [
-    { title:'Numbered Editions', links: [['Skyline Anniversary Coupe','collectibles.html'],['Aerodrome Squadron Set','collectibles.html'],['Ironclad Legion Founders Set','collectibles.html']] },
-    { title:'Collector Info', links: [['Provenance','provenance.html'],['Authentication','authentication.html']] },
-  ], feature: { label:'Voltage Corps Display Case', sub:'Built for numbered pieces', href:'product.html?id=p22', img:'https://picsum.photos/seed/p22-2/640/480' } },
-  'Sale': { cols: [
-    { title:'Current Sale', links: [['Up to 40% Off','sale.html'],['Founders Sets','sale.html'],['Bundle & Save','sale.html']] },
-  ], feature: { label:'Ochre Rambler', sub:'Now PKR 5,570 — save 20%', href:'product.html?id=p3', img:'https://picsum.photos/seed/p3-2/640/480' } },
+  'Shop All': { cols: [
+    { title:'A – D', links: CATEGORIES.slice(0,6).map(categoryLink) },
+    { title:'D – K', links: CATEGORIES.slice(6,12).map(categoryLink) },
+    { title:'M – R', links: CATEGORIES.slice(12,18).map(categoryLink) },
+  ], feature: { label:'Shop the Full Collection', sub:'72 products across 18 categories', href:'shop-all.html', img:'https://picsum.photos/seed/funx-shop-all/640/480' } },
 };
 
 const ICONS = {
@@ -607,7 +600,7 @@ function Footer() {
   const [email,setEmail] = React.useState('');
   const [subscribed,setSubscribed] = React.useState(false);
   const cols = [
-    ['Shop', [['New Arrivals','new.html'],['Trending','trending.html'],['Toys & Plush','toys-plush.html'],['Collectibles','collectibles.html'],['Sale','sale.html']]],
+    ['Shop', [['Shop All','shop-all.html'], categoryLink('Action Figures'), categoryLink('Building Blocks'), categoryLink('Educational Toys'), categoryLink('Remote Control Vehicles')]],
     ['The Universe', [['Provenance','provenance.html'],['Authentication','authentication.html'],['Our Story','story.html'],['Press','press.html']]],
     ['Support', [['Shipping','shipping.html'],['Returns','returns.html'],['Track Order','track-order.html'],['Contact','contact.html']]],
   ];
@@ -670,21 +663,17 @@ function ProductCard({ p }) {
         style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416',cursor:'pointer'}}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </span>
-      {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:54,left:0,right:0,display:'flex',justifyContent:'center',gap:5,opacity:hover?0:1,transition:'opacity var(--duration-fast)'}}>
+      {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5}}>
         {p.images.map((_,i) => <span key={i} style={{width:5,height:5,borderRadius:'50%',background:i===0?'#fff':'rgba(255,255,255,0.4)'}}></span>)}
       </div>}
-      <div style={{position:'absolute',left:0,right:0,bottom:0,transform: hover && p.stock>0 ? 'translateY(0)' : 'translateY(100%)',transition:'transform var(--duration-base) var(--ease-decelerate)',padding:10}}>
-        <button disabled={p.stock<=0} onClick={(e)=>{e.preventDefault();e.stopPropagation(); if(p.stock>0) window.addToCart(p.id,1);}} style={{width:'100%',height:38,borderRadius:'var(--radius-md)',border:'none',background:'#141416',color:'#fff',fontSize:12,fontWeight:700,letterSpacing:'0.5px',cursor:'pointer'}}>{STRINGS.product.quickAdd}</button>
-      </div>
     </div>
-    <StockLabel stock={p.stock}/>
-    <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4,minHeight:28,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{p.line}</div>
-    <div style={{fontSize:'var(--title-md-size)',fontWeight:600,color:'var(--text-primary)',marginBottom:6,lineHeight:1.3,minHeight:'calc(var(--title-md-size) * 1.3 * 2)',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{p.name}</div>
-    {p.rating && <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:6,minHeight:19}}>
+    <StockLabel stock={p.quantity}/>
+    <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4,minHeight:28,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{p.line || p.category}</div>
+    <div style={{fontSize:'var(--title-md-size)',fontWeight:600,color:'var(--text-primary)',marginBottom:6,lineHeight:1.3,minHeight:'calc(var(--title-md-size) * 1.3 * 2)',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
+    {p.rating > 0 ? <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:6,minHeight:19}}>
       <div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i => <span key={i}>{ICONS.star(i<=Math.round(p.rating))}</span>)}</div>
       <span style={{fontSize:12,color:'var(--text-muted)'}}>({p.reviews})</span>
-    </div>}
-    {!p.rating && <div style={{minHeight:19,marginBottom:6}}></div>}
+    </div> : <div style={{minHeight:19,marginBottom:6}}></div>}
     <div style={{display:'flex',alignItems:'baseline',gap:8}}>
       {p.salePrice ? <>
         <span style={{fontSize:'var(--body-md-size)',color:'var(--paint-orange)',fontWeight:700}}>{window.fmtPrice(p.salePrice)}</span>
@@ -926,7 +915,17 @@ window.PRODUCTS_PROMISE = Promise.all([
         })
     : Promise.resolve(window.PRODUCTS),
   fetchExchangeRates(),
-]).then(([products]) => products);
+]).then(([products]) => {
+  // One-time reconciliation: drop any cart line whose product id no longer
+  // exists (e.g. after a full catalog replace) so the header badge count
+  // and cart.html itself never reference a product that isn't there.
+  try {
+    const cart = getCart();
+    const valid = cart.filter(i => products.some(p => p.id === i.id));
+    if (valid.length !== cart.length) saveCart(valid);
+  } catch (e) {}
+  return products;
+});
 
 const JOURNAL_POSTS = [
   {slug:'why-i-started-funx',category:'Founder’s Note',date:'Jan 12, 2026',readTime:'5 min read',title:'Why I Started FunX at 25',excerpt:'Two failed startups, a shelf full of toy cars, and a simple realization: I never actually stopped playing.',body:[
@@ -960,6 +959,15 @@ function StockLabel({ stock }) {
   if (stock <= 5) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-warning)',marginTop:4}}>{STRINGS.product.onlyNLeft(stock)}</div>;
   return null;
 }
+
+// Raw product names/categories come from imported inventory data with
+// inconsistent casing ("GUITAR", "lazer pointer card") — this is display
+// formatting only, the stored name is never mutated.
+function titleCase(s){
+  if (!s) return s;
+  return s.toLowerCase().replace(/(^|[\s/-])\S/g, c => c.toUpperCase());
+}
+window.titleCase = titleCase;
 
 function fmtPrice(n) {
   const amount = Number(n) || 0;

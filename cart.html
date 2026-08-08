@@ -36,8 +36,8 @@ function CartRow({ item, onQty, onRemove }){
       <image-slot id={`cart-${p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${p.name}`}></image-slot>
     </div>
     <div>
-      <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>{p.line}</div>
-      <div style={{fontSize:17,fontWeight:600,marginBottom:10}}>{p.name}</div>
+      <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>{p.line || p.category}</div>
+      <div style={{fontSize:17,fontWeight:600,marginBottom:10}}>{window.titleCase(p.name)}</div>
       <QtyStepper qty={item.qty} setQty={(q)=>onQty(p.id,q)}/>
     </div>
     <div style={{fontSize:16,fontWeight:700,color:'var(--paint-orange)',justifySelf:'end'}}>{window.fmtPrice((p.salePrice||p.price)*item.qty)}</div>
@@ -64,7 +64,7 @@ function App(){
   },[]);
   const [promo,setPromo] = React.useState('');
   const [applied,setApplied] = React.useState(false);
-  const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)}));
+  const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)})).filter(i=>i.p);
   const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
   const discount = applied ? Math.round(subtotal*0.1) : 0;
   const total = subtotal - discount;
@@ -81,7 +81,7 @@ function App(){
 
     {cart.length === 0 ? <section style={{maxWidth:1100,margin:'0 auto',padding:'0 40px 120px',textAlign:'center'}}>
       <p style={{color:'var(--text-muted)',fontSize:15,marginBottom:24}}>Your collection is empty — start with a numbered edition or a new arrival.</p>
-      <Button variant="primary" size="lg" onClick={()=>location.href='toys-plush.html'}>Browse Toys & Plush</Button>
+      <Button variant="primary" size="lg" onClick={()=>location.href='shop-all.html'}>Browse All Products</Button>
     </section> : <section style={{maxWidth:1100,margin:'0 auto',padding:'0 40px 120px',display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:56,alignItems:'start'}}>
       <div>{cart.map(item => <CartRow key={item.id} item={item} onQty={setQty} onRemove={remove}/>)}</div>
       <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:32,background:'var(--surface-panel)'}}>

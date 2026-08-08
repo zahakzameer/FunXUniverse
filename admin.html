@@ -15,14 +15,17 @@
 <div id="root"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--surface-canvas,#0b0b0d)"><svg width="32" height="32" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#F16A3E" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 60"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.8s" repeatCount="indefinite"/></circle></svg></div></div>
 <script type="text/babel" src="common.jsx"></script>
 <script type="text/babel">
-const { Input, Button, Card, Checkbox, Select, Switch, Tabs, Dialog, Badge } = window.FunXDesignSystem_bbd8ae;
+const { Input, Button, Card, Checkbox, Select, Switch, Tabs, Dialog, Badge, Accordion } = window.FunXDesignSystem_bbd8ae;
 
-const PRODUCT_TYPES = ['Die-Cast','RC Vehicle','Action Figure','Accessory','Plush','Building Blocks','Puzzle','Doll','Outdoor Toy'];
 const BADGE_OPTIONS = ['', 'Best Seller', 'New', 'Sale', 'Limited Edition', 'Exclusive'];
 const BLANK_PRODUCT = {
-  id:'', name:'', description:'', brand:'FunX', line:'', universe:'', type:'Die-Cast', age:'',
-  material:'', color:'', electronic:false, price:'', sale_price:'', badge:'', rating:'', reviews:'',
-  stock:25, box_length_in:'', box_width_in:'', box_height_in:'', weight_lb:'',
+  id:'', sku:'', name:'', description:'', brand:'FunX', category:window.CATEGORIES[0], age_group:'',
+  material:'', color:'', is_electronic:false, price:'', sale_price:'', quantity:25,
+  // Legacy/merchandising fields — still real columns (kept on purpose so a
+  // future pass can add photography/badges without another schema change),
+  // just not part of the core product data entry above.
+  badge:'', rating:'', reviews:'',
+  box_length_in:'', box_width_in:'', box_height_in:'', weight_lb:'',
   is_new:false, is_trending:false, is_collectible:false, is_sale:false,
   images:[], video_url:'', sort_order:0,
 };
@@ -187,16 +190,17 @@ function ProductForm({ initial, onSaved, onCancel }){
   const save = (e) => {
     e.preventDefault();
     setError('');
-    if (!form.id.trim()) { setError('Product ID is required (e.g. p101).'); return; }
+    if (!form.id.trim()) { setError('Product ID is required (e.g. rc-buggy-73).'); return; }
+    if (!form.sku.trim()) { setError('SKU is required (e.g. RC-007).'); return; }
     if (!form.name.trim()) { setError('Name is required.'); return; }
     setSaving(true);
     const row = {
-      id: form.id.trim(), name: form.name, description: form.description, brand: form.brand || 'FunX',
-      line: form.line, universe: form.universe, type: form.type, age: form.age,
-      material: form.material, color: form.color, electronic: !!form.electronic,
+      id: form.id.trim(), sku: form.sku.trim(), name: form.name, description: form.description, brand: form.brand || 'FunX',
+      category: form.category, age_group: form.age_group || null,
+      material: form.material || null, color: form.color || null, is_electronic: !!form.is_electronic,
       price: Number(form.price) || 0, sale_price: form.sale_price === '' ? null : Number(form.sale_price),
+      quantity: Number(form.quantity) || 0,
       badge: form.badge || null, rating: Number(form.rating) || 0, reviews: Number(form.reviews) || 0,
-      stock: Number(form.stock) || 0,
       box_length_in: form.box_length_in === '' ? null : Number(form.box_length_in),
       box_width_in: form.box_width_in === '' ? null : Number(form.box_width_in),
       box_height_in: form.box_height_in === '' ? null : Number(form.box_height_in),
@@ -212,33 +216,11 @@ function ProductForm({ initial, onSaved, onCancel }){
     });
   };
 
-  return <form onSubmit={save} style={{display:'flex',flexDirection:'column',gap:16,maxHeight:'70vh',overflowY:'auto',padding:'4px 4px 4px 0'}}>
-    {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-      <Input label="Product ID" placeholder="p101" value={form.id} onChange={set('id')} disabled={isEdit} required/>
-      <Input label="Name" value={form.name} onChange={set('name')} required/>
-    </div>
-    <Input label="Description" value={form.description} onChange={set('description')}/>
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
-      <Input label="Line" placeholder="Skyline Riders · Die-Cast" value={form.line} onChange={set('line')}/>
-      <Input label="Universe" value={form.universe} onChange={set('universe')}/>
-      <Select label="Type" value={form.type} onChange={set('type')} options={PRODUCT_TYPES}/>
-    </div>
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
-      <Input label="Age" placeholder="8+" value={form.age} onChange={set('age')}/>
-      <Input label="Material" value={form.material} onChange={set('material')}/>
-      <Input label="Color" value={form.color} onChange={set('color')}/>
-    </div>
-    <Switch label="Electronic / powered" checked={!!form.electronic} onChange={setBool('electronic')}/>
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
-      <Input label="Price (PKR)" type="number" value={form.price} onChange={set('price')} required/>
-      <Input label="Sale price (optional)" type="number" value={form.sale_price} onChange={set('sale_price')}/>
-      <Select label="Badge" value={form.badge} onChange={set('badge')} options={BADGE_OPTIONS}/>
-    </div>
+  const merchandising = <div style={{display:'flex',flexDirection:'column',gap:16}}>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
       <Input label="Rating" type="number" step="0.1" min="0" max="5" value={form.rating} onChange={set('rating')}/>
       <Input label="Reviews" type="number" value={form.reviews} onChange={set('reviews')}/>
-      <Input label="Stock" type="number" value={form.stock} onChange={set('stock')}/>
+      <Select label="Badge" value={form.badge} onChange={set('badge')} options={BADGE_OPTIONS}/>
     </div>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16}}>
       <Input label="Box L (in)" type="number" value={form.box_length_in} onChange={set('box_length_in')}/>
@@ -252,6 +234,31 @@ function ProductForm({ initial, onSaved, onCancel }){
       <Checkbox label="Collectible" checked={!!form.is_collectible} onChange={(e)=>setBool('is_collectible')(e.target.checked)}/>
       <Checkbox label="On Sale" checked={!!form.is_sale} onChange={(e)=>setBool('is_sale')(e.target.checked)}/>
     </div>
+  </div>;
+
+  return <form onSubmit={save} style={{display:'flex',flexDirection:'column',gap:16,maxHeight:'70vh',overflowY:'auto',padding:'4px 4px 4px 0'}}>
+    {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+      <Input label="Product ID" placeholder="rc-buggy-73" value={form.id} onChange={set('id')} disabled={isEdit} required/>
+      <Input label="SKU" placeholder="RC-007" value={form.sku} onChange={set('sku')} required/>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+      <Input label="Name" value={form.name} onChange={set('name')} required/>
+      <Select label="Category" value={form.category} onChange={set('category')} options={window.CATEGORIES}/>
+    </div>
+    <Input label="Description" value={form.description} onChange={set('description')}/>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+      <Input label="Age group" placeholder="6+" value={form.age_group} onChange={set('age_group')}/>
+      <Input label="Material" value={form.material} onChange={set('material')}/>
+      <Input label="Color" value={form.color} onChange={set('color')}/>
+    </div>
+    <Switch label="Electronic / powered" checked={!!form.is_electronic} onChange={setBool('is_electronic')}/>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+      <Input label="Price (PKR)" type="number" value={form.price} onChange={set('price')} required/>
+      <Input label="Sale price (optional)" type="number" value={form.sale_price} onChange={set('sale_price')}/>
+      <Input label="Quantity" type="number" value={form.quantity} onChange={set('quantity')}/>
+    </div>
+    <Accordion items={[{title:'Merchandising (optional)', content: merchandising}]}/>
     <div>
       <div style={{fontSize:13,fontWeight:600,marginBottom:8,color:'var(--text-secondary)'}}>Images (up to 5)</div>
       <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
@@ -305,7 +312,7 @@ function ProductsTab({ canManage }){
         </div>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontWeight:600,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
-          <div style={{fontSize:12,color:'var(--text-muted)'}}>{p.id} · {window.fmtPrice(p.price)}{p.badge ? ` · ${p.badge}` : ''}</div>
+          <div style={{fontSize:12,color:'var(--text-muted)'}}>{p.sku} · {p.category} · {window.fmtPrice(p.price)}{p.badge ? ` · ${p.badge}` : ''}</div>
         </div>
         {canManage && <Button variant="secondary" size="sm" onClick={()=>setDialog(p)}>Edit</Button>}
         {canManage && <Button variant="secondary" size="sm" onClick={()=>remove(p.id)}>Delete</Button>}

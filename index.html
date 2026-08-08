@@ -40,8 +40,8 @@ function Hero(){
         <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:80,lineHeight:0.98,letterSpacing:'-1px',margin:'0 0 26px'}}>Every Toy<br/>Has a Story</h1>
         <p style={{fontSize:18,color:'var(--text-secondary)',lineHeight:1.6,marginBottom:36,maxWidth:440}}>Founded 2026 by a lifelong player, FunX builds RC vehicles, die-cast, and action figures worth taking out of the box — not just displaying.</p>
         <div style={{display:'flex',gap:14}}>
-          <Button variant="primary" size="lg" onClick={()=>location.href='new.html'}>Shop New Arrivals</Button>
-          <Button variant="secondary" size="lg" onClick={()=>location.href='collectibles.html'}>Explore Collectibles</Button>
+          <Button variant="primary" size="lg" onClick={()=>location.href='shop-all.html'}>Shop All Products</Button>
+          <Button variant="secondary" size="lg" onClick={()=>location.href='shop-all.html?category=Action%20Figures'}>Shop Action Figures</Button>
         </div>
       </div>
     </div>
@@ -51,22 +51,22 @@ function Hero(){
 function CategoryNav(){
   return <section style={{padding:'88px 0'}}>
     <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 40px'}}>
-      <SectionHeading eyebrow="Start Browsing" title="Shop by World"/>
+      <SectionHeading eyebrow="Start Browsing" title="Shop by Category"/>
     </div>
     <CategoryRail tiles={[
-      {label:'Die-Cast Vehicles',href:'toys-plush.html'},
-      {label:'Action Figures',href:'toys-plush.html'},
-      {label:'Numbered Editions',href:'collectibles.html'},
-      {label:'Current Sale',href:'sale.html'},
+      {label:'Die-Cast Vehicles',href:'shop-all.html?category=Die-Cast%20Vehicles'},
+      {label:'Action Figures',href:'shop-all.html?category=Action%20Figures'},
+      {label:'Building Blocks',href:'shop-all.html?category=Building%20Blocks'},
+      {label:'Remote Control Vehicles',href:'shop-all.html?category=Remote%20Control%20Vehicles'},
     ]}/>
   </section>;
 }
 
 function FeaturedGrid(){
-  const trending = window.PRODUCTS.filter(p=>p.isTrending).slice(0,6);
+  const featured = window.PRODUCTS.slice(0,6);
   return <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px'}}>
-    <SectionHeading eyebrow="Most Collected" title="Trending Now" cta="View all" ctaHref="trending.html"/>
-    <ProductGrid products={trending} cols={3}/>
+    <SectionHeading eyebrow="The Collection" title="Shop the Catalog" cta="View all" ctaHref="shop-all.html"/>
+    <ProductGrid products={featured} cols={3}/>
   </section>;
 }
 
@@ -106,14 +106,6 @@ function StoryAndExplorer(){
   </section>;
 }
 
-function NewStrip(){
-  const items = window.PRODUCTS.filter(p=>p.isNew).slice(0,4);
-  return <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px'}}>
-    <SectionHeading eyebrow="Just Landed" title="New Arrivals" cta="View all" ctaHref="new.html"/>
-    <ProductGrid products={items} cols={4}/>
-  </section>;
-}
-
 function Newsletter(){
   const [email,setEmail] = React.useState('');
   const [subscribed,setSubscribed] = React.useState(false);
@@ -137,7 +129,6 @@ function App(){
     <FeaturedGrid/>
     <TrustStrip/>
     <StoryAndExplorer/>
-    <NewStrip/>
     <Newsletter/>
     <Footer/>
   </div>;

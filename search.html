@@ -23,8 +23,8 @@ const { Tag } = window.FunXDesignSystem_bbd8ae;
 // Prices are stored in PKR (the base currency — see common.jsx), so the
 // budget threshold is defined in PKR and only the displayed label is
 // converted via fmtPrice for whatever currency the visitor has selected.
-const BUDGET_MAX_PKR = 4000;
-const POPULAR_TAGS = ['Skyline Riders','Ironclad Legion','Numbered Edition','Aerodrome'];
+const BUDGET_MAX_PKR = 400;
+const POPULAR_TAGS = ['Action Figures','Building Blocks','Remote Control','Educational Toys'];
 
 function SearchBar({ query, setQuery }){
   return <div style={{maxWidth:720,margin:'0 auto',position:'relative'}}>
@@ -41,7 +41,7 @@ function App(){
   const active = budgetOnly || !!q;
   const results = budgetOnly
     ? window.PRODUCTS.filter(p => (p.salePrice||p.price) < BUDGET_MAX_PKR)
-    : (q ? window.PRODUCTS.filter(p => (p.name+' '+p.line+' '+p.universe+' '+p.type).toLowerCase().includes(q)) : []);
+    : (q ? window.PRODUCTS.filter(p => (p.name+' '+p.category+' '+p.sku+' '+(p.material||'')).toLowerCase().includes(q)) : []);
 
   const selectTag = (t) => { setBudgetOnly(false); setQuery(t); };
   const selectBudget = () => { setQuery(''); setBudgetOnly(true); };
@@ -63,7 +63,7 @@ function App(){
       {!active && <div style={{textAlign:'center',color:'var(--text-muted)',fontSize:15,padding:'40px 0'}}>Start typing to search across every FunX universe.</div>}
       {active && results.length === 0 && <div style={{textAlign:'center',padding:'40px 0'}}>
         <div style={{fontSize:18,fontWeight:600,marginBottom:8}}>No results for "{budgetOnly ? budgetLabel : query}"</div>
-        <p style={{color:'var(--text-muted)',fontSize:14}}>Try a universe name like Skyline Riders or Ironclad Legion.</p>
+        <p style={{color:'var(--text-muted)',fontSize:14}}>Try a category name like Action Figures or Building Blocks.</p>
       </div>}
       {active && results.length > 0 && <>
         <div style={{fontSize:13,color:'var(--text-muted)',marginBottom:24}}>{results.length} results for "{budgetOnly ? budgetLabel : query}"</div>
