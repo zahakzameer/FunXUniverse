@@ -684,7 +684,9 @@ function ProductCard({ p }) {
 }
 
 function ProductGrid({ products, cols = 4 }) {
-  return <div style={{display:'grid',gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`,gap:'56px 40px'}}>
+  const isMobile = useIsMobile();
+  const effectiveCols = isMobile ? Math.min(cols, 2) : cols;
+  return <div style={{display:'grid',gridTemplateColumns:`repeat(${effectiveCols},minmax(0,1fr))`,gap: isMobile ? 'var(--grid-gap) var(--grid-gap-tight)' : '56px 40px'}}>
     {products.map(p => <ProductCard key={p.id} p={p}/>)}
   </div>;
 }
@@ -699,7 +701,9 @@ function CategoryTile({ label, href }) {
 }
 
 function CategoryRail({ tiles }) {
-  return <div style={{display:'grid',gridTemplateColumns:`repeat(${tiles.length},1fr)`,gap:24,maxWidth:1280,margin:'0 auto',padding:'0 40px'}}>
+  const isMobile = useIsMobile();
+  const cols = isMobile ? Math.min(tiles.length, 2) : tiles.length;
+  return <div style={{display:'grid',gridTemplateColumns:`repeat(${cols},1fr)`,gap: isMobile ? 14 : 24,maxWidth:1280,margin:'0 auto',padding: isMobile ? '0 20px' : '0 40px'}}>
     {tiles.map(t => <CategoryTile key={t.label} {...t}/>)}
   </div>;
 }
@@ -729,6 +733,23 @@ function FilterGroup({ title, options, selected=[], onToggle }) {
 
 function FilterSidebar({ groups, onClear }) {
   const hasActive = groups.some(g => g.selected && g.selected.length > 0);
+  const isMobile = useIsMobile();
+  const [open,setOpen] = React.useState(false);
+  const activeCount = groups.reduce((s,g)=>s+g.selected.length,0);
+
+  if (isMobile) {
+    return <div style={{width:'100%',marginBottom:24}}>
+      <button onClick={()=>setOpen(!open)} style={{width:'100%',display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 16px',borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',color:'var(--text-primary)',fontSize:14,fontWeight:700,cursor:'pointer'}}>
+        <span>Filter{activeCount > 0 ? ` (${activeCount})` : ''}</span>
+        <span style={{display:'flex',transform:open?'rotate(90deg)':'rotate(0)',transition:'transform var(--duration-fast)'}}>{ICONS.chevron}</span>
+      </button>
+      {open && <div style={{marginTop:16,padding:'0 4px'}}>
+        {hasActive && onClear && <div style={{textAlign:'right',marginBottom:8}}><span onClick={onClear} style={{fontSize:12,color:'var(--text-muted)',cursor:'pointer',textDecoration:'underline'}}>Clear all</span></div>}
+        {groups.map(g => <FilterGroup key={g.title} {...g}/>)}
+      </div>}
+    </div>;
+  }
+
   return <aside style={{width:236,flexShrink:0}}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:8}}>
       <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-display)',fontStyle:'italic'}}>Filter</div>

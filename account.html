@@ -51,6 +51,7 @@ function OrderHistory(){
 }
 
 function Dashboard({ session }){
+  const isMobile = window.useIsMobile();
   const [profile,setProfile] = React.useState(null);
   const [form,setForm] = React.useState(null);
   const [saving,setSaving] = React.useState(false);
@@ -92,7 +93,7 @@ function Dashboard({ session }){
 
   if (!form) return <div style={{minHeight:'50vh'}}/>;
 
-  return <section style={{maxWidth:860,margin:'0 auto',padding:'56px 40px 96px'}}>
+  return <section style={{maxWidth:860,margin:'0 auto',padding: isMobile ? '32px 20px 64px' : '56px 40px 96px'}}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8,flexWrap:'wrap',gap:16}}>
       <div>
         <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:10}}>Collector's Circle</div>
@@ -105,7 +106,7 @@ function Dashboard({ session }){
     <Card variant="dark" padding="lg" style={{marginTop:32}}>
       <h3 style={{fontSize:18,fontWeight:700,margin:'0 0 20px'}}>Profile</h3>
       <form onSubmit={save} style={{display:'flex',flexDirection:'column',gap:18}}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:18}}>
+        <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap:18}}>
           <Input label="Full name" value={form.name} onChange={update('name')}/>
           <Input label="Phone" value={form.phone} onChange={update('phone')}/>
         </div>
@@ -115,7 +116,7 @@ function Dashboard({ session }){
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <Input label="Address line 1" value={form.line1} onChange={update('line1')}/>
             <Input label="Address line 2 (optional)" value={form.line2} onChange={update('line2')}/>
-            <div style={{display:'grid',gridTemplateColumns:hint.postal===null?'1fr 1fr':'1fr 1fr 1fr',gap:14}}>
+            <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : (hint.postal===null?'1fr 1fr':'1fr 1fr 1fr'),gap:14}}>
               <Input label="City" value={form.city} onChange={update('city')}/>
               <Input label={hint.region} value={form.region} onChange={update('region')}/>
               {hint.postal !== null && <Input label={hint.postal} value={form.postal_code} onChange={update('postal_code')}/>}

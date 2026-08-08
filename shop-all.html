@@ -59,6 +59,7 @@ function useFilters(groupTitles){
 }
 
 function App(){
+  const isMobile = window.useIsMobile();
   const [sort,setSort] = React.useState('Featured');
   const [visible,setVisible] = React.useState(16);
   const { filters, setFilters, toggle, clear } = useFilters(['Category','Price','Age Group','Availability']);
@@ -93,7 +94,7 @@ function App(){
   return <div>
     <Header active="Shop All"/>
     <PageHeader/>
-    <section id="grid" style={{maxWidth:1280,margin:'0 auto',padding:'40px 40px 0',display:'flex',gap:48}}>
+    <section id="grid" style={{maxWidth:1280,margin:'0 auto',padding: isMobile ? '24px 20px 0' : '40px 40px 0',display:'flex',flexDirection: isMobile ? 'column' : 'row',gap: isMobile ? 20 : 48}}>
       <FilterSidebar groups={groups} onClear={clear}/>
       <div style={{flex:1}}>
         {activeChips.length > 0 && <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
