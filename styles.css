@@ -5,3 +5,10 @@
 @import 'tokens/radius.css';
 @import 'tokens/shadows.css';
 @import 'tokens/motion.css';
+
+/* Skeleton loading state — shown as static markup inside #root before
+   React/product data is ready, so first paint is content-shaped instead
+   of a blank page or a generic spinner. */
+@keyframes funx-shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.funx-skeleton{background:linear-gradient(90deg,var(--surface-card) 25%,var(--surface-card-raised) 50%,var(--surface-card) 75%);background-size:800px 100%;animation:funx-shimmer 1.6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.funx-skeleton{animation:none;background:var(--surface-card)}}

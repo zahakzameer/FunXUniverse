@@ -229,6 +229,8 @@ function cartCount(){ return getCart().reduce((s,i)=>s+i.qty,0); }
 
 function useCartCount(){
   const [count,setCount] = React.useState(0);
+  const [pulse,setPulse] = React.useState(false);
+  const prevCount = React.useRef(0);
   React.useEffect(()=>{
     const update = () => setCount(cartCount());
     update();
@@ -236,7 +238,16 @@ function useCartCount(){
     window.addEventListener('storage', update);
     return () => { window.removeEventListener('funx-cart-updated', update); window.removeEventListener('storage', update); };
   },[]);
-  return count;
+  React.useEffect(() => {
+    const grew = count > prevCount.current;
+    prevCount.current = count;
+    if (grew) {
+      setPulse(true);
+      const t = setTimeout(()=>setPulse(false), 420);
+      return () => clearTimeout(t);
+    }
+  }, [count]);
+  return { count, pulse };
 }
 
 function CartDrawer(){
@@ -567,7 +578,7 @@ function MobileNavPanel({ open, onClose, active }){
 }
 
 function Header({ active }) {
-  const cartQty = useCartCount();
+  const { count: cartQty, pulse: cartPulse } = useCartCount();
   const isMobile = useIsMobile();
   const [menuOpen,setMenuOpen] = React.useState(false);
   React.useEffect(()=>{ if (!isMobile) setMenuOpen(false); },[isMobile]);
@@ -590,7 +601,7 @@ function Header({ active }) {
         {!isMobile && <a href="search.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title={STRINGS.nav.search}>{ICONS.search}</a>}
         {!isMobile && <a href="wishlist.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title={STRINGS.nav.wishlist}>{ICONS.heart}</a>}
         {!isMobile && <AccountLink/>}
-        <a href="cart.html" style={{cursor:'pointer',display:'flex',color:'inherit',position:'relative'}} title={STRINGS.nav.cart}>{ICONS.cart}{cartQty > 0 && <span style={{position:'absolute',top:-7,right:-9,background:'var(--color-primary)',color:'#fff',fontSize:9,fontWeight:700,minWidth:15,height:15,padding:'0 3px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}>{cartQty}</span>}</a>
+        <a href="cart.html" style={{cursor:'pointer',display:'flex',color:'inherit',position:'relative',transform:cartPulse?'scale(1.12)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring)'}} title={STRINGS.nav.cart}>{ICONS.cart}{cartQty > 0 && <span style={{position:'absolute',top:-7,right:-9,background:'var(--color-primary)',color:'#fff',fontSize:9,fontWeight:700,minWidth:15,height:15,padding:'0 3px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',transform:cartPulse?'scale(1.35)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring)'}}>{cartQty}</span>}</a>
       </div>
     </div>
   </header>;
@@ -644,6 +655,17 @@ function ProductCard({ p }) {
   const [hover,setHover] = React.useState(false);
   const { isWishlisted, toggle: toggleWishlist } = useWishlist();
   const wish = isWishlisted(p.id);
+  const [justFilled,setJustFilled] = React.useState(false);
+  const prevWish = React.useRef(wish);
+  React.useEffect(() => {
+    const becameFilled = wish && !prevWish.current;
+    prevWish.current = wish;
+    if (becameFilled) {
+      setJustFilled(true);
+      const t = setTimeout(()=>setJustFilled(false), 380);
+      return () => clearTimeout(t);
+    }
+  }, [wish]);
   const videoRef = React.useRef(null);
   const { Badge } = window.FunXDesignSystem_bbd8ae;
   const hasRealImages = p.images && p.images[0];
@@ -660,8 +682,8 @@ function ProductCard({ p }) {
         onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}}
         onKeyDown={(e)=>{ if (e.key==='Enter'||e.key===' ') { e.stopPropagation();e.preventDefault();toggleWishlist(p.id); } }}
         role="button" tabIndex={0} aria-pressed={wish} aria-label={wish?`Remove ${p.name} from wishlist`:`Add ${p.name} to wishlist`}
-        style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416',cursor:'pointer'}}>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416',cursor:'pointer',transform:justFilled?'scale(1.22)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring), color var(--duration-fast) var(--ease-standard)'}}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8" style={{transform:justFilled?'scale(1.1)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring)'}}><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </span>
       {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5}}>
         {p.images.map((_,i) => <span key={i} style={{width:5,height:5,borderRadius:'50%',background:i===0?'#fff':'rgba(255,255,255,0.4)'}}></span>)}
