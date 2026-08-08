@@ -109,7 +109,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
         </> : <span style={{fontSize:26,fontWeight:700,color:'var(--text-primary)'}}>{window.fmtPrice(p.price)}</span>}
       </div>
     </div>
-    <div style={{maxWidth:640,margin:'0 auto',aspectRatio:'1',borderRadius:32,overflow:'hidden',position:'relative',background:'var(--surface-gallery-card)',boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5), var(--glow-gold)',marginBottom:28}}>
+    <div style={{maxWidth:640,margin:'0 auto',aspectRatio:'1',borderRadius:32,overflow:'hidden',position:'relative',background:'var(--surface-gallery-card)',color:'var(--text-ink)',boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5), var(--glow-gold)',marginBottom:28}}>
       {p.badge && <span style={{position:'absolute',top:20,right:20,zIndex:3,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 10px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
       <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'56px'}}>
         {media[active] === '__video__'
@@ -149,7 +149,7 @@ function StickyBar({ p, onAdd, added, visible }){
 
 function FeatureRow({ img, eyebrow, title, text, reverse }){
   return <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'center',maxWidth:1100,margin:'0 auto',padding:'80px 40px',direction: reverse ? 'rtl' : 'ltr'}}>
-    <div style={{aspectRatio:'4/3',borderRadius:24,overflow:'hidden',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)',direction:'ltr'}}>
+    <div style={{aspectRatio:'4/3',borderRadius:24,overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',border:'1px solid var(--border-gallery)',direction:'ltr'}}>
       {img ? <img src={img} alt={title} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-feature-${title}`} style={{width:'100%',height:'100%'}} placeholder={title}></image-slot>}
     </div>
     <div style={{direction:'ltr'}}>

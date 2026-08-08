@@ -32,7 +32,7 @@ function QtyStepper({ qty, setQty }){
 function CartRow({ item, onQty, onRemove }){
   const p = item.p;
   return <div style={{display:'grid',gridTemplateColumns:'110px 1fr auto auto',alignItems:'center',gap:24,padding:'24px 0',borderBottom:'1px solid var(--border-hairline-soft)'}}>
-    <div style={{width:110,height:110,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)'}}>
+    <div style={{width:110,height:110,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',border:'1px solid var(--border-gallery)'}}>
       <image-slot id={`cart-${p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${p.name}`}></image-slot>
     </div>
     <div>

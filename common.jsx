@@ -272,7 +272,7 @@ function CartDrawer(){
       </div>
       <div style={{flex:1,overflowY:'auto',padding:'8px 24px'}}>
         {cart.length === 0 ? <p style={{color:'var(--text-muted)',fontSize:14,marginTop:32}}>{STRINGS.cart.empty}</p> : cart.map(item => <div key={item.id} style={{display:'flex',gap:14,padding:'16px 0',borderBottom:'1px solid var(--border-hairline-soft)',background: item.id===justAdded ? 'var(--surface-card-raised)' : 'transparent',borderRadius:8}}>
-          <div style={{width:64,height:64,flexShrink:0,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',border:'1px solid var(--border-gallery)'}}>
+          <div style={{width:64,height:64,flexShrink:0,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',border:'1px solid var(--border-gallery)'}}>
             {item.p.images && item.p.images[0] ? <img src={item.p.images[0]} alt={item.p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`drawer-${item.p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${item.p.name}`}></image-slot>}
           </div>
           <div style={{flex:1,minWidth:0}}>
@@ -650,7 +650,7 @@ function ProductCard({ p }) {
   const onEnter = () => { setHover(true); const v = videoRef.current; if (v) { v.currentTime = 0; v.play().catch(()=>{}); } };
   const onLeave = () => { setHover(false); const v = videoRef.current; if (v) { v.pause(); v.currentTime = 0; } };
   return <a href={`product.html?id=${p.id}`} onMouseEnter={onEnter} onMouseLeave={onLeave} style={{fontFamily:'var(--font-body)',cursor:'pointer',minWidth:0,display:'block',textDecoration:'none',color:'inherit'}}>
-    <div style={{aspectRatio:'1',background:'var(--surface-gallery)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
+    <div style={{aspectRatio:'1',background:'var(--surface-gallery)',color:'var(--text-ink)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
       {hasRealImages ? <img src={p.images[0]} alt={p.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:hover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:hover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
       {p.hasVideo && <video ref={videoRef} muted loop playsInline preload="none" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:hover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',pointerEvents:'none'}}>
         <source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/>
@@ -905,7 +905,11 @@ window.PRODUCTS_PROMISE = Promise.all([
             window.PRODUCTS = [];
             return window.PRODUCTS;
           }
-          window.PRODUCTS = data.map(applyDisplayFormatting);
+          // Zero-price rows are incomplete listings (never priced by staff),
+          // not real inventory — hide them from the public storefront rather
+          // than show a fake "$0.00". Still fully visible/editable in
+          // admin.html, which fetches products directly, not via this list.
+          window.PRODUCTS = data.map(applyDisplayFormatting).filter(p => p.price > 0);
           return window.PRODUCTS;
         })
         .catch((err) => {
