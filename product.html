@@ -39,12 +39,47 @@ function SpecRow({ label, value }){
   </div>;
 }
 
+// No reviews backend exists yet (every real product genuinely has 0
+// reviews), so this is an honest empty-state matching that — the star
+// picker gives feedback locally but doesn't persist anywhere. A real
+// review system would need its own table, RLS, and moderation in admin.
+function ReviewsPanel(){
+  const [hovered,setHovered] = React.useState(0);
+  const [picked,setPicked] = React.useState(0);
+  return <div style={{textAlign:'center',padding:'8px 0'}}>
+    <div style={{fontSize:15,fontWeight:600,marginBottom:14}}>Review this Product</div>
+    <div style={{display:'flex',justifyContent:'center',gap:8,marginBottom:16}}>
+      {[1,2,3,4,5].map(n => <button key={n} onClick={()=>setPicked(n)} onMouseEnter={()=>setHovered(n)} onMouseLeave={()=>setHovered(0)} aria-label={`Rate ${n} star${n>1?'s':''}`} style={{width:44,height:44,borderRadius:'var(--radius-sm)',border:'1.5px solid var(--border-hairline)',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        {window.ICONS.star(n <= (hovered||picked))}
+      </button>)}
+    </div>
+    {picked > 0 ? <p style={{color:'var(--color-success)',fontSize:14}}>Thanks for the feedback — reviews aren't live on the site yet, but we're listening.</p> : <p style={{color:'var(--text-muted)',fontSize:14}}>Be the first to write a review.</p>}
+  </div>;
+}
+
 function WishlistButton({ productId }){
   const { isWishlisted, toggle } = window.useWishlist();
   const wish = isWishlisted(productId);
   return <button onClick={()=>toggle(productId)} title={wish ? 'Remove from wishlist' : 'Save to wishlist'} style={{width:48,height:48,borderRadius:'50%',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:wish?'var(--paint-red)':'var(--text-secondary)',flexShrink:0}}>
     <svg width="19" height="19" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
   </button>;
+}
+
+// Cursor-following magnifier: hovering the product photo shows a zoomed
+// view panning with the mouse, the same pattern most retail PDPs use.
+// Only applies to real photos — zooming a placeholder icon is meaningless.
+function ZoomImage({ src, alt }){
+  const [zoom,setZoom] = React.useState(false);
+  const [pos,setPos] = React.useState({x:50,y:50});
+  const onMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPos({ x: ((e.clientX-rect.left)/rect.width)*100, y: ((e.clientY-rect.top)/rect.height)*100 });
+  };
+  return <div
+    onMouseEnter={()=>setZoom(true)} onMouseLeave={()=>setZoom(false)} onMouseMove={onMove}
+    style={{width:'100%',height:'100%',cursor:'zoom-in',backgroundImage:`url(${src})`,backgroundRepeat:'no-repeat',backgroundSize: zoom ? '200%' : 'contain',backgroundPosition: zoom ? `${pos.x}% ${pos.y}%` : 'center',filter:'drop-shadow(0 30px 40px rgba(0,0,0,0.18))'}}
+    role="img" aria-label={alt}>
+  </div>;
 }
 
 function Hero({ p, qty, setQty, added, onAdd, onBuy }){
@@ -79,7 +114,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
       <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'56px'}}>
         {media[active] === '__video__'
           ? <video ref={videoRef} muted loop playsInline controls style={{maxWidth:'100%',maxHeight:'100%',borderRadius:16}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
-          : (hasReal ? <img src={p.images[active]} alt={p.name} style={{maxWidth:'100%',maxHeight:'100%',objectFit:'contain',filter:'drop-shadow(0 30px 40px rgba(0,0,0,0.18))'}}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
+          : (hasReal ? <ZoomImage src={p.images[active]} alt={p.name}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
         }
       </div>
       {media.length > 1 && <div style={{position:'absolute',bottom:20,left:0,right:0,display:'flex',justifyContent:'center',gap:7}}>
@@ -156,8 +191,9 @@ function App(){
     <FeatureRow img={p.images && p.images[2]} eyebrow="Details That Matter" title="Crafted For Collectors" text="Sample-tested by our team before it ever ships, so what arrives matches what you saw." reverse/>
 
     <section style={{maxWidth:760,margin:'0 auto',padding:'0 40px 96px'}}>
-      <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:28,textAlign:'center',marginBottom:32}}>Specifications</h3>
-      <SpecRow label="Brand" value={p.brand}/>
+      <Accordion items={[
+        {title:'Product Details', content: <div>
+          <SpecRow label="Brand" value={p.brand}/>
       <SpecRow label="Category" value={p.category}/>
       <SpecRow label="SKU" value={p.sku}/>
       <SpecRow label="Material" value={p.material}/>
@@ -166,12 +202,10 @@ function App(){
       <SpecRow label="Recommended Age" value={p.age_group}/>
       {p.boxDims && <SpecRow label="Box Dimensions" value={p.boxDims}/>}
       {p.weight && <SpecRow label="Weight" value={p.weight}/>}
-      <div style={{marginTop:32}}>
-        <Accordion items={[
-          {title:'Shipping & Returns',content:'Ships in 2 business days if in stock. 30-day returns on unworn pieces in original packaging — see our Shipping and Returns pages for full details.'},
-          {title:'Authentication',content: p.isCollectible ? 'This is a numbered edition \u2014 your order is logged in our system and traceable from checkout to delivery.' : "Every FunX product is sample-tested by our team before it ever goes live on the site."},
-        ]}/>
-      </div>
+        </div>},
+        {title:'Shipping & Delivery', content:'Ships in 2 business days if in stock. 30-day returns on unworn pieces in original packaging — see our Shipping and Returns pages for full details.'},
+        {title:'Reviews', content: <ReviewsPanel/>},
+      ]}/>
     </section>
 
     {related.length > 0 && <section style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 96px'}}>
