@@ -215,7 +215,23 @@ function AnnouncementBar() {
 }
 
 function getCart(){ try{ return JSON.parse(localStorage.getItem('funx_cart')||'[]'); }catch(e){ return []; } }
-function saveCart(items){ localStorage.setItem('funx_cart', JSON.stringify(items)); window.dispatchEvent(new Event('funx-cart-updated')); }
+function saveCart(items){
+  localStorage.setItem('funx_cart', JSON.stringify(items));
+  window.dispatchEvent(new Event('funx-cart-updated'));
+  syncCartToServer(items);
+}
+// Cart sizes are tiny, so a full delete-then-reinsert for this user is
+// simpler and safer than diffing — no risk of stale rows left behind from
+// a missed delete. Fire-and-forget: cart UI is driven by localStorage, this
+// just keeps cart_items mirroring it for the signed-in-elsewhere case.
+function syncCartToServer(items){
+  if (!window.supabaseClient || !window.__funxCurrentUserId) return;
+  const uid = window.__funxCurrentUserId;
+  window.supabaseClient.from('cart_items').delete().eq('user_id', uid).then(() => {
+    if (!items.length) return;
+    window.supabaseClient.from('cart_items').insert(items.map(i => ({ user_id: uid, product_id: i.id, qty: i.qty }))).then(()=>{});
+  });
+}
 function addToCart(id, qty){
   qty = qty || 1;
   const items = getCart();
@@ -302,6 +318,32 @@ function CartDrawer(){
       </div>}
     </div>
   </React.Fragment>;
+}
+
+// No UI — mounted once from Header so it's live on every page. On the
+// transition into a signed-in session, pulls that account's saved
+// cart_items and merges them into whatever's already in the local cart
+// (quantities summed for overlapping products), so a cart genuinely
+// follows a customer across devices instead of resetting per-browser.
+function CartSync(){
+  const session = useSession();
+  const wasSignedIn = React.useRef(false);
+  React.useEffect(() => {
+    if (session && !wasSignedIn.current) {
+      supabaseClient.from('cart_items').select('product_id,qty').eq('user_id', session.user.id).then(({ data }) => {
+        const server = data || [];
+        if (!server.length) return;
+        const merged = getCart().map(i => ({...i}));
+        server.forEach(s => {
+          const existing = merged.find(i => i.id === s.product_id);
+          if (existing) existing.qty += s.qty; else merged.push({ id: s.product_id, qty: s.qty });
+        });
+        saveCart(merged);
+      });
+    }
+    wasSignedIn.current = !!session;
+  }, [session]);
+  return null;
 }
 
 function NavItem({ l, active }){
@@ -468,6 +510,34 @@ function CreateForm({ onSignedUp }){
   </form>;
 }
 
+/* Shared sign-in/create-account card — used by account.html's own page and
+   by checkout.html's inline login gate, so both stay in sync automatically.
+   onSuccess fires on a successful sign-in, or a signup that returns an
+   active session immediately (email confirmation off); callers decide what
+   "success" means for them (account.html redirects, checkout.html doesn't
+   need to — the page's own session check re-renders it). */
+function AuthCard({ onSuccess }){
+  const { Card, Button } = window.FunXDesignSystem_bbd8ae;
+  const [mode,setMode] = React.useState('sign-in');
+  const [signedUp,setSignedUp] = React.useState(false);
+  const handleSuccess = onSuccess || (()=>{});
+  return <Card variant="dark" padding="lg" style={{width:440,maxWidth:'100%',boxShadow:'var(--shadow-3)'}}>
+    {signedUp ? <div style={{textAlign:'center',padding:'24px 8px'}}>
+      <div style={{fontSize:40,marginBottom:16,color:'var(--color-success)'}}>✓</div>
+      <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:28,margin:'0 0 10px'}}>Check your email</h3>
+      <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:24}}>We've sent a confirmation link to your inbox — verify your email, then sign in below.</p>
+      <Button variant="secondary" size="md" onClick={()=>{setSignedUp(false);setMode('sign-in');}}>Back to Sign In</Button>
+    </div> : <>
+      <div style={{textAlign:'center',marginBottom:28}}>
+        <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:12}}>Collector's Circle</div>
+        <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:36,margin:0}}>{mode==='sign-in' ? 'Sign In' : 'Create Account'}</h1>
+      </div>
+      <ModeSwitch mode={mode} setMode={setMode}/>
+      {mode==='sign-in' ? <SignInForm onSuccess={handleSuccess}/> : <CreateForm onSignedUp={(hasSession)=>{ if (hasSession) { handleSuccess(); } else { setSignedUp(true); } }}/>}
+    </>}
+  </Card>;
+}
+
 /* ── Wishlist ──────────────────────────────────────────────────────────────
    Same event-driven pattern as CartDrawer above (funx-cart-open /
    funx-cart-updated): a global dialog rendered once inside Header, driven
@@ -585,6 +655,7 @@ function Header({ active }) {
   return <header style={{position:'sticky',top:0,zIndex:30,fontFamily:'var(--font-body)'}}>
     <AnnouncementBar/>
     <CartDrawer/>
+    <CartSync/>
     <AuthPromptDialog/>
     {isMobile && <MobileNavPanel open={menuOpen} onClose={()=>setMenuOpen(false)} active={active}/>}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',height:80,padding: isMobile ? '0 20px' : '0 40px',background:'rgba(11,11,13,0.86)',backdropFilter:'blur(10px)',borderBottom:'1px solid var(--border-hairline-soft)'}}>
@@ -843,6 +914,17 @@ try {
 }
 window.supabaseClient = supabaseClient;
 
+// Plain module-scope mirror of the current session's user id, kept in sync
+// via onAuthStateChange. saveCart() is an ordinary function (not a hook), so
+// it can't call useSession() itself — this is what lets it know whether to
+// push to cart_items without every call site threading a session through.
+window.__funxCurrentUserId = null;
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange((_event, sess) => {
+    window.__funxCurrentUserId = sess ? sess.user.id : null;
+  });
+}
+
 function useSession(){
   const [session,setSession] = React.useState(undefined); // undefined = loading, null = signed out
   React.useEffect(() => {
@@ -1029,4 +1111,4 @@ function fmtPrice(n) {
   }
 }
 
-Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount, ModeSwitch, SignInForm, CreateForm });
+Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount, ModeSwitch, SignInForm, CreateForm, AuthCard });

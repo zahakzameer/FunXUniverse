@@ -95,7 +95,7 @@ function App(){
         {applied && <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--color-success)',marginBottom:12}}><span>Discount</span><span>-{window.fmtPrice(discount)}</span></div>}
         <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Shipping</span><span style={{color:'var(--text-muted)'}}>Calculated at checkout</span></div>
         <div style={{borderTop:'1px solid var(--border-hairline)',margin:'16px 0',paddingTop:16,display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:17}}><span>Total</span><span>{window.fmtPrice(total)}</span></div>
-        <Button variant="primary" size="lg" onClick={()=>location.href='track-order.html'} style={{width:'100%'}}>Checkout</Button>
+        <Button variant="primary" size="lg" onClick={()=>location.href='checkout.html'} style={{width:'100%'}}>Checkout</Button>
       </div>
     </section>}
     <Footer/>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout — The FunX Universe</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="tokens/theme-light.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="_ds_bundle.js"></script>
+<script src="image-slot.js"></script>
+<link rel="stylesheet" href="motion.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
+</head>
+<body>
+<div id="root"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--surface-canvas,#0b0b0d)"><svg width="32" height="32" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#F16A3E" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 60"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.8s" repeatCount="indefinite"/></circle></svg></div></div>
+<script type="text/babel" src="common.jsx"></script>
+<script type="text/babel">
+const { Input, Button, Card } = window.FunXDesignSystem_bbd8ae;
+const SHIPPING_COST = 200;
+
+function SignInGate(){
+  return <section style={{minHeight:'60vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'64px 40px',gap:24}}>
+    <p style={{color:'var(--text-muted)',fontSize:15,textAlign:'center',maxWidth:400}}>Sign in to check out — your order and shipping details are tied to your account.</p>
+    <AuthCard onSuccess={()=>{}}/>
+  </section>;
+}
+
+function EmptyCart(){
+  return <section style={{maxWidth:1100,margin:'0 auto',padding:'80px 40px 120px',textAlign:'center'}}>
+    <p style={{color:'var(--text-muted)',fontSize:15,marginBottom:24}}>Your cart is empty — add something before checking out.</p>
+    <Button variant="primary" size="lg" onClick={()=>location.href='shop-all.html'}>Browse All Products</Button>
+  </section>;
+}
+
+function AddressForm({ form, update, isMobile }){
+  const hint = window.getAddressHint('Pakistan');
+  return <Card variant="dark" padding="lg">
+    <h3 style={{fontSize:18,fontWeight:700,margin:'0 0 20px'}}>Shipping Address</h3>
+    <div style={{display:'flex',flexDirection:'column',gap:18}}>
+      <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap:18}}>
+        <Input label="Full name" value={form.name} onChange={update('name')} required/>
+        <Input label="Phone" value={form.phone} onChange={update('phone')} required/>
+      </div>
+      <div style={{fontSize:13,color:'var(--text-muted)'}}>Shipping to <strong style={{color:'var(--text-secondary)'}}>Pakistan</strong> — we don't ship internationally yet.</div>
+      <Input label="Address line 1" value={form.line1} onChange={update('line1')} required/>
+      <Input label="Address line 2 (optional)" value={form.line2} onChange={update('line2')}/>
+      <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',gap:14}}>
+        <Input label="City" value={form.city} onChange={update('city')} required/>
+        <Input label={hint.region} value={form.region} onChange={update('region')} required/>
+        <Input label={hint.postal} value={form.postal_code} onChange={update('postal_code')}/>
+      </div>
+    </div>
+  </Card>;
+}
+
+function OrderSummary({ cart, subtotal, isMobile }){
+  return <Card variant="dark" padding="lg">
+    <h3 style={{fontSize:18,fontWeight:700,margin:'0 0 20px'}}>Order Summary</h3>
+    <div style={{display:'flex',flexDirection:'column',gap:16,marginBottom:20,maxHeight:isMobile?'none':320,overflowY:isMobile?'visible':'auto'}}>
+      {cart.map(item => <div key={item.id} style={{display:'flex',gap:12,alignItems:'center'}}>
+        <div style={{width:52,height:52,flexShrink:0,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',border:'1px solid var(--border-gallery)'}}>
+          {item.p.images && item.p.images[0] ? <img src={item.p.images[0]} alt={item.p.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`checkout-${item.p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${item.p.name}`}></image-slot>}
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:600}}>{window.titleCase(item.p.name)}</div>
+          <div style={{fontSize:12,color:'var(--text-muted)'}}>Qty {item.qty}</div>
+        </div>
+        <div style={{fontSize:13,fontWeight:700,color:'var(--paint-orange)',whiteSpace:'nowrap'}}>{window.fmtPrice((item.p.salePrice||item.p.price)*item.qty)}</div>
+      </div>)}
+    </div>
+    <div style={{borderTop:'1px solid var(--border-hairline)',paddingTop:16,display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)'}}><span>Subtotal</span><span>{window.fmtPrice(subtotal)}</span></div>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)'}}><span>Shipping</span><span>{window.fmtPrice(SHIPPING_COST)}</span></div>
+      <div style={{display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:17,paddingTop:8,borderTop:'1px solid var(--border-hairline)'}}><span>Total</span><span>{window.fmtPrice(subtotal+SHIPPING_COST)}</span></div>
+    </div>
+    <Button variant="primary" size="lg" disabled style={{width:'100%',marginTop:24,opacity:0.5,cursor:'not-allowed'}}>Place Order</Button>
+    <p style={{fontSize:12,color:'var(--text-muted)',textAlign:'center',marginTop:12,lineHeight:1.6}}>Online payment isn't connected yet — checkout can't be completed until it is. Everything above (address, order total) is real; we're just missing the last step.</p>
+  </Card>;
+}
+
+function CheckoutForm({ session }){
+  const isMobile = window.useIsMobile();
+  const [form,setForm] = React.useState({ name:'', phone:'', line1:'', line2:'', city:'', region:'', postal_code:'' });
+  const [loaded,setLoaded] = React.useState(false);
+  const items = window.getCart();
+  const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)})).filter(i=>i.p);
+  const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
+
+  React.useEffect(() => {
+    window.supabaseClient.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => {
+      const addr = (data && data.shipping_address) || {};
+      setForm(f => ({
+        ...f,
+        name: (data && data.name) || '',
+        phone: (data && data.phone) || '',
+        line1: addr.line1 || '', line2: addr.line2 || '', city: addr.city || '',
+        region: addr.region || '', postal_code: addr.postal_code || '',
+      }));
+      setLoaded(true);
+    });
+  }, [session.user.id]);
+
+  const update = (k) => (e) => setForm({...form,[k]:e.target.value});
+
+  if (!loaded) return <div style={{minHeight:'40vh'}}/>;
+  if (cart.length === 0) return <EmptyCart/>;
+
+  return <section style={{maxWidth:1100,margin:'0 auto',padding: isMobile ? '32px 20px 96px' : '56px 40px 120px',display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr',gap: isMobile ? 24 : 40,alignItems:'start'}}>
+    <AddressForm form={form} update={update} isMobile={isMobile}/>
+    <OrderSummary cart={cart} subtotal={subtotal} isMobile={isMobile}/>
+  </section>;
+}
+
+function App(){
+  const session = window.useSession();
+  return <div>
+    <Header active=""/>
+    <section style={{maxWidth:1100,margin:'0 auto',padding:'56px 40px 0'}} data-screen-label="Checkout">
+      <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,margin:'0 0 8px'}}>Checkout</h1>
+    </section>
+    {session === undefined ? <div style={{minHeight:'60vh'}}/>
+      : session === null ? <SignInGate/>
+      : <CheckoutForm session={session}/>}
+    <Footer/>
+  </div>;
+}
+window.PRODUCTS_PROMISE.then(() => ReactDOM.render(<App/>, document.getElementById('root')));
+</script>
+<script src="motion.js"></script>
+</body></html>
