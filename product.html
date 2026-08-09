@@ -39,21 +39,118 @@ function SpecRow({ label, value }){
   </div>;
 }
 
-// No reviews backend exists yet (every real product genuinely has 0
-// reviews), so this is an honest empty-state matching that — the star
-// picker gives feedback locally but doesn't persist anywhere. A real
-// review system would need its own table, RLS, and moderation in admin.
-function ReviewsPanel(){
+// Real reviews backend (Phase 3, live RLS-tested): verified-purchase-only
+// insert enforced server-side via a WITH CHECK against order_items/orders,
+// so the eligibility check here is purely for UI state — the security
+// boundary is the database policy, not this component.
+function timeAgo(dateStr){
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+  if (days < 1) return 'Today';
+  if (days === 1) return '1 day ago';
+  if (days < 30) return `${days} days ago`;
+  const months = Math.floor(days/30);
+  if (months < 12) return `${months} month${months>1?'s':''} ago`;
+  const years = Math.floor(months/12);
+  return `${years} year${years>1?'s':''} ago`;
+}
+
+function ReviewRow({ r }){
+  return <div style={{padding:'16px 0',borderBottom:'1px solid var(--border-hairline-soft)',textAlign:'left'}}>
+    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+      <Stars rating={r.rating}/>
+      <span style={{fontSize:12,color:'var(--text-muted)'}}>Verified Buyer · {timeAgo(r.created_at)}</span>
+    </div>
+    {r.title && <div style={{fontWeight:600,fontSize:14,marginBottom:4}}>{r.title}</div>}
+    {r.body && <p style={{fontSize:14,color:'var(--text-secondary)',margin:0}}>{r.body}</p>}
+  </div>;
+}
+
+function ReviewForm({ productId, session, onSubmitted }){
+  const { Input, Button } = window.FunXDesignSystem_bbd8ae;
+  const [rating,setRating] = React.useState(0);
   const [hovered,setHovered] = React.useState(0);
-  const [picked,setPicked] = React.useState(0);
-  return <div style={{textAlign:'center',padding:'8px 0'}}>
-    <div style={{fontSize:15,fontWeight:600,marginBottom:14}}>Review this Product</div>
+  const [title,setTitle] = React.useState('');
+  const [body,setBody] = React.useState('');
+  const [error,setError] = React.useState('');
+  const [saving,setSaving] = React.useState(false);
+
+  const submit = () => {
+    if (rating === 0) { setError('Pick a star rating first.'); return; }
+    setSaving(true); setError('');
+    window.supabaseClient.from('reviews').insert({
+      product_id: productId, user_id: session.user.id, rating, title: title.trim() || null, body: body.trim() || null,
+    }).select().single().then(({ data: row, error }) => {
+      setSaving(false);
+      if (error) { setError(error.message); return; }
+      onSubmitted(row);
+    });
+  };
+
+  return <div style={{textAlign:'left'}}>
+    <div style={{fontSize:15,fontWeight:600,marginBottom:14,textAlign:'center'}}>Review this Product</div>
     <div style={{display:'flex',justifyContent:'center',gap:8,marginBottom:16}}>
-      {[1,2,3,4,5].map(n => <button key={n} onClick={()=>setPicked(n)} onMouseEnter={()=>setHovered(n)} onMouseLeave={()=>setHovered(0)} aria-label={`Rate ${n} star${n>1?'s':''}`} style={{width:44,height:44,borderRadius:'var(--radius-sm)',border:'1.5px solid var(--border-hairline)',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-        {window.ICONS.star(n <= (hovered||picked))}
+      {[1,2,3,4,5].map(n => <button key={n} onClick={()=>setRating(n)} onMouseEnter={()=>setHovered(n)} onMouseLeave={()=>setHovered(0)} aria-label={`Rate ${n} star${n>1?'s':''}`} style={{width:44,height:44,borderRadius:'var(--radius-sm)',border:'1.5px solid var(--border-hairline)',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        {window.ICONS.star(n <= (hovered||rating))}
       </button>)}
     </div>
-    {picked > 0 ? <p style={{color:'var(--color-success)',fontSize:14}}>Thanks for the feedback — reviews aren't live on the site yet, but we're listening.</p> : <p style={{color:'var(--text-muted)',fontSize:14}}>Be the first to write a review.</p>}
+    <div style={{display:'flex',flexDirection:'column',gap:12,maxWidth:420,margin:'0 auto'}}>
+      <Input placeholder="Title (optional)" value={title} onChange={e=>setTitle(e.target.value)}/>
+      <textarea placeholder="Tell other collectors what you think (optional)" value={body} onChange={e=>setBody(e.target.value)} rows={3} style={{borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',color:'var(--text-primary)',padding:'10px 14px',fontSize:14,fontFamily:'inherit',resize:'vertical'}}/>
+      {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
+      <Button variant="primary" size="md" onClick={submit} disabled={saving}>{saving ? 'Submitting…' : 'Submit Review'}</Button>
+    </div>
+  </div>;
+}
+
+function ReviewsPanel({ productId }){
+  const { Button } = window.FunXDesignSystem_bbd8ae;
+  const session = window.useSession();
+  const [approved,setApproved] = React.useState(null);
+  const [ownReview,setOwnReview] = React.useState(undefined); // undefined = loading, null = none
+  const [eligible,setEligible] = React.useState(null);
+
+  React.useEffect(() => {
+    window.supabaseClient.from('reviews').select('*').eq('product_id',productId).eq('status','approved').order('created_at',{ascending:false}).then(({ data }) => setApproved(data || []));
+  }, [productId]);
+
+  React.useEffect(() => {
+    if (session === undefined) return;
+    if (!session) { setOwnReview(null); setEligible(false); return; }
+    window.supabaseClient.from('reviews').select('*').eq('product_id',productId).eq('user_id',session.user.id).maybeSingle().then(({ data }) => {
+      setOwnReview(data || null);
+      if (data) return;
+      window.supabaseClient.from('order_items').select('id, orders!inner(user_id,status)').eq('product_id',productId).eq('orders.user_id',session.user.id).eq('orders.status','delivered').limit(1).then(({ data: oi }) => {
+        setEligible(!!(oi && oi.length));
+      });
+    });
+  }, [session, productId]);
+
+  const stillLoading = session === undefined || ownReview === undefined || (session && !ownReview && eligible === null);
+
+  return <div style={{padding:'8px 0'}}>
+    {stillLoading ? <div style={{minHeight:80}}/> : <>
+      {!session && <div style={{textAlign:'center',marginBottom:28}}>
+        <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:14}}>Sign in to write a review.</p>
+        <a href="account.html" style={{textDecoration:'none'}}><Button variant="secondary" size="md">Sign In</Button></a>
+      </div>}
+      {session && ownReview && <div style={{textAlign:'center',marginBottom:28,padding:20,border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-md)'}}>
+        <div style={{display:'flex',justifyContent:'center'}}><Stars rating={ownReview.rating}/></div>
+        {ownReview.title && <div style={{fontWeight:600,fontSize:14,margin:'8px 0 4px'}}>{ownReview.title}</div>}
+        {ownReview.body && <p style={{fontSize:14,color:'var(--text-secondary)'}}>{ownReview.body}</p>}
+        <div style={{fontSize:12,color:'var(--text-muted)',marginTop:8}}>
+          {ownReview.status === 'approved' ? 'Published' : ownReview.status === 'rejected' ? 'Not published' : 'Pending review by our team'}
+        </div>
+      </div>}
+      {session && !ownReview && eligible && <div style={{marginBottom:28}}>
+        <ReviewForm productId={productId} session={session} onSubmitted={(row)=>setOwnReview(row)}/>
+      </div>}
+      {session && !ownReview && eligible === false && <p style={{textAlign:'center',color:'var(--text-muted)',fontSize:14,marginBottom:28}}>Only customers who've received this item can leave a review.</p>}
+    </>}
+
+    <div style={{borderTop: (approved && approved.length>0) ? '1px solid var(--border-hairline-soft)' : 'none',paddingTop: (approved && approved.length>0) ? 20 : 0}}>
+      {approved === null ? null : approved.length === 0 ? <p style={{textAlign:'center',color:'var(--text-muted)',fontSize:14}}>Be the first to write a review.</p>
+        : approved.map(r => <ReviewRow key={r.id} r={r}/>)}
+    </div>
   </div>;
 }
 
@@ -216,7 +313,7 @@ function App(){
       {p.weight && <SpecRow label="Weight" value={p.weight}/>}
         </div>},
         {title:'Shipping & Delivery', content:'Ships in 2 business days if in stock. 30-day returns on unworn pieces in original packaging — see our Shipping and Returns pages for full details.'},
-        {title:'Reviews', content: <ReviewsPanel/>},
+        {title:'Reviews', content: <ReviewsPanel productId={p.id}/>},
       ]}/>
     </section>
 

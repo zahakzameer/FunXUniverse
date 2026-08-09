@@ -621,6 +621,57 @@ function OrdersTab(){
   </div>;
 }
 
+/* ── review moderation (Marketing tab) ─────────────────────────────────────
+   Covered by the already-live-tested reviews_staff_moderate RLS policy
+   (has_module('marketing') or is_admin()) — this is the UI for it. */
+function PendingReviewRow({ r, onDecide }){
+  const product = window.PRODUCTS.find(p => p.id === r.product_id);
+  return <Card variant="dark" padding="sm">
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16,flexWrap:'wrap'}}>
+      <div style={{flex:1,minWidth:220}}>
+        <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:4}}>{product ? product.name : r.product_id}</div>
+        <div style={{display:'flex',gap:1,marginBottom:6}}>{[1,2,3,4,5].map(i => <span key={i} style={{color: i<=r.rating ? 'var(--paint-yellow)' : 'var(--text-muted)'}}>★</span>)}</div>
+        {r.title && <div style={{fontWeight:600,fontSize:14,marginBottom:4}}>{r.title}</div>}
+        {r.body && <p style={{fontSize:13,color:'var(--text-secondary)',margin:0}}>{r.body}</p>}
+        <div style={{fontSize:11,color:'var(--text-muted)',marginTop:6}}>{new Date(r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <Button variant="primary" size="sm" onClick={()=>onDecide(r.id,'approved')}>Approve</Button>
+        <Button variant="secondary" size="sm" onClick={()=>onDecide(r.id,'rejected')}>Reject</Button>
+      </div>
+    </div>
+  </Card>;
+}
+
+function MarketingTab(){
+  const [reviews,setReviews] = React.useState(null);
+  const [error,setError] = React.useState('');
+
+  const load = React.useCallback(() => {
+    window.supabaseClient.from('reviews').select('*').eq('status','pending').order('created_at').then(({ data, error }) => {
+      if (error) { setError(error.message); return; }
+      setReviews(data);
+    });
+  }, []);
+  React.useEffect(load, [load]);
+
+  const decide = (id, status) => {
+    window.supabaseClient.from('reviews').update({ status }).eq('id', id).then(({ error }) => {
+      if (error) { setError(error.message); return; }
+      load();
+    });
+  };
+
+  return <div>
+    <h3 style={{fontSize:16,fontWeight:700,marginBottom:16}}>Reviews Awaiting Moderation</h3>
+    {error && <div style={{fontSize:13,color:'var(--color-error)',marginBottom:16}}>{error}</div>}
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {(reviews||[]).length === 0 && <p style={{color:'var(--text-muted)',fontSize:14}}>Nothing pending — new reviews show up here for approval before they go public.</p>}
+      {(reviews||[]).map(r => <PendingReviewRow key={r.id} r={r} onDecide={decide}/>)}
+    </div>
+  </div>;
+}
+
 /* ── app shell ─────────────────────────────────────────────────────────── */
 function NotConfigured(){
   return <div><Header active=""/>
@@ -678,7 +729,7 @@ function AdminApp(){
       {activeTab==='Categories' && <CategoriesTab/>}
       {activeTab==='Accounts' && <AccountsTab/>}
       {activeTab==='Orders' && <OrdersTab/>}
-      {activeTab==='Marketing' && <ComingSoonTab title="Marketing"/>}
+      {activeTab==='Marketing' && <MarketingTab/>}
       {activeTab==='Manage Staff' && <StaffTab selfId={session.user.id}/>}
     </section>
     <Footer/>

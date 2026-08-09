@@ -746,18 +746,27 @@ function ProductCard({ p }) {
       return () => clearTimeout(t);
     }
   }, [wish]);
+  const [justAdded,setJustAdded] = React.useState(false);
   const videoRef = React.useRef(null);
   const { Badge } = window.FunXDesignSystem_bbd8ae;
   const hasRealImages = p.images && p.images[0];
+  const inStock = p.quantity > 0;
+  const discountPct = p.salePrice ? Math.round((1 - p.salePrice / p.price) * 100) : 0;
   const onEnter = () => { setHover(true); const v = videoRef.current; if (v) { v.currentTime = 0; v.play().catch(()=>{}); } };
   const onLeave = () => { setHover(false); const v = videoRef.current; if (v) { v.pause(); v.currentTime = 0; } };
+  const quickAdd = (e) => {
+    e.stopPropagation(); e.preventDefault();
+    if (!inStock) return;
+    window.addToCart(p.id, 1);
+    setJustAdded(true);
+    setTimeout(()=>setJustAdded(false), 1600);
+  };
   return <a href={`product.html?id=${p.id}`} onMouseEnter={onEnter} onMouseLeave={onLeave} style={{fontFamily:'var(--font-body)',cursor:'pointer',minWidth:0,display:'block',textDecoration:'none',color:'inherit'}}>
     <div style={{aspectRatio:'1',background:'var(--surface-gallery)',color:'var(--text-ink)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
       {hasRealImages ? <img src={p.images[0]} alt={p.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:hover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:hover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
       {p.hasVideo && <video ref={videoRef} muted loop playsInline preload="none" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:hover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',pointerEvents:'none'}}>
         <source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/>
       </video>}
-      {p.badge && <span style={{position:'absolute',top:12,left:12,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 9px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
       <span
         onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}}
         onKeyDown={(e)=>{ if (e.key==='Enter'||e.key===' ') { e.stopPropagation();e.preventDefault();toggleWishlist(p.id); } }}
@@ -765,23 +774,36 @@ function ProductCard({ p }) {
         style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416',cursor:'pointer',transform:justFilled?'scale(1.22)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring), color var(--duration-fast) var(--ease-standard)'}}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8" style={{transform:justFilled?'scale(1.1)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring)'}}><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </span>
-      {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5}}>
+      {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5,opacity:hover?0:1,transition:'opacity var(--duration-fast) var(--ease-standard)'}}>
         {p.images.map((_,i) => <span key={i} style={{width:5,height:5,borderRadius:'50%',background:i===0?'#fff':'rgba(255,255,255,0.4)'}}></span>)}
       </div>}
+      {/* Hover-only Quick Add — hidden by default, appears over the image on
+          hover (desktop) so the card stays clean otherwise; click-through to
+          the product page still works everywhere else on the card. */}
+      <button
+        onClick={quickAdd}
+        disabled={!inStock}
+        tabIndex={-1}
+        aria-hidden={!hover}
+        style={{position:'absolute',left:10,right:10,bottom:10,height:38,borderRadius:'var(--radius-pill)',border:'1px solid rgba(255,255,255,0.85)',background:'rgba(20,20,22,0.82)',backdropFilter:'blur(4px)',color:'#fff',fontSize:12,fontWeight:700,letterSpacing:0.3,cursor:inStock?'pointer':'not-allowed',opacity:hover?1:0,transform:hover?'translateY(0)':'translateY(6px)',transition:'opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',pointerEvents:hover?'auto':'none'}}>
+        {!inStock ? 'Out of Stock' : justAdded ? 'Added ✓' : 'Quick Add'}
+      </button>
     </div>
-    <StockLabel stock={p.quantity}/>
+    {discountPct > 0 && <div style={{fontSize:11,fontWeight:700,color:'var(--paint-orange)',marginBottom:4}}>SAVE {discountPct}%</div>}
     <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4,minHeight:28,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{p.line || p.category}</div>
     <div style={{fontSize:'var(--title-md-size)',fontWeight:600,color:'var(--text-primary)',marginBottom:6,lineHeight:1.3,minHeight:'calc(var(--title-md-size) * 1.3 * 2)',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
-    {p.rating > 0 ? <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:6,minHeight:19}}>
-      <div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i => <span key={i}>{ICONS.star(i<=Math.round(p.rating))}</span>)}</div>
-      <span style={{fontSize:12,color:'var(--text-muted)'}}>({p.reviews})</span>
-    </div> : <div style={{minHeight:19,marginBottom:6}}></div>}
-    <div style={{display:'flex',alignItems:'baseline',gap:8}}>
+    <div style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:6}}>
       {p.salePrice ? <>
         <span style={{fontSize:'var(--body-md-size)',color:'var(--paint-orange)',fontWeight:700}}>{window.fmtPrice(p.salePrice)}</span>
         <span style={{fontSize:13,color:'var(--text-muted-soft)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
       </> : <span style={{fontSize:'var(--body-md-size)',color:'var(--text-primary)',fontWeight:600}}>{window.fmtPrice(p.price)}</span>}
     </div>
+    {p.rating > 0 ? <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:4,minHeight:19}}>
+      <div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i => <span key={i}>{ICONS.star(i<=Math.round(p.rating))}</span>)}</div>
+      <span style={{fontSize:12,color:'var(--text-muted)'}}>({p.reviews})</span>
+    </div> : <div style={{minHeight:19,marginBottom:4}}></div>}
+    {p.badge && <div style={{fontSize:11,fontWeight:700,color:'var(--color-success)',marginBottom:2}}>{p.badge}</div>}
+    <StockLabel stock={p.quantity}/>
   </a>;
 }
 
@@ -826,10 +848,10 @@ function SectionHeading({ eyebrow, title, cta, ctaHref }) {
 
 function FilterGroup({ title, options, selected=[], onToggle }) {
   const { Checkbox } = window.FunXDesignSystem_bbd8ae;
-  const [open,setOpen] = React.useState(true);
+  const [open,setOpen] = React.useState(false);
   return <div style={{borderBottom:'1px solid var(--border-hairline-soft)',padding:'18px 0'}}>
     <div onClick={()=>setOpen(!open)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',fontSize:14,fontWeight:600,color:'var(--text-primary)'}}>
-      {title}<span style={{transform:open?'rotate(90deg)':'rotate(0)',transition:'transform var(--duration-fast)',color:'var(--text-muted)'}}>{ICONS.chevron}</span>
+      {title}<span style={{fontSize:16,lineHeight:1,color:'var(--text-muted)',width:16,textAlign:'center'}}>{open ? '−' : '+'}</span>
     </div>
     {open && <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:11}}>
       {options.map(o => <Checkbox key={o} label={o} checked={selected.includes(o)} onChange={()=>onToggle && onToggle(o)} labelStyle={{fontSize:13,color:'var(--text-secondary)'}}/>)}
@@ -1072,7 +1094,25 @@ window.PRODUCTS_PROMISE = Promise.all([
         })
         .catch(() => {})
     : Promise.resolve(),
-]).then(([products]) => {
+  // Real rating aggregation from approved reviews only — products.rating/
+  // reviews are legacy columns that were always 0 for every real product,
+  // which is also the exact signal ProductCard/product.html's dormant star
+  // UI already checks for, so this activates that UI with no changes there.
+  supabaseClient
+    ? supabaseClient.from('reviews').select('product_id,rating').eq('status', 'approved')
+        .then(({ data, error }) => {
+          if (error || !data) return {};
+          const agg = {};
+          data.forEach(r => {
+            if (!agg[r.product_id]) agg[r.product_id] = { sum: 0, count: 0 };
+            agg[r.product_id].sum += r.rating;
+            agg[r.product_id].count += 1;
+          });
+          return agg;
+        })
+        .catch(() => ({}))
+    : Promise.resolve({}),
+]).then(([products, , , reviewAgg]) => {
   // One-time reconciliation: drop any cart line whose product id no longer
   // exists (e.g. after a full catalog replace) so the header badge count
   // and cart.html itself never reference a product that isn't there.
@@ -1081,6 +1121,13 @@ window.PRODUCTS_PROMISE = Promise.all([
     const valid = cart.filter(i => products.some(p => p.id === i.id));
     if (valid.length !== cart.length) saveCart(valid);
   } catch (e) {}
+  products.forEach(p => {
+    const agg = reviewAgg && reviewAgg[p.id];
+    if (agg && agg.count > 0) {
+      p.rating = Math.round((agg.sum / agg.count) * 10) / 10;
+      p.reviews = agg.count;
+    }
+  });
   return products;
 });
 
@@ -1113,7 +1160,7 @@ const JOURNAL_POSTS = [
 
 function StockLabel({ stock }) {
   if (stock <= 0) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-error)',marginTop:4}}>{STRINGS.product.outOfStock}</div>;
-  if (stock <= 5) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-warning)',marginTop:4}}>{STRINGS.product.onlyNLeft(stock)}</div>;
+  if (stock <= 5) return <div style={{fontSize:12,fontWeight:600,color:'var(--color-error)',marginTop:4}}>{STRINGS.product.onlyNLeft(stock)}</div>;
   return null;
 }
 
