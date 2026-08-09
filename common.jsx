@@ -747,13 +747,19 @@ function ProductCard({ p }) {
     }
   }, [wish]);
   const [justAdded,setJustAdded] = React.useState(false);
+  const [qsHover,setQsHover] = React.useState(false);
   const videoRef = React.useRef(null);
   const { Badge } = window.FunXDesignSystem_bbd8ae;
   const hasRealImages = p.images && p.images[0];
   const inStock = p.quantity > 0;
   const discountPct = p.salePrice ? Math.round((1 - p.salePrice / p.price) * 100) : 0;
-  const onEnter = () => { setHover(true); const v = videoRef.current; if (v) { v.currentTime = 0; v.play().catch(()=>{}); } };
-  const onLeave = () => { setHover(false); const v = videoRef.current; if (v) { v.pause(); v.currentTime = 0; } };
+  // Video playback is scoped to the photo itself (imgHover), separate from
+  // the whole-card hover (name color, Quick Shop reveal, lift/glow) — moving
+  // the cursor onto the name/price/stars/Quick Shop shouldn't start a video
+  // that has nothing to do with what's under the cursor.
+  const [imgHover,setImgHover] = React.useState(false);
+  const onImgEnter = () => { setImgHover(true); const v = videoRef.current; if (v) { v.currentTime = 0; v.play().catch(()=>{}); } };
+  const onImgLeave = () => { setImgHover(false); const v = videoRef.current; if (v) { v.pause(); v.currentTime = 0; } };
   const quickAdd = (e) => {
     e.stopPropagation(); e.preventDefault();
     if (!inStock) return;
@@ -761,10 +767,10 @@ function ProductCard({ p }) {
     setJustAdded(true);
     setTimeout(()=>setJustAdded(false), 1600);
   };
-  return <a href={`product.html?id=${p.id}`} onMouseEnter={onEnter} onMouseLeave={onLeave} style={{fontFamily:'var(--font-body)',cursor:'pointer',minWidth:0,display:'block',textDecoration:'none',color:'inherit'}}>
-    <div style={{aspectRatio:'1',background:'var(--surface-gallery)',color:'var(--text-ink)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
-      {hasRealImages ? <img src={p.images[0]} alt={p.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:hover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:hover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
-      {p.hasVideo && <video ref={videoRef} muted loop playsInline preload="none" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:hover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',pointerEvents:'none'}}>
+  return <a href={`product.html?id=${p.id}`} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} style={{fontFamily:'var(--font-body)',cursor:'pointer',minWidth:0,display:'block',textDecoration:'none',color:'inherit'}}>
+    <div onMouseEnter={onImgEnter} onMouseLeave={onImgLeave} style={{aspectRatio:'1',background:'var(--surface-gallery)',color:'var(--text-ink)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
+      {hasRealImages ? <img src={p.images[0]} alt={p.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:imgHover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:imgHover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
+      {p.hasVideo && <video ref={videoRef} muted loop playsInline preload="none" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:imgHover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',pointerEvents:'none'}}>
         <source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/>
       </video>}
       <span
@@ -774,7 +780,7 @@ function ProductCard({ p }) {
         style={{position:'absolute',top:10,right:10,width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,0.9)',display:'flex',alignItems:'center',justifyContent:'center',color:wish?'var(--paint-red)':'#141416',cursor:'pointer',transform:justFilled?'scale(1.22)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring), color var(--duration-fast) var(--ease-standard)'}}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill={wish?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8" style={{transform:justFilled?'scale(1.1)':'scale(1)',transition:'transform var(--duration-slow) var(--ease-spring)'}}><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </span>
-      {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5,opacity:hover?0:1,transition:'opacity var(--duration-fast) var(--ease-standard)'}}>
+      {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5,opacity:imgHover?0:1,transition:'opacity var(--duration-fast) var(--ease-standard)'}}>
         {p.images.map((_,i) => <span key={i} style={{width:5,height:5,borderRadius:'50%',background:i===0?'#fff':'rgba(255,255,255,0.4)'}}></span>)}
       </div>}
     </div>
@@ -809,8 +815,10 @@ function ProductCard({ p }) {
         own behavior, not an oversight. */}
     {hover && <button
       onClick={quickAdd}
+      onMouseEnter={()=>setQsHover(true)}
+      onMouseLeave={()=>setQsHover(false)}
       disabled={!inStock}
-      style={{width:'100%',height:44,marginTop:14,borderRadius:'var(--radius-pill)',border:'1px solid var(--border-strong)',background:'none',color:'var(--text-primary)',fontSize:13,fontWeight:700,letterSpacing:0.3,cursor:inStock?'pointer':'not-allowed'}}>
+      style={{width:'100%',height:44,marginTop:14,borderRadius:'var(--radius-pill)',border:'1px solid var(--border-strong)',background:qsHover&&inStock?'var(--text-primary)':'none',color:qsHover&&inStock?'var(--surface-canvas)':'var(--text-primary)',fontSize:13,fontWeight:700,letterSpacing:0.3,cursor:inStock?'pointer':'not-allowed',transform:qsHover&&inStock?'scale(1.02)':'scale(1)',transition:'background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard)'}}>
       {!inStock ? 'Out of Stock' : justAdded ? 'Added ✓' : 'Quick Shop'}
     </button>}
     </div>
