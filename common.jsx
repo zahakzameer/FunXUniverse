@@ -416,7 +416,7 @@ function SignInForm({ onSuccess }){
     <Input label={STRINGS.auth.emailLabel} type="email" placeholder={STRINGS.auth.emailPlaceholder} value={form.email} onChange={update('email')} required/>
     <Input label={STRINGS.auth.passwordLabel} type="password" placeholder={STRINGS.auth.passwordPlaceholder} value={form.password} onChange={update('password')} required/>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:24,fontSize:13}}>
-      <Checkbox label={STRINGS.auth.rememberMe} checked={form.remember} onChange={update('remember')}/>
+      <Checkbox label={STRINGS.auth.rememberMe} checked={form.remember} onChange={(v)=>setForm({...form,remember:v})}/>
       <a href="forgot-password.html" style={{color:'var(--text-link)'}}>{STRINGS.auth.forgotPassword}</a>
     </div>
     {error && <div style={{fontSize:13,color:'var(--color-error)'}}>{error}</div>}
