@@ -435,7 +435,8 @@ function Checkbox({
   label,
   checked,
   onChange,
-  disabled
+  disabled,
+  labelStyle
 }) {
   return React.createElement('label', {
     style: {
@@ -471,7 +472,8 @@ function Checkbox({
   }))), React.createElement('span', {
     style: {
       fontSize: 'var(--body-md-size)',
-      color: 'var(--text-primary)'
+      color: 'var(--text-primary)',
+      ...labelStyle
     }
   }, label));
 }

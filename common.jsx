@@ -650,8 +650,7 @@ function MobileNavPanel({ open, onClose, active }){
         <a href="wishlist.html" onClick={onClose} style={{display:'flex',alignItems:'center',gap:12,color:'var(--text-secondary)',textDecoration:'none',fontSize:14,fontWeight:600}}>{ICONS.heart}{STRINGS.nav.wishlist}</a>
         <AccountLink/>
       </div>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px',borderTop:'1px solid var(--border-hairline-soft)',marginTop:'auto'}}>
-        <CurrencySwitcher/>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',padding:'20px 24px',borderTop:'1px solid var(--border-hairline-soft)',marginTop:'auto'}}>
         <ThemeToggle/>
       </div>
     </div>
@@ -678,7 +677,6 @@ function Header({ active }) {
         {NAV_LINKS.map(l => <NavItem key={l.label} l={l} active={active}/>)}
       </nav>}
       <div style={{display:'flex',gap:22,alignItems:'center',color:'var(--text-secondary)'}}>
-        {!isMobile && <CurrencySwitcher/>}
         {!isMobile && <ThemeToggle/>}
         {!isMobile && <a href="search.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title={STRINGS.nav.search}>{ICONS.search}</a>}
         {!isMobile && <a href="wishlist.html" style={{cursor:'pointer',display:'flex',color:'inherit'}} title={STRINGS.nav.wishlist}>{ICONS.heart}</a>}
@@ -834,7 +832,7 @@ function FilterGroup({ title, options, selected=[], onToggle }) {
       {title}<span style={{transform:open?'rotate(90deg)':'rotate(0)',transition:'transform var(--duration-fast)',color:'var(--text-muted)'}}>{ICONS.chevron}</span>
     </div>
     {open && <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:11}}>
-      {options.map(o => <Checkbox key={o} label={o} checked={selected.includes(o)} onChange={()=>onToggle && onToggle(o)}/>)}
+      {options.map(o => <Checkbox key={o} label={o} checked={selected.includes(o)} onChange={()=>onToggle && onToggle(o)} labelStyle={{fontSize:13,color:'var(--text-secondary)'}}/>)}
     </div>}
   </div>;
 }
@@ -1000,7 +998,12 @@ if (typeof window !== 'undefined' && !localStorage.getItem(CURRENCY_STORAGE_KEY)
 }
 
 function getCurrentCurrency(){
-  try { return localStorage.getItem(CURRENCY_STORAGE_KEY) || 'PKR'; } catch (e) { return 'PKR'; }
+  // Locked to PKR for now — checkout is Pakistan-only (no real international
+  // shipping/payment yet), so showing converted prices in other currencies
+  // implied a purchasing capability the site doesn't actually have. The
+  // switcher UI is removed from Header below; setCurrency()/fetchExchangeRates()
+  // stay defined (unused) so this is a one-line revert if that changes.
+  return 'PKR';
 }
 window.getCurrentCurrency = getCurrentCurrency;
 
