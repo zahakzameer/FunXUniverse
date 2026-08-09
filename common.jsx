@@ -123,13 +123,24 @@ window.getAddressHint = getAddressHint;
 
 function categoryLink(label){ return [label, `shop-all.html?category=${encodeURIComponent(label)}`]; }
 
-const NAV_MENUS = {
-  'Shop All': { cols: [
-    { title:'A – D', links: CATEGORIES.slice(0,6).map(categoryLink) },
-    { title:'D – K', links: CATEGORIES.slice(6,12).map(categoryLink) },
-    { title:'M – R', links: CATEGORIES.slice(12,18).map(categoryLink) },
-  ], feature: { label:'Shop the Full Collection', sub:'72 products across 18 categories', href:'shop-all.html', img:'https://picsum.photos/seed/funx-shop-all/640/480' } },
-};
+// A function, not a constant — window.CATEGORIES may still be the hardcoded
+// fallback or the real categories table depending on where PRODUCTS_PROMISE
+// is in flight, so this re-splits into columns fresh on every call instead
+// of freezing whatever CATEGORIES looked like at module-parse time. Column
+// titles are computed from each slice's own first/last item rather than a
+// fixed "A – D" style range, so they can never go stale after a rename,
+// reorder, add, or delete in admin's Categories tab.
+function getNavMenus(){
+  const cats = window.CATEGORIES;
+  const per = Math.ceil(cats.length / 3);
+  const slices = [cats.slice(0, per), cats.slice(per, per*2), cats.slice(per*2)].filter(s => s.length);
+  return {
+    'Shop All': { cols: slices.map(s => ({
+      title: s.length > 1 ? `${s[0][0]} – ${s[s.length-1][0]}` : s[0][0],
+      links: s.map(categoryLink),
+    })), feature: { label:'Shop the Full Collection', sub:`${window.PRODUCTS.length} products across ${cats.length} categories`, href:'shop-all.html', img:'https://picsum.photos/seed/funx-shop-all/640/480' } },
+  };
+}
 
 const ICONS = {
   search: <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>,
@@ -349,7 +360,7 @@ function CartSync(){
 function NavItem({ l, active }){
   const [open,setOpen] = React.useState(false);
   const timer = React.useRef(null);
-  const menu = NAV_MENUS[l.label];
+  const menu = getNavMenus()[l.label];
   const onEnter = () => { clearTimeout(timer.current); setOpen(true); };
   const onLeave = () => { timer.current = setTimeout(()=>setOpen(false), 120); };
   return <div onMouseEnter={onEnter} onMouseLeave={onLeave} style={{position:'relative'}}>
@@ -779,7 +790,11 @@ function ProductCard({ p }) {
 function ProductGrid({ products, cols = 4 }) {
   const isMobile = useIsMobile();
   const effectiveCols = isMobile ? Math.min(cols, 2) : cols;
-  return <div style={{display:'grid',gridTemplateColumns:`repeat(${effectiveCols},minmax(0,1fr))`,gap: isMobile ? 'var(--grid-gap) var(--grid-gap-tight)' : '56px 40px'}}>
+  // Row gap must clearly exceed ProductCard's own image-to-text margin
+  // (20px) or a row's price/name reads as ambiguously close to the next
+  // row's image once scrolled — mobile's old 24px row gap was too close
+  // to that 20px to tell them apart at a glance.
+  return <div style={{display:'grid',gridTemplateColumns:`repeat(${effectiveCols},minmax(0,1fr))`,gap: isMobile ? '40px var(--grid-gap-tight)' : '56px 40px'}}>
     {products.map(p => <ProductCard key={p.id} p={p}/>)}
   </div>;
 }
@@ -1044,6 +1059,16 @@ window.PRODUCTS_PROMISE = Promise.all([
         })
     : Promise.resolve(window.PRODUCTS),
   fetchExchangeRates(),
+  // Only overwrites window.CATEGORIES if the table exists and has rows —
+  // so this degrades to the hardcoded list with zero breakage before
+  // phase-categories-schema.sql has been run.
+  supabaseClient
+    ? supabaseClient.from('categories').select('name').order('sort_order', { ascending: true })
+        .then(({ data, error }) => {
+          if (!error && data && data.length) window.CATEGORIES = data.map(r => r.name);
+        })
+        .catch(() => {})
+    : Promise.resolve(),
 ]).then(([products]) => {
   // One-time reconciliation: drop any cart line whose product id no longer
   // exists (e.g. after a full catalog replace) so the header badge count
