@@ -790,18 +790,22 @@ function ProductCard({ p }) {
       </button>
     </div>
     {discountPct > 0 && <div style={{fontSize:11,fontWeight:700,color:'var(--paint-orange)',marginBottom:4}}>SAVE {discountPct}%</div>}
-    <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4,minHeight:28,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{p.line || p.category}</div>
-    <div style={{fontSize:'var(--title-md-size)',fontWeight:600,color:'var(--text-primary)',marginBottom:6,lineHeight:1.3,minHeight:'calc(var(--title-md-size) * 1.3 * 2)',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
-    <div style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:6}}>
+    <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{p.line || p.category}</div>
+    <div style={{fontSize:'var(--title-md-size)',fontWeight:600,color:'var(--text-primary)',marginBottom:4,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
+    <div style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:4}}>
       {p.salePrice ? <>
         <span style={{fontSize:'var(--body-md-size)',color:'var(--paint-orange)',fontWeight:700}}>{window.fmtPrice(p.salePrice)}</span>
         <span style={{fontSize:13,color:'var(--text-muted-soft)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
       </> : <span style={{fontSize:'var(--body-md-size)',color:'var(--text-primary)',fontWeight:600}}>{window.fmtPrice(p.price)}</span>}
     </div>
-    {p.rating > 0 ? <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:4,minHeight:19}}>
+    {/* Rating/badge/stock lines only take up space when there's something
+        real to show — no reserved empty height, since most of the real
+        catalog has no rating yet and a tall dead gap on every card read as
+        "not like Disney" (whose cards sit tight against real content). */}
+    {p.rating > 0 && <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
       <div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i => <span key={i}>{ICONS.star(i<=Math.round(p.rating))}</span>)}</div>
       <span style={{fontSize:12,color:'var(--text-muted)'}}>({p.reviews})</span>
-    </div> : <div style={{minHeight:19,marginBottom:4}}></div>}
+    </div>}
     {p.badge && <div style={{fontSize:11,fontWeight:700,color:'var(--color-success)',marginBottom:2}}>{p.badge}</div>}
     <StockLabel stock={p.quantity}/>
   </a>;
