@@ -207,9 +207,9 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
       <div style={{fontSize:13,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:14}}>{p.category}</div>
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:'clamp(38px,5.5vw,64px)',margin:'0 0 18px',lineHeight:1.02,letterSpacing:'-1.5px',color:'var(--text-primary)'}}>{window.titleCase(p.name)}</h1>
       <p style={{fontSize:18,color:'var(--text-secondary)',maxWidth:560,margin:'0 auto 28px',lineHeight:1.6}}>{p.description}</p>
-      {p.rating > 0 && <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:8}}>
-        <Stars rating={p.rating}/><span style={{fontSize:13,color:'var(--text-muted)'}}>{p.rating} · {p.reviews} reviews</span>
-      </div>}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:8}}>
+        <Stars rating={p.rating}/>{p.reviews > 0 && <span style={{fontSize:13,color:'var(--text-muted)'}}>{p.rating} · {p.reviews} reviews</span>}
+      </div>
       <div style={{display:'flex',alignItems:'baseline',justifyContent:'center',gap:12,marginBottom:36}}>
         {p.salePrice ? <>
           <span style={{fontSize:26,fontWeight:700,color:'var(--paint-orange)'}}>{window.fmtPrice(p.salePrice)}</span>

@@ -151,7 +151,7 @@ const ICONS = {
   moon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>,
   chevron: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>,
   menu: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>,
-  star: (filled) => <svg width="13" height="13" viewBox="0 0 24 24" fill={filled ? 'var(--paint-yellow)' : 'none'} stroke="var(--paint-yellow)" strokeWidth="1.5"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1z"/></svg>,
+  star: (filled) => <svg width="13" height="13" viewBox="0 0 24 24" fill={filled ? 'var(--paint-yellow)' : 'none'} stroke={filled ? 'var(--paint-yellow)' : 'var(--border-strong)'} strokeWidth="1.5"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1z"/></svg>,
   instagram: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>,
   facebook: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M15 8.5h2V5h-2a4 4 0 0 0-4 4v2H9v3.5h2V21h3v-6.5h2.4l.6-3.5H14v-1.5c0-.55.45-1 1-1z"/></svg>,
   tiktok: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 4v10.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 4c.4 2.2 2 4 4.5 4.3"/></svg>,
@@ -797,21 +797,21 @@ function ProductCard({ p }) {
     {/* Name/price weights match the reference's lighter touch (regular,
         not semibold, when there's no discount to emphasize) — colors stay
         FunX's own per the user's call, only size/weight follow the ref. */}
-    <div style={{fontSize:'var(--title-md-size)',fontWeight:500,color:'var(--text-primary)',marginBottom:4,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
+    <div style={{fontSize:'var(--title-md-size)',fontWeight:400,color:'var(--text-primary)',marginBottom:4,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
     <div style={{display:'flex',alignItems:'baseline',justifyContent:'center',gap:8,marginBottom:4}}>
       {p.salePrice ? <>
         <span style={{fontSize:'var(--body-md-size)',color:'var(--paint-orange)',fontWeight:700}}>{window.fmtPrice(p.salePrice)}</span>
         <span style={{fontSize:13,color:'var(--text-muted-soft)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
-      </> : <span style={{fontSize:'var(--body-md-size)',color:'var(--text-primary)',fontWeight:500}}>{window.fmtPrice(p.price)}</span>}
+      </> : <span style={{fontSize:'var(--body-md-size)',color:'var(--text-primary)',fontWeight:400}}>{window.fmtPrice(p.price)}</span>}
     </div>
-    {/* Rating/badge/stock lines only take up space when there's something
-        real to show — no reserved empty height, since most of the real
-        catalog has no rating yet and a tall dead gap on every card read as
-        "not like Disney" (whose cards sit tight against real content). */}
-    {p.rating > 0 && <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:5,marginBottom:3}}>
+    {/* Always shown, like the reference — unrated products show 5 grey
+        (unfilled) stars rather than hiding the row, which is an honest
+        "not yet rated" state, not fabricated data. Real ratings fill in
+        gold per the actual average; the count is only shown once real. */}
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:5,marginBottom:3}}>
       <div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i => <span key={i}>{ICONS.star(i<=Math.round(p.rating))}</span>)}</div>
-      <span style={{fontSize:13,color:'var(--text-muted)'}}>({p.reviews})</span>
-    </div>}
+      {p.reviews > 0 && <span style={{fontSize:13,color:'var(--text-muted)'}}>({p.reviews})</span>}
+    </div>
     {p.badge && <div style={{fontSize:12,fontWeight:700,color:'var(--color-success)',marginBottom:2}}>{p.badge}</div>}
     <StockLabel stock={p.quantity}/>
     </div>
