@@ -16,7 +16,9 @@ function Button({
   icon,
   disabled,
   children,
-  onClick
+  onClick,
+  style: styleOverride,
+  type
 }) {
   const base = {
     fontFamily: 'var(--font-body)',
@@ -75,12 +77,19 @@ function Button({
   const style = {
     ...base,
     ...sizes[size],
-    ...variants[variant]
+    ...variants[variant],
+    ...styleOverride
   };
   return React.createElement('button', {
     style,
     disabled,
     onClick,
+    // Only set the DOM attribute when the caller explicitly passes one —
+    // omitting it preserves the native default (type="submit" inside a
+    // <form>, which several submit buttons rely on with no type prop at
+    // all), while an explicit type="button" (e.g. a dialog's Cancel
+    // button) now actually reaches the DOM instead of being dropped.
+    ...(type ? { type } : {}),
     onMouseDown: e => {
       if (!disabled) e.currentTarget.style.transform = 'scale(0.96)';
     },
@@ -217,7 +226,8 @@ try { (() => {
 function Card({
   children,
   padding = 'md',
-  variant = 'dark'
+  variant = 'dark',
+  style
 }) {
   const pad = {
     sm: 'var(--card-padding-sm)',
@@ -242,7 +252,8 @@ function Card({
       borderRadius: 'var(--radius-lg)',
       padding: pad,
       fontFamily: 'var(--font-body)',
-      ...variants[variant]
+      ...variants[variant],
+      ...style
     }
   }, children);
 }
