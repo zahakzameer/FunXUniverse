@@ -777,17 +777,6 @@ function ProductCard({ p }) {
       {p.images && p.images.length > 1 && <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5,opacity:hover?0:1,transition:'opacity var(--duration-fast) var(--ease-standard)'}}>
         {p.images.map((_,i) => <span key={i} style={{width:5,height:5,borderRadius:'50%',background:i===0?'#fff':'rgba(255,255,255,0.4)'}}></span>)}
       </div>}
-      {/* Hover-only Quick Add — hidden by default, appears over the image on
-          hover (desktop) so the card stays clean otherwise; click-through to
-          the product page still works everywhere else on the card. */}
-      <button
-        onClick={quickAdd}
-        disabled={!inStock}
-        tabIndex={-1}
-        aria-hidden={!hover}
-        style={{position:'absolute',left:10,right:10,bottom:10,height:38,borderRadius:'var(--radius-pill)',border:'1px solid rgba(255,255,255,0.85)',background:'rgba(20,20,22,0.82)',backdropFilter:'blur(4px)',color:'#fff',fontSize:12,fontWeight:700,letterSpacing:0.3,cursor:inStock?'pointer':'not-allowed',opacity:hover?1:0,transform:hover?'translateY(0)':'translateY(6px)',transition:'opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',pointerEvents:hover?'auto':'none'}}>
-        {!inStock ? 'Out of Stock' : justAdded ? 'Added ✓' : 'Quick Add'}
-      </button>
     </div>
     {/* Centered text stack, matching the reference — name/price/rating/tag
         all center-aligned rather than left, image and controls unaffected. */}
@@ -797,7 +786,7 @@ function ProductCard({ p }) {
     {/* Name/price weights match the reference's lighter touch (regular,
         not semibold, when there's no discount to emphasize) — colors stay
         FunX's own per the user's call, only size/weight follow the ref. */}
-    <div style={{fontSize:'var(--title-md-size)',fontWeight:700,color:'var(--text-primary)',marginBottom:4,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
+    <div style={{fontSize:'var(--title-md-size)',fontWeight:700,color:hover?'var(--paint-orange)':'var(--text-primary)',transition:'color var(--duration-fast) var(--ease-standard)',marginBottom:4,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
     <div style={{display:'flex',alignItems:'baseline',justifyContent:'center',gap:8,marginBottom:4}}>
       {p.salePrice ? <>
         <span style={{fontSize:16,color:'var(--paint-orange)',fontWeight:400}}>{window.fmtPrice(p.salePrice)}</span>
@@ -814,6 +803,16 @@ function ProductCard({ p }) {
     </div>
     {p.badge && <div style={{fontSize:12,fontWeight:700,color:'var(--color-success)',marginBottom:2}}>{p.badge}</div>}
     <StockLabel stock={p.quantity}/>
+    {/* In-flow, hover-only (desktop) — sits below the tag rather than
+        overlaying the product photo, per the reference. Appearing/
+        disappearing does shift card height on hover; that's the reference's
+        own behavior, not an oversight. */}
+    {hover && <button
+      onClick={quickAdd}
+      disabled={!inStock}
+      style={{width:'100%',height:44,marginTop:14,borderRadius:'var(--radius-pill)',border:'1px solid var(--border-strong)',background:'none',color:'var(--text-primary)',fontSize:13,fontWeight:700,letterSpacing:0.3,cursor:inStock?'pointer':'not-allowed'}}>
+      {!inStock ? 'Out of Stock' : justAdded ? 'Added ✓' : 'Quick Shop'}
+    </button>}
     </div>
   </a>;
 }
