@@ -800,9 +800,9 @@ function ProductCard({ p }) {
     <div style={{fontSize:'var(--title-md-size)',fontWeight:700,color:'var(--text-primary)',marginBottom:4,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{titleCase(p.name)}</div>
     <div style={{display:'flex',alignItems:'baseline',justifyContent:'center',gap:8,marginBottom:4}}>
       {p.salePrice ? <>
-        <span style={{fontSize:26,color:'var(--paint-orange)',fontWeight:700}}>{window.fmtPrice(p.salePrice)}</span>
+        <span style={{fontSize:16,color:'var(--paint-orange)',fontWeight:400}}>{window.fmtPrice(p.salePrice)}</span>
         <span style={{fontSize:13,color:'var(--text-muted-soft)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
-      </> : <span style={{fontSize:26,color:'var(--text-primary)',fontWeight:400}}>{window.fmtPrice(p.price)}</span>}
+      </> : <span style={{fontSize:16,color:'var(--text-primary)',fontWeight:400}}>{window.fmtPrice(p.price)}</span>}
     </div>
     {/* Always shown, like the reference — unrated products show 5 grey
         (unfilled) stars rather than hiding the row, which is an honest
