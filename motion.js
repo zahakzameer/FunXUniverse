@@ -60,9 +60,51 @@ function setupTilt(){
   }, true);
 }
 
+function setupCursor(){
+  if (reduced || coarse) return;
+  var dot = document.createElement('div');
+  dot.setAttribute('aria-hidden', 'true');
+  dot.style.cssText = 'position:fixed;top:0;left:0;width:26px;height:26px;border-radius:50%;'
+    + 'border:1.5px solid var(--paint-orange);pointer-events:none;z-index:9999;'
+    + 'transform:translate3d(-50%,-50%,0) scale(0);opacity:0;'
+    + 'transition:opacity 200ms ease,transform 200ms var(--ease-spring,ease),width 200ms ease,height 200ms ease,background 200ms ease;';
+  document.body.appendChild(dot);
+
+  var tx = 0, ty = 0, x = 0, y = 0, shown = false;
+  document.addEventListener('pointermove', function(e){
+    tx = e.clientX; ty = e.clientY;
+    if (!shown){ shown = true; dot.style.opacity = '1'; dot.style.transform = 'translate3d(-50%,-50%,0) scale(1)'; }
+  }, { passive:true });
+  document.addEventListener('pointerleave', function(){ dot.style.opacity = '0'; }, true);
+
+  function tick(){
+    x += (tx - x) * 0.18;
+    y += (ty - y) * 0.18;
+    dot.style.left = x + 'px';
+    dot.style.top = y + 'px';
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  var hoverTargets = 'a, button, input, textarea, select, [role="button"], [onclick], .funx-tilt-active';
+  document.addEventListener('pointerover', function(e){
+    if (e.target.closest && e.target.closest(hoverTargets)){
+      dot.style.width = '44px'; dot.style.height = '44px';
+      dot.style.background = 'rgba(241,106,62,0.08)';
+    }
+  });
+  document.addEventListener('pointerout', function(e){
+    if (e.target.closest && e.target.closest(hoverTargets)){
+      dot.style.width = '26px'; dot.style.height = '26px';
+      dot.style.background = 'transparent';
+    }
+  });
+}
+
 function init(){
   setupReveal();
   setupTilt();
+  setupCursor();
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

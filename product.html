@@ -219,7 +219,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
     </div>
     <div style={{maxWidth:640,margin:'0 auto',aspectRatio:'1',borderRadius:32,overflow:'hidden',position:'relative',background:'var(--surface-gallery-card)',color:'var(--text-ink)',boxShadow:'0 40px 80px -20px rgba(0,0,0,0.5), var(--glow-gold)',marginBottom:28}}>
       {p.badge && <span style={{position:'absolute',top:20,right:20,zIndex:3,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 10px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
-      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'56px'}}>
+      <div key={active} className="funx-gallery-in" style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:'56px'}}>
         {media[active] === '__video__'
           ? <video ref={videoRef} muted loop playsInline controls style={{maxWidth:'100%',maxHeight:'100%',borderRadius:16}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
           : (hasReal ? <ZoomImage src={p.images[active]} alt={p.name}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
@@ -241,6 +241,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
     <div style={{marginTop:14}}><Button variant="secondary" size="md" onClick={onBuy}>Buy Now</Button></div>
     <StockLabel stock={p.quantity}/>
     <p style={{fontSize:12,color:'var(--text-muted)',marginTop:10}}>Shipping calculated at checkout.</p>
+    <div style={{marginTop:20}}><TrustRow align="center"/></div>
   </section>;
 }
 

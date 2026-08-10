@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="motion.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
 </head>
 <body>
@@ -27,38 +28,110 @@
 const { Button } = window.FunXDesignSystem_bbd8ae;
 
 function Hero(){
+  const headlineRef = React.useRef(null);
+  const restRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!window.gsap) return;
+    const words = headlineRef.current ? headlineRef.current.querySelectorAll('.funx-hero-word') : [];
+    const tl = window.gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.fromTo(words, { yPercent: 130, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.9, stagger: 0.09 })
+      .fromTo(restRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.35');
+  }, []);
+
   return <section style={{position:'relative',minHeight:680,display:'flex',alignItems:'center',overflow:'hidden',background:'#000'}} data-screen-label="Home — Hero">
     <img src="assets/hero-universe.jpg" alt="The FunX Universe" fetchpriority="high" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',objectPosition:'center 40%',opacity:0.85}}/>
     <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,rgba(11,11,13,0.95) 0%,rgba(11,11,13,0.6) 50%,rgba(11,11,13,0.25) 100%)'}}></div>
     <div style={{position:'absolute',inset:0,backgroundImage:'repeating-linear-gradient(115deg,transparent 0,transparent 38px,rgba(255,255,255,0.03) 38px,rgba(255,255,255,0.03) 40px)',mixBlendMode:'overlay'}}></div>
+    <div id="funx-hero-portal" style={{position:'absolute',inset:0,pointerEvents:'none'}}></div>
     <div style={{position:'absolute',top:0,bottom:0,right:0,width:6,background:'linear-gradient(180deg,var(--paint-orange),var(--paint-yellow))'}}></div>
     <div style={{position:'relative',maxWidth:1280,margin:'0 auto',padding:'0 40px',width:'100%'}}>
       <div style={{maxWidth:560}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:8,fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:18}}>
           <span style={{width:8,height:8,borderRadius:'50%',background:'var(--paint-orange)',boxShadow:'0 0 10px var(--paint-orange)'}}></span>The FunX Universe
         </div>
-        <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:80,lineHeight:0.98,letterSpacing:'-1px',margin:'0 0 26px'}}>Every Toy<br/>Has a Story</h1>
-        <p style={{fontSize:18,color:'var(--text-secondary)',lineHeight:1.6,marginBottom:36,maxWidth:440}}>Founded 2026 by a lifelong player, FunX builds RC vehicles, die-cast, and action figures worth taking out of the box — not just displaying.</p>
-        <div style={{display:'flex',gap:14}}>
-          <Button variant="primary" size="lg" onClick={()=>location.href='shop-all.html'}>Shop All Products</Button>
-          <Button variant="secondary" size="lg" onClick={()=>location.href='shop-all.html?category=Action%20Figures'}>Shop Action Figures</Button>
+        <h1 ref={headlineRef} style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:80,lineHeight:0.98,letterSpacing:'-1px',margin:'0 0 26px',overflow:'hidden'}}>
+          <span style={{display:'block',overflow:'hidden'}}><span className="funx-hero-word" style={{display:'inline-block'}}>Every</span> <span className="funx-hero-word" style={{display:'inline-block'}}>Toy</span></span>
+          <span style={{display:'block',overflow:'hidden'}}><span className="funx-hero-word" style={{display:'inline-block'}}>Has</span> <span className="funx-hero-word" style={{display:'inline-block'}}>a</span> <span className="funx-hero-word" style={{display:'inline-block'}}>Story</span></span>
+        </h1>
+        <div ref={restRef}>
+          <p style={{fontSize:18,color:'var(--text-secondary)',lineHeight:1.6,marginBottom:36,maxWidth:440}}>Founded 2026 by a lifelong player, FunX builds RC vehicles, die-cast, and action figures worth taking out of the box — not just displaying.</p>
+          <div style={{display:'flex',gap:14}}>
+            <Button variant="primary" size="lg" onClick={()=>location.href='shop-all.html'}>Shop All Products</Button>
+            <Button variant="secondary" size="lg" onClick={()=>location.href='shop-all.html?category=Action%20Figures'}>Shop Action Figures</Button>
+          </div>
         </div>
       </div>
     </div>
   </section>;
 }
 
+const HERO_CATEGORIES = [
+  {label:'Die-Cast Vehicles',href:'shop-all.html?category=Die-Cast%20Vehicles',copy:'Scale models built for the shelf and the racetrack alike.'},
+  {label:'Action Figures',href:'shop-all.html?category=Action%20Figures',copy:'Characters worth posing, collecting, and actually playing with.'},
+  {label:'Building Blocks',href:'shop-all.html?category=Building%20Blocks',copy:'Sets that reward patience with something worth keeping.'},
+  {label:'Remote Control Vehicles',href:'shop-all.html?category=Remote%20Control%20Vehicles',copy:'Built for backyards, hallways, and everything in between.'},
+];
+
 function CategoryNav(){
-  return <section style={{padding:'88px 0'}}>
-    <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 40px'}}>
-      <SectionHeading eyebrow="Start Browsing" title="Shop by Category"/>
+  const wrapRef = React.useRef(null);
+  const panelsRef = React.useRef([]);
+  const isMobile = window.useIsMobile();
+
+  React.useEffect(() => {
+    if (isMobile || !window.gsap || !window.ScrollTrigger) return;
+    window.gsap.registerPlugin(window.ScrollTrigger);
+    const panels = panelsRef.current.filter(Boolean);
+    if (panels.length === 0) return;
+    window.gsap.set(panels, { autoAlpha: 0 });
+    window.gsap.set(panels[0], { autoAlpha: 1 });
+
+    const ctx = window.gsap.context(() => {
+      const tl = window.gsap.timeline({
+        scrollTrigger: {
+          trigger: wrapRef.current,
+          start: 'top top',
+          end: () => '+=' + (panels.length * 640),
+          scrub: 0.6,
+          pin: true,
+        },
+      });
+      panels.forEach((p, i) => {
+        if (i === 0) return;
+        tl.to(panels[i-1], { autoAlpha: 0, duration: 0.3 })
+          .fromTo(p, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.3 }, '<');
+      });
+    }, wrapRef);
+    return () => ctx.revert();
+  }, [isMobile]);
+
+  if (isMobile) {
+    return <section style={{padding:'88px 0'}}>
+      <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 40px'}}>
+        <SectionHeading eyebrow="Start Browsing" title="Shop by Category"/>
+      </div>
+      <CategoryRail tiles={HERO_CATEGORIES}/>
+    </section>;
+  }
+
+  return <section ref={wrapRef} style={{position:'relative',height:'100vh',overflow:'hidden',background:'var(--surface-canvas)'}}>
+    {HERO_CATEGORIES.map((c,i) => <a key={c.label} href={c.href} ref={el=>panelsRef.current[i]=el}
+      style={{position:'absolute',inset:0,display:'flex',alignItems:'center',textDecoration:'none',color:'inherit'}}>
+      <div style={{position:'absolute',inset:0}}>
+        <image-slot id={`hero-cat-${c.label}`} style={{width:'100%',height:'100%'}} placeholder={`Photo — ${c.label}`}></image-slot>
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,rgba(11,11,13,0.9) 0%,rgba(11,11,13,0.4) 55%,transparent 100%)'}}></div>
+      </div>
+      <div style={{position:'relative',maxWidth:1280,margin:'0 auto',padding:'0 40px',width:'100%'}}>
+        <div style={{maxWidth:520}}>
+          <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--paint-orange)',textTransform:'uppercase',marginBottom:14}}>{`0${i+1} — Start Browsing`}</div>
+          <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:56,margin:'0 0 16px',letterSpacing:'-0.5px',color:'var(--text-primary)'}}>{c.label}</h2>
+          <p style={{fontSize:16,color:'var(--text-secondary)',marginBottom:24,maxWidth:400}}>{c.copy}</p>
+          <span style={{fontSize:14,fontWeight:700,color:'var(--paint-orange)'}}>Shop the collection →</span>
+        </div>
+      </div>
+    </a>)}
+    <div style={{position:'absolute',bottom:32,left:'50%',transform:'translateX(-50%)',display:'flex',gap:8}}>
+      {HERO_CATEGORIES.map((c,i) => <span key={c.label} style={{width:24,height:3,borderRadius:2,background:'var(--border-strong)'}}></span>)}
     </div>
-    <CategoryRail tiles={[
-      {label:'Die-Cast Vehicles',href:'shop-all.html?category=Die-Cast%20Vehicles'},
-      {label:'Action Figures',href:'shop-all.html?category=Action%20Figures'},
-      {label:'Building Blocks',href:'shop-all.html?category=Building%20Blocks'},
-      {label:'Remote Control Vehicles',href:'shop-all.html?category=Remote%20Control%20Vehicles'},
-    ]}/>
   </section>;
 }
 

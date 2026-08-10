@@ -48,6 +48,18 @@ function start(){
     my = ((e.clientY-r.top)/r.height - 0.5) * 2;
   });
 
+  // Scroll progress through the hero section (0 at top, 1 once scrolled
+  // past it) — drives the camera pulling back and the field spreading out,
+  // so the portal feels like part of the page rather than a static banner.
+  var scrollT = 0;
+  function updateScroll(){
+    var r = host.getBoundingClientRect();
+    var p = 1 - Math.max(0, Math.min(1, r.bottom / (r.height + window.innerHeight)));
+    scrollT = Math.max(0, Math.min(1, p));
+  }
+  window.addEventListener('scroll', updateScroll, { passive:true });
+  updateScroll();
+
   var visible = true;
   var io = new IntersectionObserver(function(entries){ visible = entries[0].isIntersecting; }, { threshold:0 });
   io.observe(host);
@@ -55,9 +67,11 @@ function start(){
   function animate(){
     requestAnimationFrame(animate);
     if (!visible) return;
-    points.rotation.y += 0.0009;
+    points.rotation.y += 0.0009 + scrollT*0.002;
     points.rotation.x += (my*0.15 - points.rotation.x) * 0.03;
     camera.position.x += (mx*1.2 - camera.position.x) * 0.04;
+    camera.position.z += ((18 + scrollT*14) - camera.position.z) * 0.05;
+    mat.opacity = 0.85 * (1 - scrollT*0.7);
     camera.lookAt(0,0,-6);
     renderer.render(scene, camera);
   }

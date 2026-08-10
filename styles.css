@@ -6,6 +6,21 @@
 @import 'tokens/shadows.css';
 @import 'tokens/motion.css';
 
+/* Cross-document view transitions — every full-page navigation gets a
+   soft cross-fade automatically, no JS, no SPA router. Purely additive:
+   browsers without support (Safari/Firefox today) just navigate as
+   normal, nothing breaks or looks different there. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root), ::view-transition-new(root) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-standard);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
 /* Skeleton loading state — shown as static markup inside #root before
    React/product data is ready, so first paint is content-shaped instead
    of a blank page or a generic spinner. */
