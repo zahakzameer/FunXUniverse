@@ -24,7 +24,16 @@ const { Breadcrumb, Input, Button } = window.FunXDesignSystem_bbd8ae;
 function App(){
   const [order,setOrder] = React.useState('');
   const [result,setResult] = React.useState(null);
-  const submit = (e) => { e.preventDefault(); setResult(order.length > 2); };
+  const [checking,setChecking] = React.useState(false);
+  const submit = (e) => {
+    e.preventDefault();
+    setChecking(true);
+    setResult(null);
+    window.supabaseClient.rpc('order_exists', { p_order_number: order.trim() }).then(({ data, error }) => {
+      setChecking(false);
+      setResult(error ? 'unavailable' : !!data);
+    });
+  };
   return <div>
     <Header active=""/>
     <div style={{maxWidth:900,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Authentication"><Breadcrumb items={['The Universe','Authentication']}/></div>
@@ -36,9 +45,10 @@ function App(){
     <section style={{maxWidth:520,margin:'0 auto',padding:'56px 40px 0'}}>
       <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20,border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:32,background:'var(--surface-panel)'}}>
         <Input label="Order number" placeholder="e.g. FX-10482" value={order} onChange={e=>setOrder(e.target.value)}/>
-        <Button variant="primary" size="lg">Verify</Button>
+        <Button variant="primary" size="lg" disabled={checking}>{checking ? 'Checking…' : 'Verify'}</Button>
         {result === true && <div style={{fontSize:13,color:'var(--color-success)'}}>✓ Verified — this order is logged in our system.</div>}
-        {result === false && <div style={{fontSize:13,color:'var(--color-error)'}}>Enter a valid order number to verify.</div>}
+        {result === false && <div style={{fontSize:13,color:'var(--color-error)'}}>We couldn't find that order number — double-check it and try again.</div>}
+        {result === 'unavailable' && <div style={{fontSize:13,color:'var(--text-muted)'}}>Verification isn't available right now — please try again shortly.</div>}
       </form>
     </section>
 

@@ -21,17 +21,31 @@
 <script type="text/babel">
 const { Input, Button } = window.FunXDesignSystem_bbd8ae;
 
-const STAGES = ['Order Confirmed','In Production','Shipped','Out for Delivery','Delivered'];
+const STATUS_LABEL = { pending:'Order confirmed', processing:'In production', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled' };
 
-function Timeline({ stage }){
-  return <div style={{display:'flex',alignItems:'flex-start',marginTop:40}}>
-    {STAGES.map((s,i) => <React.Fragment key={s}>
-      <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:110}}>
-        <div style={{width:32,height:32,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',background: i<=stage ? 'var(--color-primary)' : 'var(--surface-panel)',border: i<=stage ? 'none' : '1px solid var(--border-hairline)',color:'#fff',fontSize:13,fontWeight:700,flexShrink:0}}>{i<stage ? '✓' : i+1}</div>
-        <div style={{fontSize:12,color: i<=stage ? 'var(--text-primary)' : 'var(--text-muted)',textAlign:'center',marginTop:10,lineHeight:1.4}}>{s}</div>
-      </div>
-      {i < STAGES.length-1 && <div style={{flex:1,height:2,background: i<stage ? 'var(--color-primary)' : 'var(--border-hairline)',marginTop:15}}></div>}
-    </React.Fragment>)}
+function OrderResult({ result }){
+  if (result === 'unavailable') return <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:32,textAlign:'center'}}>
+    <div style={{fontSize:16,fontWeight:600,marginBottom:8}}>Order tracking isn't available right now</div>
+    <p style={{color:'var(--text-secondary)',fontSize:14,lineHeight:1.6,margin:0}}>Something went wrong looking that up — please try again shortly, or sign in to your account to see your order history.</p>
+    <a href="account.html" style={{display:'inline-block',marginTop:20,fontSize:14,fontWeight:600,color:'var(--text-link)'}}>Go to your account →</a>
+  </div>;
+  if (result === 'not-found') return <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:32,textAlign:'center'}}>
+    <div style={{fontSize:16,fontWeight:600,marginBottom:8}}>No order found</div>
+    <p style={{color:'var(--text-secondary)',fontSize:14,lineHeight:1.6,margin:0}}>We couldn't find an order matching that order number and email. Double-check both and try again.</p>
+  </div>;
+  return <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:32}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+      <div style={{fontSize:15,fontWeight:700}}>Order {result.order_number}</div>
+      <div style={{fontSize:13,fontWeight:600,color:'var(--paint-orange)'}}>{STATUS_LABEL[result.status] || result.status}</div>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:16}}>
+      {result.items.map((it,i) => <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'var(--text-secondary)'}}>
+        <span>{window.titleCase(it.product_name)} × {it.qty}</span>
+        <span>{window.fmtPrice(it.line_total)}</span>
+      </div>)}
+    </div>
+    {result.tracking_number && <div style={{fontSize:13,color:'var(--text-secondary)',borderTop:'1px solid var(--border-hairline)',paddingTop:14,marginBottom:6}}>{result.courier || 'Courier'} tracking: <strong style={{color:'var(--text-primary)'}}>{result.tracking_number}</strong></div>}
+    <div style={{display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:16,borderTop:'1px solid var(--border-hairline)',paddingTop:14,marginTop:result.tracking_number?0:14}}><span>Total</span><span>{window.fmtPrice(result.total)}</span></div>
   </div>;
 }
 
@@ -39,44 +53,37 @@ function App(){
   const [order,setOrder] = React.useState('');
   const [email,setEmail] = React.useState('');
   const [result,setResult] = React.useState(null);
+  const [loading,setLoading] = React.useState(false);
 
   const submit = (e) => {
     e.preventDefault();
-    setResult({ id: order || 'FX-10482', stage: 2, item: window.PRODUCTS[4], eta: 'Aug 6, 2026' });
+    setLoading(true);
+    setResult(null);
+    window.supabaseClient.rpc('lookup_order', { p_order_number: order.trim(), p_contact_email: email.trim() })
+      .then(({ data, error }) => {
+        setLoading(false);
+        if (error) { setResult('unavailable'); return; }
+        setResult(data || 'not-found');
+      });
   };
 
   return <div>
     <Header active=""/>
     <section style={{maxWidth:760,margin:'0 auto',padding:'72px 40px 0',textAlign:'center'}} data-screen-label="Track Order">
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:48,margin:'0 0 14px'}}>Track Your Order</h1>
-      <p style={{color:'var(--text-secondary)',fontSize:16}}>Enter your order number and email to see production and shipping status.</p>
+      <p style={{color:'var(--text-secondary)',fontSize:16}}>Enter your order number and email to see production and shipping status. Works whether you checked out signed in or as a guest.</p>
     </section>
 
     <section style={{maxWidth:520,margin:'0 auto',padding:'40px 40px 0'}}>
       <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:20,border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:32,background:'var(--surface-panel)'}}>
         <Input label="Order number" placeholder="FX-10482" value={order} onChange={e=>setOrder(e.target.value)} required/>
         <Input label="Email" type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} required/>
-        <Button variant="primary" size="lg">Track Order</Button>
+        <Button variant="primary" size="lg" disabled={loading}>{loading ? 'Looking up…' : 'Track Order'}</Button>
       </form>
     </section>
 
-    {result && <section style={{maxWidth:760,margin:'0 auto',padding:'56px 40px 96px'}}>
-      <div style={{border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-lg)',padding:36}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-          <div style={{fontSize:14,color:'var(--text-muted)'}}>Order {result.id}</div>
-          <div style={{fontSize:14,color:'var(--paint-orange)',fontWeight:600}}>Est. delivery {result.eta}</div>
-        </div>
-        <div style={{display:'flex',gap:16,alignItems:'center',marginTop:20}}>
-          <div style={{width:72,height:72,borderRadius:'var(--radius-md)',overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',border:'1px solid var(--border-gallery)',flexShrink:0}}>
-            <image-slot id="track-item" style={{width:'100%',height:'100%'}} placeholder={`Photo of ${result.item.name}`}></image-slot>
-          </div>
-          <div>
-            <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>{result.item.line}</div>
-            <div style={{fontSize:16,fontWeight:600}}>{result.item.name}</div>
-          </div>
-        </div>
-        <Timeline stage={result.stage}/>
-      </div>
+    {result && <section style={{maxWidth:520,margin:'0 auto',padding:'40px 40px 96px'}}>
+      <OrderResult result={result}/>
     </section>}
     <Footer/>
   </div>;

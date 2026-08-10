@@ -22,10 +22,22 @@
 const { Input, Button, Card } = window.FunXDesignSystem_bbd8ae;
 const SHIPPING_COST = 200;
 
-function SignInGate(){
-  return <section style={{minHeight:'60vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'64px 40px',gap:24}}>
-    <p style={{color:'var(--text-muted)',fontSize:15,textAlign:'center',maxWidth:400}}>Sign in to check out — your order and shipping details are tied to your account.</p>
+function CheckoutChoice({ onGuest }){
+  const [mode,setMode] = React.useState(null);
+  if (mode === 'signin') return <section style={{minHeight:'60vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'64px 40px',gap:24}}>
+    <p style={{color:'var(--text-muted)',fontSize:15,textAlign:'center',maxWidth:400}}>Sign in to check out — your order will be saved to your account.</p>
     <AuthCard onSuccess={()=>{}}/>
+    <button onClick={()=>setMode(null)} style={{background:'none',border:'none',color:'var(--text-muted)',fontSize:13,cursor:'pointer',textDecoration:'underline'}}>Back</button>
+  </section>;
+  return <section style={{maxWidth:520,margin:'0 auto',padding:'64px 40px 96px',display:'flex',flexDirection:'column',gap:16}}>
+    <button onClick={()=>setMode('signin')} style={{textAlign:'left',padding:24,borderRadius:'var(--radius-lg)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',cursor:'pointer',color:'var(--text-primary)'}}>
+      <div style={{fontSize:16,fontWeight:700,marginBottom:6}}>Sign in</div>
+      <div style={{fontSize:13,color:'var(--text-muted)'}}>Track this order in your account and check out faster next time.</div>
+    </button>
+    <button onClick={onGuest} style={{textAlign:'left',padding:24,borderRadius:'var(--radius-lg)',border:'1px solid var(--border-hairline)',background:'var(--surface-panel)',cursor:'pointer',color:'var(--text-primary)'}}>
+      <div style={{fontSize:16,fontWeight:700,marginBottom:6}}>Continue as guest</div>
+      <div style={{fontSize:13,color:'var(--text-muted)'}}>Just an email and shipping address — no account needed. You can create one afterward if you'd like.</div>
+    </button>
   </section>;
 }
 
@@ -36,11 +48,12 @@ function EmptyCart(){
   </section>;
 }
 
-function AddressForm({ form, update, isMobile }){
+function AddressForm({ form, update, isMobile, showEmail }){
   const hint = window.getAddressHint('Pakistan');
   return <Card variant="dark" padding="lg">
     <h3 style={{fontSize:18,fontWeight:700,margin:'0 0 20px'}}>Shipping Address</h3>
     <div style={{display:'flex',flexDirection:'column',gap:18}}>
+      {showEmail && <Input label="Email" type="email" value={form.email} onChange={update('email')} required/>}
       <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap:18}}>
         <Input label="Full name" value={form.name} onChange={update('name')} required/>
         <Input label="Phone" value={form.phone} onChange={update('phone')} required/>
@@ -57,7 +70,7 @@ function AddressForm({ form, update, isMobile }){
   </Card>;
 }
 
-function OrderSummary({ cart, subtotal, isMobile }){
+function OrderSummary({ cart, subtotal, isMobile, isGuest }){
   return <Card variant="dark" padding="lg">
     <h3 style={{fontSize:18,fontWeight:700,margin:'0 0 20px'}}>Order Summary</h3>
     <div style={{display:'flex',flexDirection:'column',gap:16,marginBottom:20,maxHeight:isMobile?'none':320,overflowY:isMobile?'visible':'auto'}}>
@@ -79,22 +92,26 @@ function OrderSummary({ cart, subtotal, isMobile }){
     </div>
     <Button variant="primary" size="lg" disabled style={{width:'100%',marginTop:24,opacity:0.5,cursor:'not-allowed'}}>Place Order</Button>
     <p style={{fontSize:12,color:'var(--text-muted)',textAlign:'center',marginTop:12,lineHeight:1.6}}>Online payment isn't connected yet — checkout can't be completed until it is. Everything above (address, order total) is real; we're just missing the last step.</p>
+    {isGuest && <p style={{fontSize:12,color:'var(--text-muted)',textAlign:'center',marginTop:8,lineHeight:1.6}}>Checking out as a guest — once payment is live you'll get the option to save this order to a new account afterward.</p>}
+    <div style={{marginTop:20,paddingTop:20,borderTop:'1px solid var(--border-hairline)'}}><TrustRow align="center"/></div>
   </Card>;
 }
 
-function CheckoutForm({ session }){
+function CheckoutForm({ session, isGuest }){
   const isMobile = window.useIsMobile();
-  const [form,setForm] = React.useState({ name:'', phone:'', line1:'', line2:'', city:'', region:'', postal_code:'' });
-  const [loaded,setLoaded] = React.useState(false);
+  const [form,setForm] = React.useState({ email:'', name:'', phone:'', line1:'', line2:'', city:'', region:'', postal_code:'' });
+  const [loaded,setLoaded] = React.useState(isGuest);
   const items = window.getCart();
   const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)})).filter(i=>i.p);
   const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
 
   React.useEffect(() => {
+    if (isGuest) return;
     window.supabaseClient.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => {
       const addr = (data && data.shipping_address) || {};
       setForm(f => ({
         ...f,
+        email: session.user.email || '',
         name: (data && data.name) || '',
         phone: (data && data.phone) || '',
         line1: addr.line1 || '', line2: addr.line2 || '', city: addr.city || '',
@@ -102,7 +119,7 @@ function CheckoutForm({ session }){
       }));
       setLoaded(true);
     });
-  }, [session.user.id]);
+  }, [isGuest, session && session.user.id]);
 
   const update = (k) => (e) => setForm({...form,[k]:e.target.value});
 
@@ -110,21 +127,22 @@ function CheckoutForm({ session }){
   if (cart.length === 0) return <EmptyCart/>;
 
   return <section style={{maxWidth:1100,margin:'0 auto',padding: isMobile ? '32px 20px 96px' : '56px 40px 120px',display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr',gap: isMobile ? 24 : 40,alignItems:'start'}}>
-    <AddressForm form={form} update={update} isMobile={isMobile}/>
-    <OrderSummary cart={cart} subtotal={subtotal} isMobile={isMobile}/>
+    <AddressForm form={form} update={update} isMobile={isMobile} showEmail={isGuest}/>
+    <OrderSummary cart={cart} subtotal={subtotal} isMobile={isMobile} isGuest={isGuest}/>
   </section>;
 }
 
 function App(){
   const session = window.useSession();
+  const [guest,setGuest] = React.useState(false);
   return <div>
     <Header active=""/>
     <section style={{maxWidth:1100,margin:'0 auto',padding:'56px 40px 0'}} data-screen-label="Checkout">
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,margin:'0 0 8px'}}>Checkout</h1>
     </section>
     {session === undefined ? <div style={{minHeight:'60vh'}}/>
-      : session === null ? <SignInGate/>
-      : <CheckoutForm session={session}/>}
+      : session === null && !guest ? <CheckoutChoice onGuest={()=>setGuest(true)}/>
+      : <CheckoutForm session={session} isGuest={!session}/>}
     <Footer/>
   </div>;
 }
