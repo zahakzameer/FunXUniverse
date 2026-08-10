@@ -1,0 +1,13 @@
+{
+  "name": "funx-universe-build",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Build-time only: precompiles JSX (common.jsx + each page's inline script) to plain JS so visitors' browsers never run Babel. Nothing here changes how you author pages — you still edit HTML/JSX directly; this just runs before deploy.",
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-react": "^7.24.7"
+  }
+}

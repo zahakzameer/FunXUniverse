@@ -1,6 +1,6 @@
 # FunX Universe — Toy Store Website
 
-Static multi-page site (HTML + React via CDN/Babel, no build step). Open `index.html` directly or serve the folder with any static host (GitHub Pages, Netlify, Vercel).
+Static multi-page site (HTML + React). Pages author JSX directly (no local build step needed for development — open `index.html` and it runs via in-browser Babel same as always). Deployment now precompiles that JSX ahead of time — see **Deploying** below.
 
 ## Structure
 - `index.html` — Homepage
@@ -26,4 +26,6 @@ Static multi-page site (HTML + React via CDN/Babel, no build step). Open `index.
 - No backend — contact form, checkout, and auth are front-end only (no real submission yet).
 
 ## Deploying
-Just push this folder to a GitHub repo and enable **GitHub Pages** (Settings → Pages → deploy from branch, root folder), or drag the folder into Netlify/Vercel.
+`.github/workflows/deploy.yml` runs on every push to `main`: it precompiles `common.jsx` and each page's inline JSX to plain JS (`scripts/build.js`) into `dist/`, then deploys `dist/` to GitHub Pages — visitors' browsers no longer run Babel at all. This requires a one-time repo setting: **Settings → Pages → Build and deployment → Source: "GitHub Actions"** (not "Deploy from a branch").
+
+To build locally: `npm install && npm run build`, output lands in `dist/`.
