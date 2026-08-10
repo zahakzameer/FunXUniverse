@@ -158,7 +158,29 @@ const ICONS = {
   mail: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 6.5l9 6 9-6"/></svg>,
   phone: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h4l2 5-2.5 1.5a12 12 0 0 0 6 6L15 14l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 2 6a2 2 0 0 1 2-2z"/></svg>,
   pin: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s7-6.6 7-11.5A7 7 0 0 0 5 9.5C5 14.4 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>,
+  lock: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+  shield: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>,
+  undo: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h9a5 5 0 0 1 0 10h-2"/><path d="M8 5L3 10l5 5"/></svg>,
 };
+
+// Shared trust-signal row — checkout and product pages both need the same
+// three reassurances, so this is one component instead of three copies
+// that could quietly drift apart.
+function TrustRow({ align }){
+  const items = [
+    [ICONS.lock, STRINGS.trust.secure],
+    [ICONS.undo, STRINGS.trust.returns, 'returns.html'],
+    [ICONS.shield, STRINGS.trust.authenticity, 'authentication.html'],
+  ];
+  return <div style={{display:'flex',gap:20,flexWrap:'wrap',justifyContent:align||'flex-start'}}>
+    {items.map(([icon,label,href],i) => {
+      const inner = <span style={{display:'flex',alignItems:'center',gap:7,fontSize:12.5,color:'var(--text-muted)'}}>{icon}{label}</span>;
+      return href
+        ? <a key={i} href={href} style={{textDecoration:'none',color:'inherit'}}>{inner}</a>
+        : <span key={i}>{inner}</span>;
+    })}
+  </div>;
+}
 
 const SOCIAL_LINKS = [
   { label: 'Instagram', href: 'https://instagram.com/thefunxuniverse', icon: 'instagram' },
@@ -173,6 +195,7 @@ const SOCIAL_LINKS = [
 // that for real needs actual localization, not just a moved string.
 const STRINGS = {
   nav: { search:'Search', wishlist:'Wishlist', cart:'Cart', login:'Login', currency:'Currency' },
+  trust: { secure:'Secure checkout', returns:'Easy returns', authenticity:'Authenticity guarantee' },
   cart: {
     title: 'Added to Your Collection',
     empty: 'Your collection is empty.',
@@ -692,7 +715,7 @@ function Footer() {
   const [subscribed,setSubscribed] = React.useState(false);
   const cols = [
     ['Shop', [['Shop All','shop-all.html'], categoryLink('Action Figures'), categoryLink('Building Blocks'), categoryLink('Educational Toys'), categoryLink('Remote Control Vehicles')]],
-    ['The Universe', [['Provenance','provenance.html'],['Authentication','authentication.html'],['Our Story','story.html'],['Press','press.html']]],
+    ['The Universe', [['Provenance','provenance.html'],['Authenticity Guarantee','authentication.html'],['Our Story','story.html'],['Press','press.html']]],
     ['Support', [['Shipping','shipping.html'],['Returns','returns.html'],['Track Order','track-order.html'],['Contact','contact.html']]],
   ];
   return <footer style={{background:'var(--surface-sunken)',borderTop:'1px solid var(--border-hairline-soft)',padding:'64px 40px 32px',fontFamily:'var(--font-body)',color:'var(--text-muted)'}}>
@@ -758,8 +781,16 @@ function ProductCard({ p }) {
   // the cursor onto the name/price/stars/Quick Shop shouldn't start a video
   // that has nothing to do with what's under the cursor.
   const [imgHover,setImgHover] = React.useState(false);
+  const glowRef = React.useRef(null);
   const onImgEnter = () => { setImgHover(true); const v = videoRef.current; if (v) { v.currentTime = 0; v.play().catch(()=>{}); } };
   const onImgLeave = () => { setImgHover(false); const v = videoRef.current; if (v) { v.pause(); v.currentTime = 0; } };
+  const onImgMove = (e) => {
+    if (!glowRef.current) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width * 100).toFixed(1);
+    const y = ((e.clientY - r.top) / r.height * 100).toFixed(1);
+    glowRef.current.style.background = `radial-gradient(200px circle at ${x}% ${y}%, rgba(241,106,62,0.16), transparent 70%)`;
+  };
   const quickAdd = (e) => {
     e.stopPropagation(); e.preventDefault();
     if (!inStock) return;
@@ -768,8 +799,9 @@ function ProductCard({ p }) {
     setTimeout(()=>setJustAdded(false), 1600);
   };
   return <a href={`product.html?id=${p.id}`} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} style={{fontFamily:'var(--font-body)',cursor:'pointer',minWidth:0,display:'block',textDecoration:'none',color:'inherit'}}>
-    <div onMouseEnter={onImgEnter} onMouseLeave={onImgLeave} style={{aspectRatio:'1',background:'var(--surface-gallery)',color:'var(--text-ink)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
+    <div onMouseEnter={onImgEnter} onMouseLeave={onImgLeave} onMouseMove={onImgMove} style={{aspectRatio:'1',background:'var(--surface-gallery)',color:'var(--text-ink)',borderRadius:'var(--radius-lg)',marginBottom:20,position:'relative',overflow:'hidden',border:'none',boxShadow:hover?'var(--shadow-gallery-2), var(--glow-gold)':'var(--shadow-gallery-1)',transition:'box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',transform:hover?'translateY(-2px)':'none'}}>
       {hasRealImages ? <img src={p.images[0]} alt={p.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',display:imgHover&&p.hasVideo?'none':'block'}}/> : <image-slot id={`prod-${p.id}`} style={{width:'100%',height:'100%',pointerEvents:'none',position:'absolute',inset:0,display:imgHover&&p.hasVideo?'none':'block'}} placeholder={`Photo of ${p.name}`}></image-slot>}
+      <div ref={glowRef} style={{position:'absolute',inset:0,pointerEvents:'none',opacity:hover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',mixBlendMode:'multiply'}}></div>
       {p.hasVideo && <video ref={videoRef} muted loop playsInline preload="none" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:imgHover?1:0,transition:'opacity var(--duration-base) var(--ease-standard)',pointerEvents:'none'}}>
         <source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/>
       </video>}
@@ -1204,4 +1236,4 @@ function fmtPrice(n) {
   }
 }
 
-Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount, ModeSwitch, SignInForm, CreateForm, AuthCard });
+Object.assign(window, { NAV_LINKS, ICONS, SOCIAL_LINKS, COUNTRIES, Header, Footer, ProductCard, ProductGrid, CategoryTile, CategoryRail, SectionHeading, FilterSidebar, FilterGroup, PromoBanner, BADGE_TONE, JOURNAL_POSTS, fmtPrice, getCart, saveCart, addToCart, cartCount, ModeSwitch, SignInForm, CreateForm, AuthCard, TrustRow });
