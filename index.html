@@ -90,15 +90,19 @@ function CategoryNav(){
         scrollTrigger: {
           trigger: wrapRef.current,
           start: 'top top',
-          end: () => '+=' + (panels.length * 640),
-          scrub: 0.6,
+          end: () => '+=' + (panels.length * 380),
+          scrub: 0.4,
           pin: true,
         },
       });
+      // Outgoing panel fully fades out before the incoming one fades in —
+      // overlapping them (previously via GSAP's '<' same-start-time position)
+      // left two panels partially visible at once, which under any scroll
+      // jank froze mid-crossfade as doubled, overlapping headline text.
       panels.forEach((p, i) => {
         if (i === 0) return;
         tl.to(panels[i-1], { autoAlpha: 0, duration: 0.3 })
-          .fromTo(p, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.3 }, '<');
+          .fromTo(p, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.3 });
       });
     }, wrapRef);
     return () => ctx.revert();
