@@ -101,10 +101,81 @@ function setupCursor(){
   });
 }
 
+// Add-to-cart "pop" — a brief burst of brand-colored dots from the header
+// cart icon. Reads cart count itself independently of React (consistent
+// with the rest of this file), so it needs no wiring into common.jsx.
+// Session-scoped intensity decay so it never gets old on a multi-item
+// order: full burst the 1st add this session, half the 2nd-3rd, then just
+// the icon's existing scale-pulse (no particles) from the 4th on.
+function setupCartBurst(){
+  if (reduced) return;
+  var SESSION_KEY = 'funx_cart_pop_count';
+  var prevCount = null;
+
+  function getCartCount(){
+    try {
+      var items = JSON.parse(localStorage.getItem('funx_cart') || '[]');
+      return items.reduce(function(s, i){ return s + (i.qty || 0); }, 0);
+    } catch (e) { return 0; }
+  }
+
+  function nextBurstSize(){
+    var n = 0;
+    try { n = parseInt(sessionStorage.getItem(SESSION_KEY) || '0', 10) || 0; } catch (e) {}
+    try { sessionStorage.setItem(SESSION_KEY, String(n + 1)); } catch (e) {}
+    if (n < 1) return 8;   // 1st add this session
+    if (n < 3) return 4;   // 2nd-3rd
+    return 0;              // 4th+ — icon's own pulse carries the moment
+  }
+
+  function burst(){
+    var cartLink = document.querySelector('a[href="cart.html"]');
+    if (!cartLink) return;
+    var count = nextBurstSize();
+    if (count === 0) return;
+    var r = cartLink.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var colors = ['#F16A3E', '#FFC93C', '#E8384F', '#3DDBFF'];
+    // Spread within an upward arc, not a full circle — the icon sits at
+    // the top of the page, so particles fly up/sideways into open header
+    // space rather than down into page content.
+    for (var i = 0; i < count; i++){
+      var angle = -Math.PI * 0.15 - (Math.PI * 0.7) * (i / Math.max(1, count - 1)) + (Math.random() * 0.3 - 0.15);
+      var dist = 26 + Math.random() * 22;
+      var dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
+      var size = 5 + Math.random() * 4;
+      (function(dx, dy, size, color){
+        var el = document.createElement('div');
+        el.setAttribute('aria-hidden', 'true');
+        el.className = 'funx-cart-particle';
+        el.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;width:' + size + 'px;height:' + size + 'px;'
+          + 'border-radius:50%;background:' + color + ';pointer-events:none;z-index:9998;'
+          + 'transform:translate3d(-50%,-50%,0) scale(1);opacity:1;'
+          + 'transition:transform 560ms cubic-bezier(.2,.7,.3,1),opacity 560ms ease-out;';
+        document.body.appendChild(el);
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            el.style.transform = 'translate3d(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px), 0) scale(0.3)';
+            el.style.opacity = '0';
+          });
+        });
+        setTimeout(function(){ el.remove(); }, 640);
+      })(dx, dy, size, colors[i % colors.length]);
+    }
+  }
+
+  window.addEventListener('funx-cart-updated', function(){
+    var c = getCartCount();
+    if (prevCount !== null && c > prevCount) burst();
+    prevCount = c;
+  });
+}
+
 function init(){
   setupReveal();
   setupTilt();
   setupCursor();
+  setupCartBurst();
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

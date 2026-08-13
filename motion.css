@@ -1,9 +1,54 @@
-.funx-reveal{opacity:0;transform:translateY(28px);transition:opacity var(--duration-slower) var(--ease-decelerate),transform var(--duration-slower) var(--ease-decelerate)}
-.funx-reveal.funx-in{opacity:1;transform:translateY(0)}
-.funx-reveal-item{opacity:0;transform:translateY(20px);transition:opacity var(--duration-slow) var(--ease-decelerate),transform var(--duration-slow) var(--ease-decelerate);transition-delay:var(--funx-delay,0ms)}
-.funx-reveal-item.funx-in{opacity:1;transform:translateY(0)}
+/* "Unfold" reveal — sections and cards tilt down from a top hinge into
+   place, rather than a plain fade-up, echoing a box flap opening. Uses
+   perspective() inline on the transform itself (same technique as the
+   existing pointer-tilt effect below) so no parent perspective context is
+   needed. Section-level rotation is kept subtle (-4deg) since perspective
+   distortion is more noticeable across a full-width element; the smaller
+   per-card rotation (-11deg) reads clearly as a corner/flap lifting. */
+.funx-reveal{opacity:0;transform:perspective(1400px) rotateX(-4deg) translateY(24px);transform-origin:top center;transition:opacity var(--duration-slower) var(--ease-decelerate),transform var(--duration-slower) var(--ease-decelerate)}
+.funx-reveal.funx-in{opacity:1;transform:perspective(1400px) rotateX(0deg) translateY(0)}
+.funx-reveal-item{opacity:0;transform:perspective(700px) rotateX(-11deg) translateY(16px);transform-origin:top center;transition:opacity var(--duration-slow) var(--ease-decelerate),transform var(--duration-slow) var(--ease-decelerate);transition-delay:var(--funx-delay,0ms)}
+.funx-reveal-item.funx-in{opacity:1;transform:perspective(700px) rotateX(0deg) translateY(0)}
 .funx-tilt{transition:transform var(--duration-base) var(--ease-decelerate)}
 @keyframes funx-gallery-in{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:scale(1)}}
 .funx-gallery-in{animation:funx-gallery-in var(--duration-slow) var(--ease-decelerate)}
 @media(prefers-reduced-motion:reduce){.funx-gallery-in{animation:none}}
 @media(prefers-reduced-motion:reduce){.funx-reveal,.funx-reveal-item{opacity:1!important;transform:none!important;transition:none!important}}
+
+/* Hero "lid lift" — a synthetic dark panel (not a photo) slides up and
+   tilts away on load, revealing the hero already-rendered beneath it.
+   pointer-events:none from the very first frame, not just at animation
+   end — a decorative overlay should never be able to intercept a click,
+   full stop (this is the exact bug class fixed on the live site earlier:
+   a "hidden" element that's still interactive). */
+@keyframes funx-lid-lift{
+  0%{transform:translateY(0) rotate(0deg);opacity:1}
+  70%{opacity:1}
+  100%{transform:translateY(-112%) rotate(-3deg);opacity:0}
+}
+.funx-lid{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden;
+  background:linear-gradient(155deg,var(--neutral-950) 0%,#141416 55%,var(--neutral-950) 100%);
+  animation:funx-lid-lift 780ms var(--ease-decelerate) 60ms forwards;}
+.funx-lid::after{content:'';position:absolute;top:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg,var(--paint-orange),var(--paint-yellow),var(--paint-red))}
+@media(prefers-reduced-motion:reduce){.funx-lid{display:none}}
+
+/* Product card "tape corner" peel — a small brand-gradient triangle that
+   lifts at the top-left of the photo. Desktop: hover-triggered (repeats
+   each hover, matching the tilt/glow effects it sits alongside). Touch:
+   no hover exists, so it triggers once via the same scroll-into-view
+   .funx-in class the reveal system above already applies — no new JS. */
+.funx-card-peel{position:absolute;top:0;left:0;width:34px;height:34px;pointer-events:none;z-index:2;overflow:hidden;opacity:0;transform:scale(0.55);transform-origin:top left;transition:opacity var(--duration-base) var(--ease-standard),transform var(--duration-slow) var(--ease-spring)}
+.funx-card-peel::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--paint-orange),var(--paint-yellow));clip-path:polygon(0 0,100% 0,0 100%)}
+@media (hover:hover) and (pointer:fine){
+  a:hover .funx-card-peel{opacity:1;transform:scale(1)}
+}
+@media (hover:none),(pointer:coarse){
+  .funx-reveal-item.funx-in .funx-card-peel{opacity:1;transform:scale(1)}
+}
+@media(prefers-reduced-motion:reduce){.funx-card-peel{display:none}}
+
+/* Add-to-cart particle burst — see motion.js setupCartBurst(). Particles
+   are plain fixed-position divs animated via CSS transition (not
+   keyframes) so each one's random trajectory can be set inline per-burst. */
+@media(prefers-reduced-motion:reduce){.funx-cart-particle{display:none}}
