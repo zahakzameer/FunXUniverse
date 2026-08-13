@@ -67,7 +67,7 @@ function setupCursor(){
   dot.style.cssText = 'position:fixed;top:0;left:0;width:26px;height:26px;border-radius:50%;'
     + 'border:1.5px solid var(--paint-orange);pointer-events:none;z-index:9999;'
     + 'transform:translate3d(-50%,-50%,0) scale(0);opacity:0;'
-    + 'transition:opacity 200ms ease,transform 200ms var(--ease-spring,ease),width 200ms ease,height 200ms ease,background 200ms ease;';
+    + 'transition:opacity var(--duration-base,220ms) var(--ease-standard,ease),transform var(--duration-base,220ms) var(--ease-spring,ease),width var(--duration-base,220ms) var(--ease-standard,ease),height var(--duration-base,220ms) var(--ease-standard,ease),background var(--duration-base,220ms) var(--ease-standard,ease);';
   document.body.appendChild(dot);
 
   var tx = 0, ty = 0, x = 0, y = 0, shown = false;

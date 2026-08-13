@@ -205,7 +205,9 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
   const media = p.hasVideo ? [...p.images, '__video__'] : p.images;
   const [active,setActive] = React.useState(0);
   const videoRef = React.useRef(null);
-  const colors = ['#F16A3E','#141416','#3DDBFF','#FFC93C'];
+  // Token-backed instead of duplicated literal hex, so this stays in sync
+  // if the brand palette ever changes.
+  const colors = ['var(--paint-orange)','var(--text-ink)','var(--accent-cyan)','var(--paint-yellow)'];
   React.useEffect(()=>{
     const v = videoRef.current;
     if (!v) return;
@@ -236,7 +238,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
         }
       </div>
       {media.length > 1 && <div style={{position:'absolute',bottom:20,left:0,right:0,display:'flex',justifyContent:'center',gap:7}}>
-        {media.map((m,i) => <button key={i} type="button" onClick={()=>setActive(i)} aria-label={`View image ${i+1} of ${media.length}`} aria-pressed={i===active} style={{width:7,height:7,padding:0,borderRadius:'50%',border:'none',cursor:'pointer',background: i===active ? '#141416' : '#14141633'}}></button>)}
+        {media.map((m,i) => <button key={i} type="button" onClick={()=>setActive(i)} aria-label={`View image ${i+1} of ${media.length}`} aria-pressed={i===active} style={{width:7,height:7,padding:0,borderRadius:'50%',border:'none',cursor:'pointer',background: i===active ? 'var(--text-ink)' : 'rgba(20,20,22,0.2)'}}></button>)}
       </div>}
     </div>
     <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:'center',marginBottom:36}}>
@@ -261,7 +263,7 @@ function StickyBar({ p, onAdd, added, visible }){
   // still leaves this in normal flow near the top of the page (right below
   // the 80px header), so before `visible` it was a real, clickable,
   // overlapping "Add to Cart" that silently ate clicks meant for the header.
-  return <div style={{position:'sticky',top:80,zIndex:20,background:'rgba(11,11,13,0.92)',backdropFilter:'blur(10px)',borderBottom:'1px solid var(--border-hairline-soft)',transform: visible ? 'translateY(0)' : 'translateY(-100%)',pointerEvents: visible ? 'auto' : 'none',transition:'transform .3s ease',padding:'14px 40px',display:'flex',alignItems:'center',justifyContent:'space-between',maxWidth:1280,margin:'0 auto'}}>
+  return <div style={{position:'sticky',top:80,zIndex:20,background:'rgba(11,11,13,0.92)',backdropFilter:'blur(10px)',borderBottom:'1px solid var(--border-hairline-soft)',transform: visible ? 'translateY(0)' : 'translateY(-100%)',pointerEvents: visible ? 'auto' : 'none',transition:'transform var(--duration-slow) var(--ease-standard)',padding:'14px 40px',display:'flex',alignItems:'center',justifyContent:'space-between',maxWidth:1280,margin:'0 auto'}}>
     <div style={{display:'flex',alignItems:'center',gap:14}}>
       <span style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{window.titleCase(p.name)}</span>
       <span style={{fontSize:14,color:'var(--text-muted)'}}>{window.fmtPrice(price)}</span>

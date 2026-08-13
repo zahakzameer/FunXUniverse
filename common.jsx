@@ -329,7 +329,7 @@ function CartDrawer(){
   const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)})).filter(i=>i.p);
   const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
   return <React.Fragment>
-    <div onClick={()=>setOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:98,opacity:open?1:0,pointerEvents:open?'auto':'none',transition:'opacity .3s ease'}}></div>
+    <div onClick={()=>setOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:98,opacity:open?1:0,pointerEvents:open?'auto':'none',transition:'opacity var(--duration-slow) var(--ease-standard)'}}></div>
     <div style={{position:'fixed',top:0,right:0,bottom:0,width:400,maxWidth:'92vw',background:'var(--surface-panel)',borderLeft:'1px solid var(--border-hairline)',zIndex:99,display:'flex',flexDirection:'column',transform: open ? 'translateX(0)' : 'translateX(100%)',transition:'transform .38s cubic-bezier(.16,.84,.44,1)',boxShadow:'-20px 0 60px rgba(0,0,0,0.4)'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'22px 24px',borderBottom:'1px solid var(--border-hairline-soft)'}}>
         <h3 style={{fontSize:17,fontWeight:700,margin:0}}>{STRINGS.cart.title}</h3>
@@ -392,7 +392,7 @@ function NavItem({ l, active }){
   const onLeave = () => { timer.current = setTimeout(()=>setOpen(false), 120); };
   return <div onMouseEnter={onEnter} onMouseLeave={onLeave} style={{position:'relative'}}>
     <a href={l.href} style={{fontSize:'var(--nav-link-size)',fontWeight:'var(--nav-link-weight)',color:l.label===active?'var(--text-primary)':'var(--text-secondary)',textDecoration:'none',position:'relative',paddingBottom:4,borderBottom:l.label===active?'2px solid var(--paint-orange)':'2px solid transparent',display:'inline-block'}}>{l.label}</a>
-    {menu && <div style={{position:'fixed',left:0,right:0,top:80,zIndex:29,opacity:open?1:0,visibility:open?'visible':'hidden',transform:open?'translateY(0)':'translateY(-6px)',transition:'opacity .2s ease, transform .2s ease',background:'rgba(14,14,16,0.98)',backdropFilter:'blur(14px)',borderBottom:'1px solid var(--border-hairline-soft)',boxShadow:'0 24px 48px rgba(0,0,0,0.4)'}}>
+    {menu && <div style={{position:'fixed',left:0,right:0,top:80,zIndex:29,opacity:open?1:0,visibility:open?'visible':'hidden',transform:open?'translateY(0)':'translateY(-6px)',transition:'opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard)',background:'rgba(14,14,16,0.98)',backdropFilter:'blur(14px)',borderBottom:'1px solid var(--border-hairline-soft)',boxShadow:'0 24px 48px rgba(0,0,0,0.4)'}}>
       <div style={{maxWidth:1280,margin:'0 auto',padding:'48px',display:'grid',gridTemplateColumns:`repeat(${menu.cols.length},1fr) 1.4fr`,gap:56}}>
         {menu.cols.map(col => <div key={col.title}>
           <div style={{fontSize:13,letterSpacing:0.2,fontWeight:400,color:'var(--text-muted)',marginBottom:20}}>{col.title}</div>
@@ -663,7 +663,7 @@ function MobileNavPanel({ open, onClose, active }){
     return () => document.removeEventListener('keydown', onKey);
   },[open, onClose]);
   return <React.Fragment>
-    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:98,opacity:open?1:0,pointerEvents:open?'auto':'none',transition:'opacity .3s ease'}}></div>
+    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:98,opacity:open?1:0,pointerEvents:open?'auto':'none',transition:'opacity var(--duration-slow) var(--ease-standard)'}}></div>
     <div style={{position:'fixed',top:0,left:0,bottom:0,width:320,maxWidth:'86vw',background:'var(--surface-panel)',borderRight:'1px solid var(--border-hairline)',zIndex:99,display:'flex',flexDirection:'column',overflowY:'auto',transform: open ? 'translateX(0)' : 'translateX(-100%)',transition:'transform .38s cubic-bezier(.16,.84,.44,1)',boxShadow:'20px 0 60px rgba(0,0,0,0.4)'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'22px 24px',borderBottom:'1px solid var(--border-hairline-soft)'}}>
         <img src="assets/logo.svg" alt="The FunX Universe" style={{height:28}}/>

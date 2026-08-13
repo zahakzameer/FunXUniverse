@@ -125,7 +125,11 @@ function App(){
   const prevListKeyRef = React.useRef(listKey);
   React.useLayoutEffect(() => {
     if (prevListKeyRef.current !== listKey && flipStateRef.current && window.Flip) {
-      window.Flip.from(flipStateRef.current, { duration: 0.5, ease: 'power2.out', stagger: 0.02, absolute: true });
+      // Flip drives inline transforms directly, same as GSAP tweens
+      // elsewhere — the sitewide CSS reduced-motion kill-switch doesn't
+      // reach it, so honor the preference explicitly with duration 0.
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.Flip.from(flipStateRef.current, { duration: reduced ? 0 : 0.5, ease: 'power2.out', stagger: reduced ? 0 : 0.02, absolute: true });
       flipStateRef.current = null;
     }
     prevListKeyRef.current = listKey;

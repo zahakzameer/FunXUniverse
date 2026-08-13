@@ -46,6 +46,16 @@ function Hero(){
   React.useEffect(() => {
     if (!window.gsap) return;
     const words = headlineRef.current ? headlineRef.current.querySelectorAll('.funx-hero-word') : [];
+    // GSAP tweens drive inline styles directly, not CSS transitions/
+    // animations — the sitewide reduced-motion kill-switch in
+    // tokens/motion.css (which forces transition/animation-duration to
+    // ~0) never touches them. Snap straight to the end state instead.
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      window.gsap.set(words, { yPercent: 0, opacity: 1 });
+      window.gsap.set(restRef.current, { y: 0, opacity: 1 });
+      return;
+    }
     const tl = window.gsap.timeline({ defaults: { ease: 'power3.out' } });
     tl.fromTo(words, { yPercent: 130, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.9, stagger: 0.09 })
       .fromTo(restRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.35');
