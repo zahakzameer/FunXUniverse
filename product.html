@@ -272,9 +272,15 @@ function StickyBar({ p, onAdd, added, visible }){
 
 function FeatureRow({ img, eyebrow, title, text, reverse }){
   const isMobile = window.useIsMobile();
+  // No fallback to the empty <image-slot> placeholder here — that renders
+  // an editor-mode "drop an image / browse files" prompt, which a real
+  // shopper should never see. Most products only have one photo (img is
+  // p.images[1]/[2]), so without this most product pages would show a
+  // broken-looking upload box. Cleaner to skip the section entirely.
+  if (!img) return null;
   return <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap: isMobile ? 24 : 64,alignItems:'center',maxWidth:1100,margin:'0 auto',padding: isMobile ? '48px 20px' : '80px 40px',direction: (reverse && !isMobile) ? 'rtl' : 'ltr'}}>
     <div style={{aspectRatio:'4/3',borderRadius:24,overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',border:'1px solid var(--border-gallery)',direction:'ltr'}}>
-      {img ? <img src={img} alt={title} loading="lazy" decoding="async" style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`pdp-feature-${title}`} style={{width:'100%',height:'100%'}} placeholder={title}></image-slot>}
+      <img src={img} alt={title} loading="lazy" decoding="async" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
     </div>
     <div style={{direction:'ltr'}}>
       <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:14}}>{eyebrow}</div>

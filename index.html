@@ -28,7 +28,6 @@
 <link rel="stylesheet" href="motion.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <style>body{margin:0;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}*{box-sizing:border-box}</style>
 </head>
 <body>
@@ -86,70 +85,18 @@ const HERO_CATEGORIES = [
   {label:'Remote Control Vehicles',href:'shop-all.html?category=Remote%20Control%20Vehicles',copy:'Built for backyards, hallways, and everything in between.'},
 ];
 
+// Was a GSAP ScrollTrigger pinned crossfade — reported "hanging" on scroll
+// twice (once as overlapping panels, then again after tightening the
+// timing), because pinning the viewport for ~1500px of scroll to cross-fade
+// four text panels reads as the page not responding no matter how the
+// crossfade itself is tuned. Replaced with the same static grid already
+// used on mobile — reliable, no scroll-jacking, same real category links.
 function CategoryNav(){
-  const wrapRef = React.useRef(null);
-  const panelsRef = React.useRef([]);
-  const isMobile = window.useIsMobile();
-
-  React.useEffect(() => {
-    if (isMobile || !window.gsap || !window.ScrollTrigger) return;
-    window.gsap.registerPlugin(window.ScrollTrigger);
-    const panels = panelsRef.current.filter(Boolean);
-    if (panels.length === 0) return;
-    window.gsap.set(panels, { autoAlpha: 0 });
-    window.gsap.set(panels[0], { autoAlpha: 1 });
-
-    const ctx = window.gsap.context(() => {
-      const tl = window.gsap.timeline({
-        scrollTrigger: {
-          trigger: wrapRef.current,
-          start: 'top top',
-          end: () => '+=' + (panels.length * 380),
-          scrub: 0.4,
-          pin: true,
-        },
-      });
-      // Outgoing panel fully fades out before the incoming one fades in —
-      // overlapping them (previously via GSAP's '<' same-start-time position)
-      // left two panels partially visible at once, which under any scroll
-      // jank froze mid-crossfade as doubled, overlapping headline text.
-      panels.forEach((p, i) => {
-        if (i === 0) return;
-        tl.to(panels[i-1], { autoAlpha: 0, duration: 0.3 })
-          .fromTo(p, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.3 });
-      });
-    }, wrapRef);
-    return () => ctx.revert();
-  }, [isMobile]);
-
-  if (isMobile) {
-    return <section style={{padding:'88px 0'}}>
-      <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 40px'}}>
-        <SectionHeading eyebrow="Start Browsing" title="Shop by Category"/>
-      </div>
-      <CategoryRail tiles={HERO_CATEGORIES}/>
-    </section>;
-  }
-
-  return <section ref={wrapRef} style={{position:'relative',height:'100vh',overflow:'hidden',background:'var(--surface-canvas)'}}>
-    {HERO_CATEGORIES.map((c,i) => <a key={c.label} href={c.href} ref={el=>panelsRef.current[i]=el}
-      style={{position:'absolute',inset:0,display:'flex',alignItems:'center',textDecoration:'none',color:'inherit'}}>
-      <div style={{position:'absolute',inset:0}}>
-        <image-slot id={`hero-cat-${c.label}`} style={{width:'100%',height:'100%'}} placeholder={`Photo — ${c.label}`}></image-slot>
-        <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,rgba(11,11,13,0.9) 0%,rgba(11,11,13,0.4) 55%,transparent 100%)'}}></div>
-      </div>
-      <div style={{position:'relative',maxWidth:1280,margin:'0 auto',padding:'0 40px',width:'100%'}}>
-        <div style={{maxWidth:520}}>
-          <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--paint-orange)',textTransform:'uppercase',marginBottom:14}}>{`0${i+1} — Start Browsing`}</div>
-          <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:56,margin:'0 0 16px',letterSpacing:'-0.5px',color:'var(--text-primary)'}}>{c.label}</h2>
-          <p style={{fontSize:16,color:'var(--text-secondary)',marginBottom:24,maxWidth:400}}>{c.copy}</p>
-          <span style={{fontSize:14,fontWeight:700,color:'var(--paint-orange)'}}>Shop the collection →</span>
-        </div>
-      </div>
-    </a>)}
-    <div style={{position:'absolute',bottom:32,left:'50%',transform:'translateX(-50%)',display:'flex',gap:8}}>
-      {HERO_CATEGORIES.map((c,i) => <span key={c.label} style={{width:24,height:3,borderRadius:2,background:'var(--border-strong)'}}></span>)}
+  return <section style={{padding:'88px 0'}}>
+    <div style={{maxWidth:1280,margin:'0 auto',padding:'0 40px 40px'}}>
+      <SectionHeading eyebrow="Start Browsing" title="Shop by Category"/>
     </div>
+    <CategoryRail tiles={HERO_CATEGORIES}/>
   </section>;
 }
 

@@ -1,5 +1,5 @@
 const NAV_LINKS = [
-  { label: 'Shop All', href: 'shop-all.html' },
+  { label: 'Categories', href: 'shop-all.html' },
 ];
 
 // The 18 real categories from the product catalog — reused by the Shop All
@@ -134,11 +134,15 @@ function getNavMenus(){
   const cats = window.CATEGORIES;
   const per = Math.ceil(cats.length / 3);
   const slices = [cats.slice(0, per), cats.slice(per, per*2), cats.slice(per*2)].filter(s => s.length);
+  // Real product photo for the featured card — was a random Lorem Picsum
+  // placeholder unrelated to FunX, which read as unfinished/unprofessional
+  // in a menu otherwise built entirely from real catalog data.
+  const featuredProduct = (window.PRODUCTS || []).find(p => p.images && p.images[0]);
   return {
-    'Shop All': { cols: slices.map(s => ({
+    'Categories': { cols: slices.map(s => ({
       title: s.length > 1 ? `${s[0][0]} – ${s[s.length-1][0]}` : s[0][0],
       links: s.map(categoryLink),
-    })), feature: { label:'Shop the Full Collection', sub:`${window.PRODUCTS.length} products across ${cats.length} categories`, href:'shop-all.html', img:'https://picsum.photos/seed/funx-shop-all/640/480' } },
+    })), feature: { label:'Shop the Full Collection', sub:`${window.PRODUCTS.length} products across ${cats.length} categories`, href:'shop-all.html', img: featuredProduct ? featuredProduct.images[0] : 'assets/hero-universe.jpg' } },
   };
 }
 
