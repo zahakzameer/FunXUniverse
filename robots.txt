@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /account.html
+Disallow: /forgot-password.html
+Disallow: /reset-password.html
+Disallow: /wishlist.html
+Disallow: /search.html
+Disallow: /track-order.html
+
+Sitemap: https://funxuniverse.com/sitemap.xml

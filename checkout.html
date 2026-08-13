@@ -3,6 +3,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Checkout — The FunX Universe</title>
+<meta name="description" content="Secure checkout at The FunX Universe — enter your shipping details and review your order total.">
+<link rel="canonical" href="https://funxuniverse.com/checkout.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The FunX Universe">
+<meta property="og:title" content="Checkout — The FunX Universe">
+<meta property="og:description" content="Secure checkout at The FunX Universe — enter your shipping details and review your order total.">
+<meta property="og:url" content="https://funxuniverse.com/checkout.html">
+<meta property="og:image" content="https://funxuniverse.com/assets/hero-universe.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Checkout — The FunX Universe">
+<meta name="twitter:description" content="Secure checkout at The FunX Universe — enter your shipping details and review your order total.">
+<meta name="robots" content="noindex,follow">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tokens/theme-light.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
@@ -136,6 +148,7 @@ function App(){
   const [guest,setGuest] = React.useState(false);
   return <div>
     <Header active=""/>
+    <div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <section style={{maxWidth:1100,margin:'0 auto',padding:'56px 40px 0'}} data-screen-label="Checkout">
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,margin:'0 0 8px'}}>Checkout</h1>
     </section>

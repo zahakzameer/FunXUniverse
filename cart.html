@@ -3,6 +3,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your Collection — The FunX Universe</title>
+<meta name="description" content="Review your cart at The FunX Universe before checkout.">
+<link rel="canonical" href="https://funxuniverse.com/cart.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The FunX Universe">
+<meta property="og:title" content="Your Collection — The FunX Universe">
+<meta property="og:description" content="Review your cart at The FunX Universe before checkout.">
+<meta property="og:url" content="https://funxuniverse.com/cart.html">
+<meta property="og:image" content="https://funxuniverse.com/assets/hero-universe.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Your Collection — The FunX Universe">
+<meta name="twitter:description" content="Review your cart at The FunX Universe before checkout.">
+<meta name="robots" content="noindex,follow">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tokens/theme-light.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
@@ -73,6 +85,7 @@ function App(){
 
   return <div>
     <Header active=""/>
+    <div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <section style={{maxWidth:1100,margin:'0 auto',padding:'56px 40px 0'}} data-screen-label="Cart">
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,margin:'0 0 8px'}}>Your Collection</h1>
       <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:40}}>{cart.length} item{cart.length===1?'':'s'} in your cart</p>

@@ -3,6 +3,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The FunX Universe</title>
+<meta name="description" content="Shop premium action figures, die-cast vehicles, building blocks and more at The FunX Universe — free shipping over Rs. 5,000, easy returns, and an authenticity guarantee on every toy.">
+<link rel="canonical" href="https://funxuniverse.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The FunX Universe">
+<meta property="og:title" content="The FunX Universe">
+<meta property="og:description" content="Shop premium action figures, die-cast vehicles, building blocks and more at The FunX Universe — free shipping over Rs. 5,000, easy returns, and an authenticity guarantee on every toy.">
+<meta property="og:url" content="https://funxuniverse.com/">
+<meta property="og:image" content="https://funxuniverse.com/assets/hero-universe.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The FunX Universe">
+<meta name="twitter:description" content="Shop premium action figures, die-cast vehicles, building blocks and more at The FunX Universe — free shipping over Rs. 5,000, easy returns, and an authenticity guarantee on every toy.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"The FunX Universe","url":"https://funxuniverse.com/","logo":"https://funxuniverse.com/assets/logo.svg","email":"thefunxuniverse@gmail.com","telephone":"+92 327 5347075","address":{"@type":"PostalAddress","addressLocality":"Jhelum","addressRegion":"Punjab","addressCountry":"PK"}}
+</script>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tokens/theme-light.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
@@ -201,6 +215,7 @@ function Newsletter(){
 function App(){
   return <div>
     <Header active="Home"/>
+    <div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <Hero/>
     <CategoryNav/>
     <FeaturedGrid/>

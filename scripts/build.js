@@ -16,7 +16,7 @@ const DIST = path.join(ROOT, 'dist');
 const BABEL_OPTS = { presets: ['@babel/preset-react'], babelrc: false, configFile: false };
 
 // Static assets the site needs at runtime, copied through unchanged.
-const COPY_FILES = ['styles.css', 'motion.css', 'motion.js', 'image-slot.js', 'hero-portal.js', '_ds_bundle.js', 'CNAME', '.nojekyll'];
+const COPY_FILES = ['styles.css', 'motion.css', 'motion.js', 'image-slot.js', 'hero-portal.js', '_ds_bundle.js', 'CNAME', '.nojekyll', 'robots.txt', 'sitemap.xml'];
 const COPY_DIRS = ['tokens', 'assets', 'videos'];
 
 const BABEL_CDN_RE = /[ \t]*<script src="https:\/\/unpkg\.com\/@babel\/standalone[^"]*"[^>]*><\/script>\r?\n?/;
