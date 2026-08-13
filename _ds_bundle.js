@@ -2231,6 +2231,7 @@ try { (() => {
         };
       }
       this._cap.textContent = this.getAttribute('placeholder') || 'Drop an image';
+      this._img.alt = this.getAttribute('placeholder') || '';
       // Toggle via style.display — the [hidden] attribute alone loses to
       // the display:flex / display:block rules in the stylesheet above.
       // An Unsplash src with no credit attribute must NOT render — showing

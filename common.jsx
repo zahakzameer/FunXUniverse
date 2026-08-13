@@ -462,7 +462,7 @@ function AccountLink(){
    once. */
 function ModeSwitch({ mode, setMode }){
   return <div style={{display:'flex',borderRadius:'var(--radius-md)',background:'var(--surface-panel)',border:'1px solid var(--border-hairline)',padding:4,marginBottom:32}}>
-    {['sign-in','create'].map(m => <div key={m} onClick={()=>setMode(m)} style={{flex:1,textAlign:'center',padding:'10px 0',borderRadius:'var(--radius-sm)',cursor:'pointer',fontSize:14,fontWeight:600,background:mode===m?'var(--color-primary)':'transparent',color:mode===m?'#fff':'var(--text-secondary)',transition:'background var(--duration-fast)'}}>{m==='sign-in'?STRINGS.auth.signIn:STRINGS.auth.createAccount}</div>)}
+    {['sign-in','create'].map(m => <button key={m} type="button" onClick={()=>setMode(m)} aria-pressed={mode===m} style={{flex:1,textAlign:'center',padding:'10px 0',borderRadius:'var(--radius-sm)',border:'none',cursor:'pointer',fontSize:14,fontWeight:600,background:mode===m?'var(--color-primary)':'transparent',color:mode===m?'#fff':'var(--text-secondary)',transition:'background var(--duration-fast)'}}>{m==='sign-in'?STRINGS.auth.signIn:STRINGS.auth.createAccount}</button>)}
   </div>;
 }
 
@@ -686,6 +686,7 @@ function Header({ active }) {
   const [menuOpen,setMenuOpen] = React.useState(false);
   React.useEffect(()=>{ if (!isMobile) setMenuOpen(false); },[isMobile]);
   return <header style={{position:'sticky',top:0,zIndex:30,fontFamily:'var(--font-body)'}}>
+    <a href="#main-content" className="funx-skip-link">Skip to content</a>
     <AnnouncementBar/>
     <CartDrawer/>
     <CartSync/>
@@ -900,9 +901,9 @@ function FilterGroup({ title, options, selected=[], onToggle }) {
   const { Checkbox } = window.FunXDesignSystem_bbd8ae;
   const [open,setOpen] = React.useState(false);
   return <div style={{borderBottom:'1px solid var(--border-hairline-soft)',padding:'18px 0'}}>
-    <div onClick={()=>setOpen(!open)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',fontSize:14,fontWeight:600,color:'var(--text-primary)'}}>
+    <button type="button" onClick={()=>setOpen(!open)} aria-expanded={open} style={{display:'flex',width:'100%',justifyContent:'space-between',alignItems:'center',cursor:'pointer',fontSize:14,fontWeight:600,color:'var(--text-primary)',background:'none',border:'none',padding:0,textAlign:'left',font:'inherit'}}>
       {title}<span style={{fontSize:16,lineHeight:1,color:'var(--text-muted)',width:16,textAlign:'center'}}>{open ? '−' : '+'}</span>
-    </div>
+    </button>
     {open && <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:11}}>
       {options.map(o => <Checkbox key={o} label={o} checked={selected.includes(o)} onChange={()=>onToggle && onToggle(o)} labelStyle={{fontSize:13,color:'var(--text-secondary)'}}/>)}
     </div>}
@@ -922,7 +923,7 @@ function FilterSidebar({ groups, onClear }) {
         <span style={{display:'flex',transform:open?'rotate(90deg)':'rotate(0)',transition:'transform var(--duration-fast)'}}>{ICONS.chevron}</span>
       </button>
       {open && <div style={{marginTop:16,padding:'0 4px'}}>
-        {hasActive && onClear && <div style={{textAlign:'right',marginBottom:8}}><span onClick={onClear} style={{fontSize:12,color:'var(--text-muted)',cursor:'pointer',textDecoration:'underline'}}>Clear all</span></div>}
+        {hasActive && onClear && <div style={{textAlign:'right',marginBottom:8}}><button type="button" onClick={onClear} style={{fontSize:12,color:'var(--text-muted)',cursor:'pointer',textDecoration:'underline',background:'none',border:'none',padding:0,font:'inherit'}}>Clear all</button></div>}
         {groups.map(g => <FilterGroup key={g.title} {...g}/>)}
       </div>}
     </div>;
@@ -931,7 +932,7 @@ function FilterSidebar({ groups, onClear }) {
   return <aside style={{width:236,flexShrink:0}}>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:8}}>
       <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-display)',fontStyle:'italic'}}>Filter</div>
-      {hasActive && onClear && <span onClick={onClear} style={{fontSize:12,color:'var(--text-muted)',cursor:'pointer',textDecoration:'underline'}}>Clear all</span>}
+      {hasActive && onClear && <button type="button" onClick={onClear} style={{fontSize:12,color:'var(--text-muted)',cursor:'pointer',textDecoration:'underline',background:'none',border:'none',padding:0,font:'inherit'}}>Clear all</button>}
     </div>
     {groups.map(g => <FilterGroup key={g.title} {...g}/>)}
   </aside>;

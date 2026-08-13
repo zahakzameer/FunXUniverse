@@ -27,3 +27,18 @@
 @keyframes funx-shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
 .funx-skeleton{background:linear-gradient(90deg,var(--surface-card) 25%,var(--surface-card-raised) 50%,var(--surface-card) 75%);background-size:800px 100%;animation:funx-shimmer 1.6s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.funx-skeleton{animation:none;background:var(--surface-card)}}
+
+/* Skip link — visually hidden until keyboard-focused, so keyboard/screen
+   reader users can bypass the header nav straight to page content. */
+.funx-skip-link{position:absolute;left:8px;top:-48px;z-index:100;background:var(--color-primary,#F16A3E);color:#fff;padding:12px 20px;border-radius:var(--radius-sm,6px);font-size:14px;font-weight:700;text-decoration:none;transition:top .15s ease}
+.funx-skip-link:focus{top:8px}
+
+/* Visible focus indicator sitewide — buttons, links, and form controls had
+   no defined focus style (falling back to inconsistent/absent browser
+   defaults), leaving keyboard users with no reliable way to see where
+   focus is. */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--accent-cyan,#3DDBFF);
+  outline-offset:2px;
+  border-radius:var(--radius-sm,4px);
+}

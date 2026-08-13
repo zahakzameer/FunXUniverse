@@ -1107,6 +1107,12 @@
         };
       }
       this._cap.textContent = this.getAttribute('placeholder') || 'Drop an image';
+      // The real <img> (part="image") was hardcoded alt="" regardless of
+      // context — every filled photo was invisible to screen readers.
+      // `placeholder` already carries a descriptive caption (e.g. "Photo —
+      // Action Figures", a product name) for every real usage sitewide, so
+      // reuse it as the accessible name once the image actually has a src.
+      this._img.alt = this.getAttribute('placeholder') || '';
       // Toggle via style.display — the [hidden] attribute alone loses to
       // the display:flex / display:block rules in the stylesheet above.
       // An Unsplash src with no credit attribute must NOT render — showing
