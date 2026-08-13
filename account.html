@@ -131,7 +131,7 @@ function Dashboard({ session }){
 function App(){
   const session = window.useSession();
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     {session === undefined ? <div style={{minHeight:'60vh'}}/>
       : session === null ? <section style={{minHeight:'calc(100vh - 156px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'64px 40px',background:'var(--surface-sunken)'}} data-screen-label="Login / Register"><AuthCard onSuccess={()=>{location.href='index.html';}}/></section>
       : <Dashboard session={session}/>}

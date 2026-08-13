@@ -39,7 +39,7 @@ const METHODS = [
 
 function App(){
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <div style={{maxWidth:900,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Shipping">
       <Breadcrumb items={['Support','Shipping']}/>
     </div>

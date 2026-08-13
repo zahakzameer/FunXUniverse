@@ -236,12 +236,12 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
         }
       </div>
       {media.length > 1 && <div style={{position:'absolute',bottom:20,left:0,right:0,display:'flex',justifyContent:'center',gap:7}}>
-        {media.map((m,i) => <span key={i} onClick={()=>setActive(i)} style={{width:7,height:7,borderRadius:'50%',cursor:'pointer',background: i===active ? '#141416' : '#14141633'}}></span>)}
+        {media.map((m,i) => <button key={i} type="button" onClick={()=>setActive(i)} aria-label={`View image ${i+1} of ${media.length}`} aria-pressed={i===active} style={{width:7,height:7,padding:0,borderRadius:'50%',border:'none',cursor:'pointer',background: i===active ? '#141416' : '#14141633'}}></button>)}
       </div>}
     </div>
     <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:'center',marginBottom:36}}>
       <span style={{fontSize:13,color:'var(--text-muted)',marginRight:4}}>Color</span>
-      {colors.map((c,i) => <span key={c} onClick={()=>setActive(i % media.length)} style={{width:26,height:26,borderRadius:'50%',background:c,border: (i % media.length)===active ? '2px solid var(--text-primary)' : '2px solid transparent',cursor:'pointer',boxShadow:'0 0 0 1px #ffffff44 inset'}}></span>)}
+      {colors.map((c,i) => <button key={c} type="button" onClick={()=>setActive(i % media.length)} aria-label={`Select color option ${i+1}`} aria-pressed={(i % media.length)===active} style={{width:26,height:26,padding:0,borderRadius:'50%',background:c,border: (i % media.length)===active ? '2px solid var(--text-primary)' : '2px solid transparent',cursor:'pointer',boxShadow:'0 0 0 1px #ffffff44 inset'}}></button>)}
     </div>
     <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',maxWidth:480,margin:'0 auto'}}>
       <QtyStepper qty={qty} setQty={setQty} max={Math.max(1,p.quantity)}/>
@@ -278,7 +278,7 @@ function FeatureRow({ img, eyebrow, title, text, reverse }){
     </div>
     <div style={{direction:'ltr'}}>
       <div style={{fontSize:12,letterSpacing:2,fontWeight:700,color:'var(--accent-cyan)',textTransform:'uppercase',marginBottom:14}}>{eyebrow}</div>
-      <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:32,margin:'0 0 16px',color:'var(--text-primary)'}}>{title}</h3>
+      <h2 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:700,fontSize:32,margin:'0 0 16px',color:'var(--text-primary)'}}>{title}</h2>
       <p style={{fontSize:16,color:'var(--text-secondary)',lineHeight:1.7}}>{text}</p>
     </div>
   </div>;

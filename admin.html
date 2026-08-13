@@ -686,7 +686,7 @@ function MarketingTab(){
 
 /* ── app shell ─────────────────────────────────────────────────────────── */
 function NotConfigured(){
-  return <div><Header active=""/>
+  return <div><Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <section style={{minHeight:'calc(100vh - 76px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'64px 40px',background:'var(--surface-sunken)'}}>
       <Card variant="dark" padding="lg" style={{width:480,textAlign:'center'}}>
         <h3 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontSize:24,margin:'0 0 10px'}}>Supabase isn't configured yet</h3>
@@ -703,7 +703,7 @@ function AdminApp(){
   const [tab,setTab] = React.useState('Dashboard');
 
   if (session === undefined) return <div style={{minHeight:'60vh'}}/>;
-  if (!session) return <div><Header active=""/><LoginScreen/><Footer/></div>;
+  if (!session) return <div><Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div><LoginScreen/><Footer/></div>;
   if (profileLoading || profile === undefined) return <div style={{minHeight:'60vh'}}/>;
 
   const perms = profile || { role:'customer', permissions:[] };
@@ -712,7 +712,7 @@ function AdminApp(){
   const hasAnyAccess = isAdmin || (perms.role === 'staff' && perms.permissions.length > 0);
   const signOut = () => window.supabaseClient.auth.signOut();
 
-  if (!hasAnyAccess) return <div><Header active=""/><WaitingForAccess profile={profile} onSignOut={signOut}/><Footer/></div>;
+  if (!hasAnyAccess) return <div><Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div><WaitingForAccess profile={profile} onSignOut={signOut}/><Footer/></div>;
 
   const tabs = [
     'Dashboard',
@@ -729,7 +729,7 @@ function AdminApp(){
   const activeTab = tabs.includes(tab) ? tab : tabs[0];
 
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <section style={{maxWidth:1100,margin:'0 auto',padding:'48px 40px 96px'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
         <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:36,margin:0}}>Admin</h1>

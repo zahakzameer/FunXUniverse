@@ -45,7 +45,7 @@ function App(){
     });
   };
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <div style={{maxWidth:900,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Authentication"><Breadcrumb items={['The Universe','Authentication']}/></div>
     <section style={{maxWidth:900,margin:'0 auto',padding:'24px 40px 0',textAlign:'center'}}>
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:52,margin:'0 0 14px'}}>Authentication</h1>

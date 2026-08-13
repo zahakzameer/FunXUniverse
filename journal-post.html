@@ -38,7 +38,7 @@ function App(){
   const others = window.JOURNAL_POSTS.filter(p=>p.slug!==post.slug).slice(0,3);
 
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <div style={{maxWidth:760,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Journal Post">
       <Breadcrumb items={['Our Story','Journal',post.title]}/>
     </div>

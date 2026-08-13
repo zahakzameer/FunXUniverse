@@ -67,7 +67,7 @@ function App(){
   const moveAllToCart = () => { items.forEach(p => window.addToCart(p.id)); items.forEach(p => toggle(p.id)); };
 
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <section style={{maxWidth:960,margin:'0 auto',padding:'72px 40px 24px',textAlign:'center'}} data-screen-label="Wishlist">
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:48,margin:'0 0 12px'}}>Your Wishlist</h1>
       {session && <p style={{color:'var(--text-secondary)',fontSize:16}}>{items.length} piece{items.length===1?'':'s'} saved for later.</p>}

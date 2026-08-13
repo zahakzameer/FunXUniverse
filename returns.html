@@ -44,7 +44,7 @@ function App(){
   const [started,setStarted] = React.useState(false);
 
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <div style={{maxWidth:900,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Returns">
       <Breadcrumb items={['Support','Returns']}/>
     </div>

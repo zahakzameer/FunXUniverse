@@ -33,7 +33,7 @@ const { Breadcrumb, Card } = window.FunXDesignSystem_bbd8ae;
 
 function App(){
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <div style={{maxWidth:900,margin:'0 auto',padding:'40px 40px 0'}} data-screen-label="Provenance"><Breadcrumb items={['The Universe','Provenance']}/></div>
     <section style={{maxWidth:900,margin:'0 auto',padding:'24px 40px 0',textAlign:'center'}}>
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:52,margin:'0 0 14px'}}>Provenance</h1>

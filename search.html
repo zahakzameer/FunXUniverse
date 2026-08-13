@@ -59,7 +59,7 @@ function App(){
   const updateQuery = (e) => { setBudgetOnly(false); setQuery(e.target.value); };
 
   return <div>
-    <Header active=""/>
+    <Header active=""/><div id="main-content" tabIndex={-1} style={{outline:'none'}}></div>
     <section style={{padding:'80px 40px 24px',textAlign:'center'}} data-screen-label="Search">
       <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:48,margin:'0 0 32px'}}>Search the Universe</h1>
       <SearchBar query={query} setQuery={(v)=>updateQuery({target:{value:v}})}/>
