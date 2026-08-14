@@ -363,23 +363,35 @@ function CartDrawer(){
 // cart_items and merges them into whatever's already in the local cart
 // (quantities summed for overlapping products), so a cart genuinely
 // follows a customer across devices instead of resetting per-browser.
+//
+// This is a static multi-page site, not an SPA — every navigation is a
+// full page load, which remounts CartSync from scratch. A useRef here
+// (the original guard) always restarts at its initial value, so it can
+// never tell "just signed in" apart from "still signed in from before,"
+// and the merge below re-ran and re-summed on every single page view
+// while signed in — doubling the cart each time (1, 2, 4, 8, ... this is
+// how a quantity reaches something like 65536). CART_SYNCED_KEY persists
+// in localStorage across page loads so the merge genuinely only runs
+// once per real sign-in, not once per page.
 function CartSync(){
   const session = useSession();
-  const wasSignedIn = React.useRef(false);
   React.useEffect(() => {
-    if (session && !wasSignedIn.current) {
-      supabaseClient.from('cart_items').select('product_id,qty').eq('user_id', session.user.id).then(({ data }) => {
-        const server = data || [];
-        if (!server.length) return;
-        const merged = getCart().map(i => ({...i}));
-        server.forEach(s => {
-          const existing = merged.find(i => i.id === s.product_id);
-          if (existing) existing.qty += s.qty; else merged.push({ id: s.product_id, qty: s.qty });
-        });
-        saveCart(merged);
+    if (!session) return;
+    const uid = session.user.id;
+    let synced;
+    try { synced = localStorage.getItem(CART_SYNCED_KEY); } catch (e) { synced = uid; }
+    if (synced === uid) return;
+    try { localStorage.setItem(CART_SYNCED_KEY, uid); } catch (e) {}
+    supabaseClient.from('cart_items').select('product_id,qty').eq('user_id', uid).then(({ data }) => {
+      const server = data || [];
+      if (!server.length) return;
+      const merged = getCart().map(i => ({...i}));
+      server.forEach(s => {
+        const existing = merged.find(i => i.id === s.product_id);
+        if (existing) existing.qty += s.qty; else merged.push({ id: s.product_id, qty: s.qty });
       });
-    }
-    wasSignedIn.current = !!session;
+      saveCart(merged);
+    });
   }, [session]);
   return null;
 }
@@ -1008,10 +1020,19 @@ window.supabaseClient = supabaseClient;
 // via onAuthStateChange. saveCart() is an ordinary function (not a hook), so
 // it can't call useSession() itself — this is what lets it know whether to
 // push to cart_items without every call site threading a session through.
+// Marks "we've already pulled this account's server cart_items into this
+// device's local cart" — see CartSync below for why a plain useRef can't
+// do this job here.
+const CART_SYNCED_KEY = 'funx_cart_synced_uid';
+
 window.__funxCurrentUserId = null;
 if (supabaseClient) {
   supabaseClient.auth.onAuthStateChange((_event, sess) => {
     window.__funxCurrentUserId = sess ? sess.user.id : null;
+    // Signing out lets a future sign-in (same account, from elsewhere)
+    // pull server cart_items again instead of staying skipped forever —
+    // see CART_SYNCED_KEY below for why this key exists at all.
+    if (!sess) try { localStorage.removeItem(CART_SYNCED_KEY); } catch (e) {}
   });
 }
 
