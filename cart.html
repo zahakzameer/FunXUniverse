@@ -81,18 +81,6 @@ function App(){
   const [promo,setPromo] = React.useState('');
   const [promoMsg,setPromoMsg] = React.useState('');
   const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)})).filter(i=>i.p);
-
-  // Repair any quantity already stuck above real stock from before the
-  // stepper had a ceiling (e.g. a runaway click leaving qty:65536 in
-  // localStorage) — clamp it down and persist so it doesn't linger.
-  React.useEffect(()=>{
-    const fixed = items.map(i => {
-      const p = window.PRODUCTS.find(p=>p.id===i.id);
-      const cap = p ? Math.max(1,p.quantity) : i.qty;
-      return i.qty > cap ? {...i,qty:cap} : i;
-    });
-    if (fixed.some((f,idx)=>f.qty!==items[idx].qty)) setItems(fixed);
-  },[items]);
   const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
   const total = subtotal;
 
