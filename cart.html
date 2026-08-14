@@ -79,7 +79,7 @@ function App(){
     return () => { window.removeEventListener('funx-cart-updated', sync); window.removeEventListener('storage', sync); };
   },[]);
   const [promo,setPromo] = React.useState('');
-  const [applied,setApplied] = React.useState(false);
+  const [promoMsg,setPromoMsg] = React.useState('');
   const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)})).filter(i=>i.p);
 
   // Repair any quantity already stuck above real stock from before the
@@ -94,8 +94,7 @@ function App(){
     if (fixed.some((f,idx)=>f.qty!==items[idx].qty)) setItems(fixed);
   },[items]);
   const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
-  const discount = applied ? Math.round(subtotal*0.1) : 0;
-  const total = subtotal - discount;
+  const total = subtotal;
 
   const setQty = (id,q) => setItems(v => v.map(i => i.id===id ? {...i,qty:q} : i));
   const remove = (id) => setItems(v => v.filter(i => i.id!==id));
@@ -117,11 +116,10 @@ function App(){
         <h3 style={{fontSize:18,fontWeight:600,margin:'0 0 20px'}}>Order Summary</h3>
         <div style={{display:'flex',gap:10,marginBottom:20}}>
           <input value={promo} onChange={e=>setPromo(e.target.value)} placeholder="Promo code" style={{flex:1,height:44,borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-card)',color:'var(--text-primary)',padding:'0 14px',fontSize:14,outline:'none'}}/>
-          <Button variant="secondary" size="md" onClick={()=>setApplied(promo.trim().length>0)}>Apply</Button>
+          <Button variant="secondary" size="md" onClick={()=>setPromoMsg(promo.trim().length>0 ? 'No active promo codes right now.' : 'Enter a code first.')}>Apply</Button>
         </div>
-        {applied && <div style={{fontSize:12,color:'var(--color-success)',marginBottom:12}}>Promo applied — 10% off subtotal.</div>}
+        {promoMsg && <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:12}}>{promoMsg}</div>}
         <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Subtotal</span><span>{window.fmtPrice(subtotal)}</span></div>
-        {applied && <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--color-success)',marginBottom:12}}><span>Discount</span><span>-{window.fmtPrice(discount)}</span></div>}
         <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Shipping</span><span style={{color:'var(--text-muted)'}}>Calculated at checkout</span></div>
         <div style={{borderTop:'1px solid var(--border-hairline)',margin:'16px 0',paddingTop:16,display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:17}}><span>Total</span><span>{window.fmtPrice(total)}</span></div>
         <Button variant="primary" size="lg" onClick={()=>location.href='checkout.html'} style={{width:'100%'}}>Checkout</Button>
