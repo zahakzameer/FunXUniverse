@@ -360,19 +360,28 @@ function CartDrawer(){
 
 // No UI — mounted once from Header so it's live on every page. On the
 // transition into a signed-in session, pulls that account's saved
-// cart_items and merges them into whatever's already in the local cart
-// (quantities summed for overlapping products), so a cart genuinely
-// follows a customer across devices instead of resetting per-browser.
+// cart_items and merges them into whatever's already in the local cart,
+// so a cart genuinely follows a customer across devices instead of
+// resetting per-browser.
 //
 // This is a static multi-page site, not an SPA — every navigation is a
 // full page load, which remounts CartSync from scratch. A useRef here
 // (the original guard) always restarts at its initial value, so it can
 // never tell "just signed in" apart from "still signed in from before,"
-// and the merge below re-ran and re-summed on every single page view
-// while signed in — doubling the cart each time (1, 2, 4, 8, ... this is
-// how a quantity reaches something like 65536). CART_SYNCED_KEY persists
-// in localStorage across page loads so the merge genuinely only runs
-// once per real sign-in, not once per page.
+// and the merge re-ran on every single page view while signed in.
+// CART_SYNCED_KEY persists in localStorage across page loads so it
+// genuinely only runs once per real sign-in, not once per page.
+//
+// The merge itself used to SUM overlapping quantities (existing.qty +=
+// s.qty), on the assumption that server data means "something you added
+// on another device." But saveCart()/syncCartToServer() mirrors local to
+// server on every single save (delete + reinsert), so "server" is
+// almost always just an echo of this same device's own cart, not
+// independent data — summing an item with its own mirror doubles it the
+// very first time this runs on a device with anything already in the
+// cart. Taking the max instead of the sum still pulls over anything
+// that's genuinely only on the server (added elsewhere), without
+// double-counting an item that's already mirrored from here.
 function CartSync(){
   const session = useSession();
   React.useEffect(() => {
@@ -388,7 +397,7 @@ function CartSync(){
       const merged = getCart().map(i => ({...i}));
       server.forEach(s => {
         const existing = merged.find(i => i.id === s.product_id);
-        if (existing) existing.qty += s.qty; else merged.push({ id: s.product_id, qty: s.qty });
+        if (existing) existing.qty = Math.max(existing.qty, s.qty); else merged.push({ id: s.product_id, qty: s.qty });
       });
       saveCart(merged);
     });
