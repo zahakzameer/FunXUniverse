@@ -1172,15 +1172,17 @@ window.PRODUCTS_PROMISE = Promise.all([
   // page, not just cart.html) so the header badge is never stale:
   // - drop any cart line whose product id no longer exists (e.g. after a
   //   full catalog replace)
-  // - clamp any qty above real stock, left over from before QtyStepper had
-  //   an upper bound (that's how a line could reach qty:65536)
+  // - reset any qty above real stock back to 1, left over from before
+  //   QtyStepper had an upper bound (that's how a line could reach
+  //   qty:65536). Capping to the stock ceiling instead would silently
+  //   assume the shopper wanted the max available, which we have no way
+  //   to know — 1 is the only safe default, they can step it back up.
   try {
     const cart = getCart();
     let changed = false;
     const valid = cart.filter(i => products.some(p => p.id === i.id)).map(i => {
       const p = products.find(p => p.id === i.id);
-      const cap = Math.max(1, p.quantity);
-      if (i.qty > cap) { changed = true; return { ...i, qty: cap }; }
+      if (i.qty > p.quantity) { changed = true; return { ...i, qty: 1 }; }
       return i;
     });
     if (valid.length !== cart.length || changed) saveCart(valid);
