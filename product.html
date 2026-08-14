@@ -226,29 +226,37 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
     if (media[active] === '__video__') { v.currentTime = 0; v.play().catch(()=>{}); } else { v.pause(); }
   },[active]);
   return <section style={{
-      // Deep near-black stage with a strong upward glow bloom — this is the
-      // reference's actual mood (dramatic, spotlit, high-contrast) rather
-      // than the previous flat surface-canvas gradient. The product photo
-      // itself stays on its light gallery card (that's the honest, clean
-      // convention for real phone-shot product photography — the drama
-      // comes from the dark stage it's spotlit within, not from forcing a
-      // dark background onto photos that weren't shot for one).
-      background:'radial-gradient(ellipse 65% 75% at 50% 38%,rgba(241,106,62,0.20),transparent 62%),radial-gradient(ellipse 50% 40% at 50% 92%,rgba(255,201,60,0.10),transparent 60%),linear-gradient(180deg,#050506,#0B0B0D)',
+      // Pushed past the orange/gold identity on purpose, per direct
+      // feedback that the orange glow still read as "not evolved" —
+      // near-pure-black stage, single neon bloom (--accent-neon, a
+      // deliberate one-off token for this preview only, not adopted
+      // sitewide). The product photo still stays on its light gallery
+      // surface (honest for real phone-shot photography), but is now
+      // vignetted into a smaller spotlit island rather than filling the
+      // card edge-to-edge, so it reads as a lit object in a dark room
+      // instead of a white rectangle sitting on the page.
+      background:'radial-gradient(ellipse 55% 60% at 50% 38%,rgba(174,250,60,0.16),transparent 62%),linear-gradient(180deg,#020202,#0B0B0D)',
       padding: isMobile ? '48px 20px 56px' : '72px 40px 80px',
     }} data-screen-label="Product Detail — Hero">
     <div style={{maxWidth:1280,margin:'0 auto',display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1.05fr) minmax(0,0.95fr)',gap: isMobile ? 32 : 64,alignItems:'center'}}>
 
       <div style={{padding: isMobile ? 0 : '0 28px 0 0'}}>
-        {/* Spotlit pedestal — the dark stage above does the dramatic
-            lighting; this card just needs a stronger glow ring so it reads
-            as lit-from-within rather than merely floating on it. */}
-        <div style={{position:'relative',aspectRatio:'1',borderRadius:28,overflow:'hidden',background:'var(--surface-gallery-card)',color:'var(--text-ink)',boxShadow:'0 60px 100px -30px rgba(0,0,0,0.7), 0 0 0 1px rgba(241,106,62,0.5), 0 0 70px rgba(241,106,62,0.35)'}}>
-          {p.badge && <span style={{position:'absolute',top:20,right:20,zIndex:3,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 10px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
-          <div key={active} className="funx-gallery-in" style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:56}}>
-            {media[active] === '__video__'
-              ? <video ref={videoRef} muted loop playsInline controls style={{maxWidth:'100%',maxHeight:'100%',borderRadius:16}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
-              : (hasReal ? <ZoomImage src={p.images[active]} alt={p.name}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
-            }
+        {/* Vignetted spotlit island — the photo sits at ~70% of the stage,
+            with a radial mask that fades the card's own light background
+            into the surrounding black rather than cutting off sharply. */}
+        <div style={{position:'relative',aspectRatio:'1',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{position:'absolute',inset:'6%',borderRadius:28,border:'1px solid rgba(174,250,60,0.35)',pointerEvents:'none'}}></div>
+          <div style={{position:'relative',width:'72%',aspectRatio:'1',borderRadius:24,overflow:'hidden',background:'var(--surface-gallery-card)',color:'var(--text-ink)'}}>
+            {p.badge && <span style={{position:'absolute',top:16,right:16,zIndex:3,background: p.badge==='Sale' ? 'var(--color-error)' : p.badge==='Exclusive' ? 'var(--color-success)' : 'var(--color-warning)',color: p.badge==='Sale'||p.badge==='Exclusive' ? '#fff' : '#141416',fontSize:10,fontWeight:700,letterSpacing:1,textTransform:'uppercase',padding:'5px 10px',borderRadius:'var(--radius-pill)'}}>{p.badge}</span>}
+            <div key={active} className="funx-gallery-in" style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',padding:36}}>
+              {media[active] === '__video__'
+                ? <video ref={videoRef} muted loop playsInline controls style={{maxWidth:'100%',maxHeight:'100%',borderRadius:16}}><source src={p.videoSrc || `videos/${p.id}.mp4`} type="video/mp4"/></video>
+                : (hasReal ? <ZoomImage src={p.images[active]} alt={p.name}/> : <image-slot id={`pdp-${p.id}-${active}`} style={{width:'80%',height:'80%'}} placeholder={`Photo of ${p.name}`}></image-slot>)
+              }
+            </div>
+            {/* Radial mask melts the card's light edges into the dark
+                stage — pure CSS, no image processing on the real photo. */}
+            <div aria-hidden="true" style={{position:'absolute',inset:-2,pointerEvents:'none',background:'#020202',WebkitMask:'radial-gradient(circle at 50% 50%, transparent 46%, #000 82%)',mask:'radial-gradient(circle at 50% 50%, transparent 46%, #000 82%)'}}></div>
           </div>
         </div>
         {/* Real thumbnail rail — replaces the old "Color" swatches, which
@@ -257,8 +265,8 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
             below them (two controls, one honest job). This is the single,
             truthful gallery control, and matches the reference's actual
             thumbnail-row pattern rather than a fabricated selector. */}
-        {media.length > 1 && <div style={{display:'flex',gap:10,marginTop:16,overflowX:'auto',paddingBottom:4}}>
-          {media.map((m,i) => <button key={i} type="button" onClick={()=>setActive(i)} aria-label={`View image ${i+1} of ${media.length}`} aria-pressed={i===active} style={{flexShrink:0,width:64,height:64,borderRadius:12,padding:0,cursor:'pointer',overflow:'hidden',border: i===active ? '2px solid var(--paint-orange)' : '2px solid var(--border-hairline)',background:'var(--surface-gallery)',opacity:i===active?1:0.65,transition:'opacity var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard)'}}>
+        {media.length > 1 && <div style={{display:'flex',gap:10,marginTop:16,justifyContent:'center',overflowX:'auto',paddingBottom:4}}>
+          {media.map((m,i) => <button key={i} type="button" onClick={()=>setActive(i)} aria-label={`View image ${i+1} of ${media.length}`} aria-pressed={i===active} style={{flexShrink:0,width:56,height:56,borderRadius:10,padding:0,cursor:'pointer',overflow:'hidden',border: i===active ? '2px solid var(--accent-neon)' : '2px solid var(--border-hairline)',background:'var(--surface-gallery)',opacity:i===active?1:0.65,transition:'opacity var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard)'}}>
             {m === '__video__'
               ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',fontSize:18}}>▶</span>
               : <img src={m} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}}/>}
@@ -274,9 +282,9 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
         </div>
         <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:24}}>
           {p.salePrice ? <>
-            <span style={{fontSize:30,fontWeight:700,color:'var(--paint-orange)'}}>{window.fmtPrice(p.salePrice)}</span>
+            <span style={{fontSize:30,fontWeight:700,color:'var(--accent-neon)'}}>{window.fmtPrice(p.salePrice)}</span>
             <span style={{fontSize:17,color:'var(--text-muted)',textDecoration:'line-through'}}>{window.fmtPrice(p.price)}</span>
-          </> : <span style={{fontSize:30,fontWeight:700,color:'var(--text-primary)'}}>{window.fmtPrice(p.price)}</span>}
+          </> : <span style={{fontSize:30,fontWeight:700,color:'var(--accent-neon)'}}>{window.fmtPrice(p.price)}</span>}
         </div>
         <p style={{fontSize:16,color:'var(--text-secondary)',lineHeight:1.65,marginBottom:28,maxWidth:480}}>{p.description}</p>
 
@@ -288,7 +296,7 @@ function Hero({ p, qty, setQty, added, onAdd, onBuy }){
 
         <div style={{display:'flex',gap:14,flexWrap:'wrap',marginBottom:14}}>
           <QtyStepper qty={qty} setQty={setQty} max={Math.max(1,p.quantity)}/>
-          <Button variant="primary" size="lg" onClick={onAdd} disabled={p.quantity<=0} style={{minWidth:200}}>{p.quantity<=0 ? 'Out of Stock' : added ? 'Added ✓' : 'Add to Cart'}</Button>
+          <Button variant="primary" size="lg" onClick={onAdd} disabled={p.quantity<=0} style={{minWidth:200,background:'var(--accent-neon)',color:'#050506',boxShadow:'0 14px 30px -8px rgba(174,250,60,0.5)'}}>{p.quantity<=0 ? 'Out of Stock' : added ? 'Added ✓' : 'Add to Cart'}</Button>
           <WishlistButton productId={p.id}/>
         </div>
         <div style={{marginBottom:14}}><Button variant="secondary" size="md" onClick={onBuy}>Buy Now</Button></div>
@@ -311,7 +319,7 @@ function StickyBar({ p, onAdd, added, visible }){
       <span style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{window.titleCase(p.name)}</span>
       <span style={{fontSize:14,color:'var(--text-muted)'}}>{window.fmtPrice(price)}</span>
     </div>
-    <Button variant="primary" size="md" onClick={onAdd} disabled={p.quantity<=0}>{added ? 'Added ✓' : 'Add to Cart'}</Button>
+    <Button variant="primary" size="md" onClick={onAdd} disabled={p.quantity<=0} style={{background:'var(--accent-neon)',color:'#050506'}}>{added ? 'Added ✓' : 'Add to Cart'}</Button>
   </div>;
 }
 

@@ -22,6 +22,13 @@
 --accent-cyan:#3DDBFF;
 --accent-cyan-deep:#0E6E88;
 
+/* Experimental — glow-redesign preview only (product/cart pages on
+   preview/glow-product-cart). Not used anywhere else in the design
+   system; a deliberate one-off accent for that specific treatment,
+   not a replacement for --paint-orange as the site's primary color. */
+--accent-neon:#AEFA3C;
+--accent-neon-deep:#5C8A1E;
+
 /* Semantic brand roles */
 --color-primary:var(--paint-red);
 --color-primary-hover:#FF4F66;

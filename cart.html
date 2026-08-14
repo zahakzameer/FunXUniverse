@@ -42,10 +42,10 @@ function QtyStepper({ qty, setQty }){
 
 function CartRow({ item, onQty, onRemove }){
   const p = item.p;
-  return <div style={{display:'grid',gridTemplateColumns:'92px 1fr auto auto',alignItems:'center',gap:20,padding:'18px',marginBottom:14,borderRadius:18,background:'var(--surface-panel)',border:'1px solid var(--border-hairline-soft)',boxShadow:'0 0 0 1px rgba(241,106,62,0.08)'}}>
+  return <div style={{display:'grid',gridTemplateColumns:'92px 1fr auto auto',alignItems:'center',gap:20,padding:'18px',marginBottom:14,borderRadius:18,background:'var(--surface-panel)',border:'1px solid var(--border-hairline-soft)',boxShadow:'0 0 0 1px rgba(174,250,60,0.08)'}}>
     {/* Small glow ring on the thumbnail — same "spotlit pedestal" language
         as the product page, scaled down for a list row. */}
-    <div style={{width:92,height:92,borderRadius:14,overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',boxShadow:'0 0 0 1px rgba(241,106,62,0.35), 0 0 24px rgba(241,106,62,0.18)'}}>
+    <div style={{width:92,height:92,borderRadius:14,overflow:'hidden',background:'var(--surface-gallery)',color:'var(--text-ink)',boxShadow:'0 0 0 1px rgba(174,250,60,0.4), 0 0 24px rgba(174,250,60,0.18)'}}>
       {p.images && p.images[0] ? <img src={p.images[0]} alt={p.name} loading="lazy" decoding="async" style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <image-slot id={`cart-${p.id}`} style={{width:'100%',height:'100%'}} placeholder={`Photo of ${p.name}`}></image-slot>}
     </div>
     <div>
@@ -53,7 +53,7 @@ function CartRow({ item, onQty, onRemove }){
       <div style={{fontSize:17,fontWeight:600,marginBottom:10}}>{window.titleCase(p.name)}</div>
       <QtyStepper qty={item.qty} setQty={(q)=>onQty(p.id,q)}/>
     </div>
-    <div style={{fontSize:16,fontWeight:700,color:'var(--paint-orange)',justifySelf:'end'}}>{window.fmtPrice((p.salePrice||p.price)*item.qty)}</div>
+    <div style={{fontSize:16,fontWeight:700,color:'var(--accent-neon)',justifySelf:'end'}}>{window.fmtPrice((p.salePrice||p.price)*item.qty)}</div>
     <button onClick={()=>onRemove(p.id)} style={{cursor:'pointer',color:'var(--text-muted)',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:'none',border:'none'}} title="Remove" aria-label={`Remove ${p.name} from cart`}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
@@ -97,7 +97,7 @@ function App(){
         post-decision journey (product -> cart -> checkout) should read as
         one continuous world, not a bright product page feeding into a
         flatly-lit cart. */}
-    <div style={{background:'radial-gradient(ellipse 55% 45% at 15% 0%,rgba(241,106,62,0.10),transparent 60%),linear-gradient(180deg,#0B0B0D,var(--surface-sunken))'}}>
+    <div style={{background:'radial-gradient(ellipse 55% 45% at 15% 0%,rgba(174,250,60,0.09),transparent 60%),linear-gradient(180deg,#020202,#0B0B0D)'}}>
       <section style={{maxWidth:1100,margin:'0 auto',padding:'56px 40px 0'}} data-screen-label="Cart">
         <h1 style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:800,fontSize:44,margin:'0 0 8px'}}>Your Collection</h1>
         <p style={{color:'var(--text-muted)',fontSize:14,marginBottom:40}}>{cart.length} item{cart.length===1?'':'s'} in your cart</p>
@@ -108,7 +108,7 @@ function App(){
         <Button variant="primary" size="lg" onClick={()=>location.href='shop-all.html'}>Browse All Products</Button>
       </section> : <section style={{maxWidth:1100,margin:'0 auto',padding:'0 40px 120px',display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:56,alignItems:'start'}}>
         <div>{cart.map(item => <CartRow key={item.id} item={item} onQty={setQty} onRemove={remove}/>)}</div>
-        <div style={{borderRadius:20,padding:32,background:'var(--surface-panel)',boxShadow:'0 0 0 1px rgba(241,106,62,0.14), 0 30px 60px -20px rgba(0,0,0,0.5)'}}>
+        <div style={{borderRadius:20,padding:32,background:'var(--surface-panel)',boxShadow:'0 0 0 1px rgba(174,250,60,0.14), 0 30px 60px -20px rgba(0,0,0,0.5)'}}>
           <h3 style={{fontSize:18,fontWeight:600,margin:'0 0 20px'}}>Order Summary</h3>
           <div style={{display:'flex',gap:10,marginBottom:10}}>
             <input value={promo} onChange={e=>{setPromo(e.target.value);setPromoMsg('');}} placeholder="Promo code" style={{flex:1,height:44,borderRadius:'var(--radius-md)',border:'1px solid var(--border-hairline)',background:'var(--surface-card)',color:'var(--text-primary)',padding:'0 14px',fontSize:14,outline:'none'}}/>
@@ -117,8 +117,8 @@ function App(){
           {promoMsg && <div style={{fontSize:12,color:'var(--text-muted)',marginBottom:12}}>{promoMsg}</div>}
           <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Subtotal</span><span>{window.fmtPrice(subtotal)}</span></div>
           <div style={{display:'flex',justifyContent:'space-between',fontSize:14,color:'var(--text-secondary)',marginBottom:12}}><span>Shipping</span><span style={{color:'var(--text-muted)'}}>Calculated at checkout</span></div>
-          <div style={{borderTop:'1px solid var(--border-hairline)',margin:'16px 0',paddingTop:16,display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:17}}><span>Total</span><span>{window.fmtPrice(total)}</span></div>
-          <Button variant="primary" size="lg" onClick={()=>location.href='checkout.html'} style={{width:'100%'}}>Checkout</Button>
+          <div style={{borderTop:'1px solid var(--border-hairline)',margin:'16px 0',paddingTop:16,display:'flex',justifyContent:'space-between',fontWeight:700,fontSize:17}}><span>Total</span><span style={{color:'var(--accent-neon)'}}>{window.fmtPrice(total)}</span></div>
+          <Button variant="primary" size="lg" onClick={()=>location.href='checkout.html'} style={{width:'100%',background:'var(--accent-neon)',color:'#050506',boxShadow:'0 14px 30px -8px rgba(174,250,60,0.5)'}}>Checkout</Button>
         </div>
       </section>}
     </div>
