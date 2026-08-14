@@ -32,11 +32,16 @@
 <script type="text/babel">
 const { Button, Input } = window.FunXDesignSystem_bbd8ae;
 
-function QtyStepper({ qty, setQty }){
+// `max` was missing entirely — the + button had no ceiling, no stock
+// check, nothing. A customer (or an impatient double-click, or a stuck
+// key) could run qty up indefinitely; product.html's own QtyStepper
+// already caps at real stock, this one just never did.
+function QtyStepper({ qty, setQty, max }){
+  const atMax = max != null && qty >= max;
   return <div style={{display:'flex',alignItems:'center',border:'1px solid var(--border-hairline)',borderRadius:'var(--radius-sm)',width:104,height:36}}>
     <button onClick={()=>setQty(Math.max(1,qty-1))} style={{flex:1,height:'100%',background:'none',border:'none',color:'var(--text-secondary)',cursor:'pointer',fontSize:16}}>−</button>
     <span style={{flex:1,textAlign:'center',fontSize:14}}>{qty}</span>
-    <button onClick={()=>setQty(qty+1)} style={{flex:1,height:'100%',background:'none',border:'none',color:'var(--text-secondary)',cursor:'pointer',fontSize:16}}>+</button>
+    <button onClick={()=>setQty(max!=null ? Math.min(max,qty+1) : qty+1)} disabled={atMax} style={{flex:1,height:'100%',background:'none',border:'none',color: atMax ? 'var(--text-muted)' : 'var(--text-secondary)',cursor: atMax ? 'not-allowed' : 'pointer',fontSize:16}}>+</button>
   </div>;
 }
 
@@ -49,7 +54,7 @@ function CartRow({ item, onQty, onRemove }){
     <div>
       <div style={{fontSize:11,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>{p.line || p.category}</div>
       <div style={{fontSize:17,fontWeight:600,marginBottom:10}}>{window.titleCase(p.name)}</div>
-      <QtyStepper qty={item.qty} setQty={(q)=>onQty(p.id,q)}/>
+      <QtyStepper qty={item.qty} setQty={(q)=>onQty(p.id,q)} max={Math.max(1,p.quantity)}/>
     </div>
     <div style={{fontSize:16,fontWeight:700,color:'var(--paint-orange)',justifySelf:'end'}}>{window.fmtPrice((p.salePrice||p.price)*item.qty)}</div>
     <button onClick={()=>onRemove(p.id)} style={{cursor:'pointer',color:'var(--text-muted)',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:'none',border:'none'}} title="Remove" aria-label={`Remove ${p.name} from cart`}>
@@ -76,6 +81,18 @@ function App(){
   const [promo,setPromo] = React.useState('');
   const [applied,setApplied] = React.useState(false);
   const cart = items.map(i => ({...i, p: window.PRODUCTS.find(p=>p.id===i.id)})).filter(i=>i.p);
+
+  // Repair any quantity already stuck above real stock from before the
+  // stepper had a ceiling (e.g. a runaway click leaving qty:65536 in
+  // localStorage) — clamp it down and persist so it doesn't linger.
+  React.useEffect(()=>{
+    const fixed = items.map(i => {
+      const p = window.PRODUCTS.find(p=>p.id===i.id);
+      const cap = p ? Math.max(1,p.quantity) : i.qty;
+      return i.qty > cap ? {...i,qty:cap} : i;
+    });
+    if (fixed.some((f,idx)=>f.qty!==items[idx].qty)) setItems(fixed);
+  },[items]);
   const subtotal = cart.reduce((s,i)=>s+(i.p.salePrice||i.p.price)*i.qty,0);
   const discount = applied ? Math.round(subtotal*0.1) : 0;
   const total = subtotal - discount;
